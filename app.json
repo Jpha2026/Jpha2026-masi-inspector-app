@@ -35,7 +35,11 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "VIBRATE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -55,8 +59,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "masi-inspector-app"
+        "projectId": "cacb0e8a-7d4c-4e8f-8e3c-c51490c7be87"
       }
-    }
+    },
+    "owner": "jpha2026"
   }
 }
