@@ -52,7 +52,7 @@ export default function LoginScreen({ navigation }: Props) {
     setFetching(true);
     try {
       const res = await axios.get<Inspector[]>(`${API_URL}/inspectors`);
-      setInspectors(res.data);
+      setInspectors(Array.isArray(res.data) ? res.data : []);
     } catch {
       Alert.alert("Sin conexión", "No se pudo obtener la lista de inspectores.", [
         { text: "Reintentar", onPress: fetchInspectors }, { text: "Cancelar" },
@@ -60,12 +60,13 @@ export default function LoginScreen({ navigation }: Props) {
     } finally { setFetching(false); }
   };
 
+  const safeInspectors = Array.isArray(inspectors) ? inspectors : [];
   const filtered = query.trim()
-    ? inspectors.filter((i) =>
+    ? safeInspectors.filter((i) =>
         i.email.toLowerCase().includes(query.toLowerCase()) ||
         i.name.toLowerCase().includes(query.toLowerCase())
       )
-    : inspectors;
+    : safeInspectors;
 
   const handleInspectorLogin = async () => {
     if (!selected) return;
