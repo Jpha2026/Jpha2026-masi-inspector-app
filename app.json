@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "MASI Inspector",
+    "slug": "masi-inspector-app",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.masi.inspector",
+      "buildNumber": "2",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Se necesita la cámara para escanear códigos QR y tomar fotos de evidencia.",
+        "NSLocationWhenInUseUsageDescription": "Se usa la ubicación para registrar el lugar de la inspección.",
+        "NSPhotoLibraryUsageDescription": "Se accede a fotos para adjuntar evidencia en inspecciones."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#122B60"
+      },
+      "package": "com.masi.inspector",
+      "versionCode": 2,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Se necesita la cámara para escanear códigos QR y tomar fotos de evidencia."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Se usa la ubicación para registrar el lugar de la inspección."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "masi-inspector-app"
+      }
+    }
+  }
+}
