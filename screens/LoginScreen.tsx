@@ -28,10 +28,10 @@ export default function LoginScreen({ navigation }: Props) {
   const [selected, setSelected]      = useState<Inspector | null>(null);
   const [fetching, setFetching]      = useState(false);
 
-  // Employee tab
+  // Employee tab — OTP flow
   const [email, setEmail]            = useState("");
-  const [password, setPassword]      = useState("");
-  const [showPass, setShowPass]      = useState(false);
+  const [codeSent, setCodeSent]      = useState(false);
+  const [code, setCode]              = useState("");
 
   const [loading, setLoading]        = useState(false);
 
@@ -80,29 +80,42 @@ export default function LoginScreen({ navigation }: Props) {
     } finally { setLoading(false); }
   };
 
-  const handleEmployeeLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert("Campos requeridos", "Ingresa tu correo y contraseña.");
+  const handleSendCode = async () => {
+    if (!email.trim()) {
+      Alert.alert("Correo requerido", "Ingresa tu correo electrónico.");
       return;
     }
     setLoading(true);
     try {
-      const res = await axios.post<AppUser>(`${API_URL}/mobile/login`, { email: email.trim(), password });
+      await axios.post(`${API_URL}/mobile/send-code`, { email: email.trim() });
+      setCodeSent(true);
+      setCode("");
+    } catch {
+      Alert.alert("Error", "No se pudo enviar el código. Verifica tu correo.");
+    } finally { setLoading(false); }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!code.trim()) {
+      Alert.alert("Código requerido", "Ingresa el código que recibiste.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post<AppUser>(`${API_URL}/mobile/verify-code`, { email: email.trim(), code: code.trim() });
       const user = res.data;
       await AsyncStorage.setItem("masi_user", JSON.stringify(user));
-      if (user.role === "empleado") {
-        navigation.replace("EmpleadoHome", { user });
-      } else if (user.inspector_id) {
+      if (user.inspector_id) {
         await AsyncStorage.setItem("inspector_id", user.inspector_id);
         await AsyncStorage.setItem("inspector_name", user.name);
         navigation.replace("Home", { inspectorId: user.inspector_id });
       } else {
-        Alert.alert("Sin acceso", "Tu usuario no tiene inspector o empleado asociado. Contacta al administrador.");
+        navigation.replace("EmpleadoHome", { user });
       }
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) && err.response?.data?.error
         ? err.response.data.error
-        : "Verifica tu correo y contraseña.";
+        : "Código incorrecto o expirado.";
       Alert.alert("Acceso denegado", msg);
     } finally { setLoading(false); }
   };
@@ -256,52 +269,76 @@ export default function LoginScreen({ navigation }: Props) {
             ) : (
               <>
                 <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
-                  Acceso con contraseña
+                  {codeSent ? "Ingresa tu código" : "Acceso por correo"}
                 </Text>
+
+                {/* Email input — siempre visible */}
                 <View style={[s.inputWrap, {
                   backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
-                  borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                  borderColor: codeSent ? "rgba(16,185,129,0.4)" : (T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0"),
                 }]}>
                   <Text style={s.inputIcon}>✉️</Text>
                   <TextInput
                     style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
                     placeholder="Correo electrónico"
                     placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
                     autoCapitalize="none"
                     autoCorrect={false}
                     keyboardType="email-address"
+                    editable={!codeSent}
                   />
+                  {codeSent && <Text style={{ color: "#10B981", fontSize: 18 }}>✓</Text>}
                 </View>
-                <View style={[s.inputWrap, {
-                  backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
-                  borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
-                  marginTop: 12,
-                }]}>
-                  <Text style={s.inputIcon}>🔒</Text>
-                  <TextInput
-                    style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", flex: 1 }]}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Contraseña"
-                    placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
-                    secureTextEntry={!showPass}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity onPress={() => setShowPass(!showPass)} style={{ padding: 4 }}>
-                    <Text style={{ fontSize: 16, opacity: 0.6 }}>{showPass ? "🙈" : "👁️"}</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={{ height: 20 }} />
-                <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <TouchableOpacity style={s.btnInner} onPress={handleEmployeeLogin} disabled={loading} activeOpacity={0.85}>
-                    {loading
-                      ? <ActivityIndicator color="#fff" />
-                      : <Text style={s.btnText}>Entrar</Text>
-                    }
-                  </TouchableOpacity>
-                </LinearGradient>
+
+                {codeSent ? (
+                  <>
+                    <View style={[s.inputWrap, {
+                      backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
+                      borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                      marginTop: 12,
+                    }]}>
+                      <Text style={s.inputIcon}>🔑</Text>
+                      <TextInput
+                        style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
+                        value={code}
+                        onChangeText={setCode}
+                        placeholder="000000"
+                        placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                        autoFocus
+                      />
+                    </View>
+                    <TouchableOpacity onPress={() => { setCodeSent(false); setCode(""); }} style={{ marginTop: 10, alignSelf: "center" }}>
+                      <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>
+                        ← Cambiar correo o reenviar código
+                      </Text>
+                    </TouchableOpacity>
+                    <View style={{ height: 16 }} />
+                    <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                      <TouchableOpacity style={s.btnInner} onPress={handleVerifyCode} disabled={loading} activeOpacity={0.85}>
+                        {loading
+                          ? <ActivityIndicator color="#fff" />
+                          : <Text style={s.btnText}>Verificar y entrar</Text>
+                        }
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </>
+                ) : (
+                  <>
+                    <View style={{ height: 20 }} />
+                    <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                      <TouchableOpacity style={s.btnInner} onPress={handleSendCode} disabled={loading} activeOpacity={0.85}>
+                        {loading
+                          ? <ActivityIndicator color="#fff" />
+                          : <Text style={s.btnText}>Enviar código al correo</Text>
+                        }
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </>
+                )}
               </>
             )}
           </Animated.View>
@@ -321,8 +358,8 @@ const s = StyleSheet.create({
   container:       { paddingBottom: 40 },
   orb1:            { position: "absolute", top: -100, left: -80, width: 300, height: 300, borderRadius: 150, backgroundColor: "rgba(59,130,246,0.12)" },
   orb2:            { position: "absolute", bottom: 60, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: "rgba(206,13,13,0.1)" },
-  header:          { alignItems: "center", paddingTop: 72, paddingBottom: 28 },
-  logoImage:       { width: 180, height: 180, marginBottom: 16, backgroundColor: "rgba(255,255,255,0.95)", borderRadius: 24, padding: 8 },
+  header:          { alignItems: "center", paddingTop: 44, paddingBottom: 20 },
+  logoImage:       { width: 110, height: 110, marginBottom: 12, backgroundColor: "rgba(255,255,255,0.95)", borderRadius: 20, padding: 6 },
   tagPill:         { marginTop: 14, paddingHorizontal: 18, paddingVertical: 7, borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
   tagText:         { color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: 0.3 },
   card:            { marginHorizontal: 16, borderRadius: 26, padding: 26, borderWidth: 1, elevation: 24, shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } },
