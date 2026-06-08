@@ -290,6 +290,14 @@ export default function HomeScreen({ navigation, route }: Props) {
           sub: "Órdenes de trabajo asignadas",
           onPress: () => navigation.navigate("Taller", { inspectorId, userName: inspector?.name ?? "" }),
         },
+        {
+          colors: ["#4C1D95", "#7C3AED"] as const,
+          shadow: "#7C3AED",
+          icon: "🤖",
+          title: "MASI-IA",
+          sub: "Asistente de seguridad industrial",
+          onPress: () => navigation.navigate("Chat", { userEmail: inspector?.email ?? "", userName: inspector?.name ?? "" }),
+        },
       ].map((btn) => (
         <TouchableOpacity
           key={btn.title}

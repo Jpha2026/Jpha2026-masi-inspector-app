@@ -131,6 +131,16 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
                 <Text style={s.actionLabel}>Mis{"\n"}Solicitudes</Text>
               </LinearGradient>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={s.actionCard}
+              onPress={() => navigation.navigate("Chat", { userEmail: user.email, userName: user.name })}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={["#065F46", "#10B981"]} style={s.actionGrad}>
+                <Text style={s.actionIcon}>🤖</Text>
+                <Text style={s.actionLabel}>MASI{"\n"}IA</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
           {/* Recent solicitudes */}

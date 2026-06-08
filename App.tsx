@@ -18,6 +18,7 @@ import MisSolicitudesScreen from "./screens/MisSolicitudesScreen";
 import NuevaSolicitudScreen from "./screens/NuevaSolicitudScreen";
 import TallerScreen from "./screens/TallerScreen";
 import RouteScreen from "./screens/RouteScreen";
+import ChatScreen from "./screens/ChatScreen";
 
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
@@ -142,6 +143,7 @@ export default function App() {
           <Stack.Screen name="NuevaSolicitud" component={NuevaSolicitudScreen} />
           <Stack.Screen name="Taller" component={TallerScreen} />
           <Stack.Screen name="Route" component={RouteScreen} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
