@@ -15,7 +15,7 @@
       "android": {
         "buildType": "apk",
         "env": {
-          "EXPO_PUBLIC_API_URL": "https://plataforma.masi.com.mx/api"
+          "EXPO_PUBLIC_API_URL": "https://divine-gentleness-production-0411.up.railway.app/api"
         }
       }
     }
