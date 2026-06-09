@@ -28,7 +28,7 @@
         "backgroundColor": "#122B60"
       },
       "package": "com.masi.inspector",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
