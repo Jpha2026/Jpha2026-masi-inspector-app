@@ -30,6 +30,7 @@ import NominaScreen from "./screens/NominaScreen";
 import PrestamosScreen from "./screens/PrestamosScreen";
 import NuevoLeadScreen from "./screens/NuevoLeadScreen";
 import POSScreen from "./screens/POSScreen";
+import ActivosScreen from "./screens/ActivosScreen";
 
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
@@ -180,6 +181,7 @@ export default function App() {
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="NuevoLead" component={NuevoLeadScreen} />
           <Stack.Screen name="POS" component={POSScreen} />
+          <Stack.Screen name="Activos" component={ActivosScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
