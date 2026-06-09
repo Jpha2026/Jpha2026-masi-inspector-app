@@ -174,33 +174,303 @@ const CHECKLIST_SCI: ChecklistDef = {
 };
 
 // Regadera de Emergencia / Lavaojo
-const CHECKLIST_REGADERA: ChecklistDef = {
-  safetyCategory: "Funcionamiento",
+// Regadera de emergencia fija — ANSI/ISEA Z358.1-2014 + NOM-026-STPS
+const CHECKLIST_REGADERA_FIJA: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1",
   categories: [
     {
       label: "Acceso y señalización",
-      items: ["Accesibilidad (radio 10 segundos)", "Señalización visible", "Delimitación"],
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos (≤16.8 m)",
+        "Sin obstrucciones en la ruta de acceso",
+        "Área bien iluminada",
+        "Piso antiderrapante en zona de activación",
+      ],
     },
     {
       label: "Funcionamiento",
       items: [
-        "Activación inmediata al tirar palanca",
-        "Flujo de agua adecuado (sin bloqueos)",
-        "Temperatura del agua: fría / tibia (NO caliente)",
-        "Duración de flujo continuo adecuada",
+        "Válvula de acción única (activación en ≤1 segundo)",
+        "Permanece activa sin sostener (stay-open valve)",
+        "Flujo de agua mínimo 76 L/min (20 gal/min)",
+        "Temperatura del agua tibia 15–37 °C",
+        "Flujo continuo garantizado por mínimo 15 minutos",
+        "Patrón de agua cubre cabeza y hombros completos",
       ],
     },
     {
       label: "Estado físico",
       items: [
-        "Sin herrumbre o corrosión en tubería",
-        "Cabezal de regadera sin obstrucciones",
-        "Cubeta de lavaojo limpia y funcional",
-        "Registro de inspección mensual al día",
+        "Sin corrosión ni herrumbre en tubería y cabezal",
+        "Sin fugas en válvula, tubería o cabezal",
+        "Cabezal limpio y sin obstrucciones",
+        "Cubierta del cabezal presente (protección de polvo)",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Prueba semanal registrada y vigente",
+        "Inspección anual documentada",
+        "Placa o identificación del equipo legible",
       ],
     },
   ],
 };
+
+// Regadera portátil por gravedad — ANSI/ISEA Z358.1-2014
+const CHECKLIST_REGADERA_PORTATIL_GRAVEDAD: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos",
+        "Sin obstrucciones en la ruta de acceso",
+        "Área bien iluminada",
+      ],
+    },
+    {
+      label: "Nivel y contenido",
+      items: [
+        "Nivel de agua suficiente para ≥15 minutos de flujo",
+        "Agua limpia, sin contaminación visible",
+        "Tapa del tanque hermética y sin daños",
+        "Sello de tamper intacto (sin uso no autorizado)",
+      ],
+    },
+    {
+      label: "Funcionamiento",
+      items: [
+        "Válvula de acción única (activación en ≤1 segundo)",
+        "Flujo de agua adecuado por gravedad",
+        "Temperatura del agua tibia 15–37 °C",
+        "Patrón de agua cubre cabeza y hombros",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Tanque sin golpes, grietas ni deformaciones",
+        "Sin fugas en válvula o conexiones",
+        "Cabezal limpio y funcional",
+        "Soporte/base estable y seguro",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Fecha de última recarga visible y vigente",
+        "Prueba semanal registrada",
+        "Placa o identificación del equipo legible",
+      ],
+    },
+  ],
+};
+
+// Regadera portátil a presión — ANSI/ISEA Z358.1-2014
+const CHECKLIST_REGADERA_PORTATIL_PRESION: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos",
+        "Sin obstrucciones en la ruta de acceso",
+        "Área bien iluminada",
+      ],
+    },
+    {
+      label: "Presión y contenido",
+      items: [
+        "Manómetro/indicador de presión en zona verde",
+        "Presión dentro del rango especificado por fabricante",
+        "Sello de seguridad intacto (sin uso no autorizado)",
+        "Fecha de última recarga visible y vigente",
+      ],
+    },
+    {
+      label: "Funcionamiento",
+      items: [
+        "Válvula de acción única (activación en ≤1 segundo)",
+        "Flujo de agua adecuado y constante",
+        "Temperatura del agua tibia 15–37 °C",
+        "Flujo continuo garantizado por mínimo 15 minutos",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Cilindro sin golpes, corrosión ni deformaciones",
+        "Sin fugas en válvula, manguera o cabezal",
+        "Cabezal limpio y sin obstrucciones",
+        "Soporte/base estable y seguro",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Prueba semanal registrada y vigente",
+        "Inspección anual documentada",
+        "Placa o identificación del equipo legible",
+      ],
+    },
+  ],
+};
+
+// Lavaojos fijo — ANSI/ISEA Z358.1-2014 + NOM-026-STPS
+const CHECKLIST_LAVAOJOS_FIJO: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos (≤16.8 m)",
+        "Sin obstrucciones en la ruta de acceso",
+        "Área bien iluminada",
+        "Altura de boquillas entre 83–114 cm del piso (ANSI)",
+      ],
+    },
+    {
+      label: "Funcionamiento",
+      items: [
+        "Ambas boquillas funcionan simultáneamente",
+        "Flujo mínimo 1.5 L/min por boquilla (ANSI Z358.1)",
+        "Flujo suave hacia arriba (no traumático para ojos)",
+        "Temperatura del agua tibia 15–37 °C",
+        "Activación en ≤1 segundo",
+        "Permanece activo sin sostener",
+        "Flujo continuo garantizado por mínimo 15 minutos",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Protectores/tapas de boquillas presentes y limpias",
+        "Boquillas sin obstrucción ni depósitos de cal",
+        "Sin corrosión en cuerpo y conexiones",
+        "Sin fugas visibles",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Prueba semanal registrada y vigente",
+        "Inspección anual documentada",
+        "Placa o identificación del equipo legible",
+      ],
+    },
+  ],
+};
+
+// Lavaojos portátil por gravedad — ANSI/ISEA Z358.1-2014
+const CHECKLIST_LAVAOJOS_PORTATIL_GRAVEDAD: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos",
+        "Área bien iluminada",
+      ],
+    },
+    {
+      label: "Solución y nivel",
+      items: [
+        "Nivel de solución suficiente para ≥15 minutos",
+        "Fecha de caducidad de la solución vigente",
+        "Solución isotónica oftálmica (pH 6.5–7.5)",
+        "Solución sin contaminación ni cambio de color",
+        "Sello de tamper intacto",
+        "Tapa hermética y sin daños",
+      ],
+    },
+    {
+      label: "Funcionamiento",
+      items: [
+        "Ambas boquillas funcionan simultáneamente",
+        "Flujo suave y adecuado por gravedad",
+        "Activación en ≤1 segundo",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Recipiente sin golpes, grietas ni deformaciones",
+        "Sin fugas en válvulas o conexiones",
+        "Boquillas limpias y sin obstrucción",
+        "Soporte/base estable",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Fecha de última recarga/reemplazo de solución",
+        "Prueba semanal registrada",
+        "Placa o identificación del equipo legible",
+      ],
+    },
+  ],
+};
+
+// Lavaojos portátil a presión — ANSI/ISEA Z358.1-2014
+const CHECKLIST_LAVAOJOS_PORTATIL_PRESION: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos",
+        "Área bien iluminada",
+      ],
+    },
+    {
+      label: "Presión y solución",
+      items: [
+        "Manómetro/indicador de presión en zona verde",
+        "Presión dentro del rango especificado por fabricante",
+        "Fecha de última recarga visible y vigente",
+        "Solución isotónica oftálmica (pH 6.5–7.5)",
+        "Sello de seguridad intacto",
+      ],
+    },
+    {
+      label: "Funcionamiento",
+      items: [
+        "Ambas boquillas funcionan simultáneamente",
+        "Flujo suave y constante a presión controlada",
+        "Activación en ≤1 segundo",
+        "Flujo continuo por mínimo 15 minutos",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Cilindro sin golpes, corrosión ni deformaciones",
+        "Sin fugas en válvula, manguera o boquillas",
+        "Boquillas limpias y sin obstrucción",
+        "Soporte/base estable",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Inspección anual documentada",
+        "Prueba semanal registrada",
+        "Placa o identificación del equipo legible",
+      ],
+    },
+  ],
+};
+
+// Mantener alias para compatibilidad con datos existentes
+const CHECKLIST_REGADERA = CHECKLIST_REGADERA_FIJA;
 
 const CHECKLIST_GENERAL: ChecklistDef = {
   safetyCategory: "Seguridad",
@@ -234,7 +504,16 @@ function getChecklist(equipmentType: string): ChecklistDef {
   if (t.includes("hidrante") || t.includes("manguera") || t.includes("caseta")) return CHECKLIST_HIDRANTE;
   if (t.includes("camilla")) return CHECKLIST_CAMILLA;
   if (t.includes("sci") || t.includes("rociador") || t.includes("supresion") || t.includes("co2") || t.includes("agente limpio")) return CHECKLIST_SCI;
-  if (t.includes("regadera") || t.includes("lavaojo") || t.includes("lavaojos")) return CHECKLIST_REGADERA;
+  if (t.includes("lavaojo") || t.includes("lavaojos")) {
+    if (t.includes("presion") || t.includes("presión")) return CHECKLIST_LAVAOJOS_PORTATIL_PRESION;
+    if (t.includes("gravedad") || t.includes("portatil") || t.includes("portátil")) return CHECKLIST_LAVAOJOS_PORTATIL_GRAVEDAD;
+    return CHECKLIST_LAVAOJOS_FIJO;
+  }
+  if (t.includes("regadera")) {
+    if (t.includes("presion") || t.includes("presión")) return CHECKLIST_REGADERA_PORTATIL_PRESION;
+    if (t.includes("gravedad") || t.includes("portatil") || t.includes("portátil")) return CHECKLIST_REGADERA_PORTATIL_GRAVEDAD;
+    return CHECKLIST_REGADERA_FIJA;
+  }
   return CHECKLIST_GENERAL;
 }
 
