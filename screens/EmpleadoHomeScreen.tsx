@@ -13,6 +13,7 @@ import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
 
 type VacBalance = { days_total: number; days_used: number; days_pending: number; days_available: number };
+type LoanSummary = { folio: string; monto_total: number; saldo: number };
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "EmpleadoHome">;
@@ -39,6 +40,7 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
   const { user } = route.params;
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [vacBalance, setVacBalance]   = useState<VacBalance | null>(null);
+  const [loans, setLoans]             = useState<LoanSummary[]>([]);
   const [loading, setLoading]         = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -50,12 +52,14 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
   const loadData = async () => {
     if (!user.employee_id) { setLoading(false); return; }
     try {
-      const [solRes, vacRes] = await Promise.allSettled([
+      const [solRes, vacRes, loanRes] = await Promise.allSettled([
         axios.get<Solicitud[]>(`${API_URL}/mobile/solicitudes?employee_id=${user.employee_id}`),
         axios.get<VacBalance>(`${API_URL}/mobile/vacation-balance?employee_id=${user.employee_id}`),
+        axios.get<LoanSummary[]>(`${API_URL}/mobile/loan-balance?employee_id=${user.employee_id}`),
       ]);
       if (solRes.status === "fulfilled") setSolicitudes(solRes.value.data);
       if (vacRes.status === "fulfilled") setVacBalance(vacRes.value.data);
+      if (loanRes.status === "fulfilled") setLoans(loanRes.value.data);
     } catch { /* silently fail */ } finally { setLoading(false); }
   };
 
@@ -128,6 +132,24 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
             </View>
           )}
 
+          {/* Loan banners */}
+          {loans.length > 0 && loans.map(loan => (
+            <View key={loan.folio} style={[s.vacBanner, { backgroundColor: T.isDark ? "#1D1040" : "#FAF5FF", borderColor: T.isDark ? "#3D1E80" : "#E9D5FF" }]}>
+              <Text style={[s.vacTitle, { color: T.isDark ? "#A78BFA" : "#6D28D9" }]}>💵 Préstamo {loan.folio}</Text>
+              <View style={s.vacRow}>
+                <View style={s.vacStat}>
+                  <Text style={[s.vacNum, { color: "#8B5CF6" }]}>${loan.monto_total.toLocaleString("es-MX")}</Text>
+                  <Text style={[s.vacLbl, { color: T.isDark ? "#4A6A90" : "#6B84A8" }]}>Total</Text>
+                </View>
+                <View style={[s.vacDivider, { backgroundColor: T.isDark ? "#3D1E80" : "#E9D5FF" }]} />
+                <View style={s.vacStat}>
+                  <Text style={[s.vacNum, { color: "#EF4444" }]}>${loan.saldo.toLocaleString("es-MX")}</Text>
+                  <Text style={[s.vacLbl, { color: T.isDark ? "#4A6A90" : "#6B84A8" }]}>Saldo</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+
           {/* Stats */}
           <View style={s.statsRow}>
             <View style={[s.statCard, { backgroundColor: T.isDark ? "#1E293B" : "#fff", borderColor: T.isDark ? "#2D3E56" : "#E2E8F5" }]}>
@@ -191,7 +213,16 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
           {/* Secondary actions */}
           <View style={s.secondaryRow}>
             <TouchableOpacity
-              style={[s.secondaryBtn, { backgroundColor: T.isDark ? "#1D1040" : "#F5F0FF", borderColor: T.isDark ? "#3D1E80" : "#C4B5FD" }]}
+              style={[s.secondaryBtn, { backgroundColor: T.isDark ? "#0A1E10" : "#F0FDF4", borderColor: T.isDark ? "#14532D" : "#BBF7D0" }]}
+              onPress={() => navigation.navigate("Asistencia", { user })}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 18 }}>📅</Text>
+              <Text style={[s.secondaryLabel, { color: T.isDark ? "#4ADE80" : "#15803D" }]}>Registrar Asistencia</Text>
+              <Text style={{ fontSize: 14, color: T.isDark ? "#22C55E" : "#16A34A", marginLeft: "auto" as any }}>→</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.secondaryBtn, { backgroundColor: T.isDark ? "#1D1040" : "#F5F0FF", borderColor: T.isDark ? "#3D1E80" : "#C4B5FD", marginTop: 8 }]}
               onPress={() => navigation.navigate("MisPedidos", { user })}
               activeOpacity={0.8}
             >

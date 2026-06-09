@@ -21,6 +21,7 @@ import RouteScreen from "./screens/RouteScreen";
 import ChatScreen from "./screens/ChatScreen";
 import PedidoScreen from "./screens/PedidoScreen";
 import MisPedidosScreen from "./screens/MisPedidosScreen";
+import AsistenciaScreen from "./screens/AsistenciaScreen";
 
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
@@ -145,6 +146,7 @@ export default function App() {
           <Stack.Screen name="NuevaSolicitud" component={NuevaSolicitudScreen} />
           <Stack.Screen name="Pedido" component={PedidoScreen} />
           <Stack.Screen name="MisPedidos" component={MisPedidosScreen} />
+          <Stack.Screen name="Asistencia" component={AsistenciaScreen} />
           <Stack.Screen name="Taller" component={TallerScreen} />
           <Stack.Screen name="Route" component={RouteScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
