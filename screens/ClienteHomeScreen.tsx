@@ -22,6 +22,14 @@ type Stats = {
   cotizaciones_pendientes: number;
 };
 
+type ClientInfo = {
+  name: string;
+  vendedor_name: string;
+  tel_atencion: string;
+  phone: string;
+  whatsapp: string;
+};
+
 export default function ClienteHomeScreen({ navigation, route }: Props) {
   const { user } = route.params;
   const [stats, setStats] = useState<Stats | null>(null);
@@ -29,6 +37,7 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
     id: string; overall_result: string; equipment_name: string;
     submitted_at: string; inspector_name: string; equipment_id: string;
   }[]>([]);
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,6 +51,7 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
         ]);
         const equipos = equipRes.data.data ?? [];
         const inspecciones = inspRes.data.data ?? [];
+        if (equipRes.data.clientInfo) setClientInfo(equipRes.data.clientInfo);
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const insMes = inspecciones.filter((i: { submitted_at: string }) => i.submitted_at >= monthStart);
@@ -132,13 +142,43 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionCard, { backgroundColor: "#B45309" }]}
-                onPress={() => Linking.openURL("https://wa.me/528180000000?text=Hola%20MASI%2C%20soy%20cliente%20y%20necesito%20apoyo")}
+                onPress={() => Linking.openURL("https://wa.me/528189973328?text=Hola%20MASI%2C%20soy%20cliente%20y%20necesito%20apoyo")}
               >
                 <Text style={styles.actionIcon}>💬</Text>
                 <Text style={styles.actionLabel}>Contacto</Text>
                 <Text style={styles.actionDesc}>WhatsApp soporte</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Ejecutivo asignado */}
+            {(clientInfo?.vendedor_name || clientInfo?.tel_atencion) && (
+              <View style={styles.section} >
+                <Text style={styles.sectionTitle}>Tu ejecutivo MASI</Text>
+                {clientInfo.vendedor_name ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 22 }}>👤</Text>
+                    <View>
+                      <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>{clientInfo.vendedor_name}</Text>
+                      <Text style={{ color: "#6B88A8", fontSize: 12 }}>Ejecutivo de cuenta</Text>
+                    </View>
+                  </View>
+                ) : null}
+                {clientInfo.tel_atencion ? (
+                  <View style={{ gap: 6 }}>
+                    {clientInfo.tel_atencion.split(",").map((t, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                        onPress={() => Linking.openURL(`tel:${t.trim()}`)}
+                      >
+                        <Text style={{ fontSize: 16 }}>📞</Text>
+                        <Text style={{ color: "#3B82F6", fontSize: 13, textDecorationLine: "underline" }}>{t.trim()}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+            )}
 
             {/* Últimas inspecciones */}
             {recentInspections.length > 0 && (
