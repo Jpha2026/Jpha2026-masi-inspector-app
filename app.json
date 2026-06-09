@@ -14,11 +14,12 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.masi.inspector",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSCameraUsageDescription": "Se necesita la cámara para escanear códigos QR y tomar fotos de evidencia.",
         "NSLocationWhenInUseUsageDescription": "Se usa la ubicación para registrar el lugar de la inspección.",
-        "NSPhotoLibraryUsageDescription": "Se accede a fotos para adjuntar evidencia en inspecciones."
+        "NSPhotoLibraryUsageDescription": "Se accede a fotos para adjuntar evidencia en inspecciones.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
