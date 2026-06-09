@@ -25,6 +25,7 @@ import AsistenciaScreen from "./screens/AsistenciaScreen";
 import ClienteHomeScreen from "./screens/ClienteHomeScreen";
 import ClienteEquiposScreen from "./screens/ClienteEquiposScreen";
 import ClienteInspeccionesScreen from "./screens/ClienteInspeccionesScreen";
+import NominaScreen from "./screens/NominaScreen";
 
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
@@ -166,6 +167,7 @@ export default function App() {
           />
           <Stack.Screen name="ClienteEquipos" component={ClienteEquiposScreen} />
           <Stack.Screen name="ClienteInspecciones" component={ClienteInspeccionesScreen} />
+          <Stack.Screen name="Nomina" component={NominaScreen} />
           <Stack.Screen name="Taller" component={TallerScreen} />
           <Stack.Screen name="Route" component={RouteScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />

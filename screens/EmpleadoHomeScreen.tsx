@@ -230,6 +230,15 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
               <Text style={[s.secondaryLabel, { color: T.isDark ? "#A78BFA" : "#5B21B6" }]}>Mis Pedidos de Insumos</Text>
               <Text style={{ fontSize: 14, color: T.isDark ? "#7C5ABD" : "#8B5CF6", marginLeft: "auto" as any }}>→</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.secondaryBtn, { backgroundColor: T.isDark ? "#1A0D30" : "#FAF5FF", borderColor: T.isDark ? "#4C1D95" : "#DDD6FE", marginTop: 8 }]}
+              onPress={() => navigation.navigate("Nomina", { user })}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 18 }}>💸</Text>
+              <Text style={[s.secondaryLabel, { color: T.isDark ? "#C4B5FD" : "#6D28D9" }]}>Mis Pagos (Nómina)</Text>
+              <Text style={{ fontSize: 14, color: T.isDark ? "#9D78F0" : "#7C3AED", marginLeft: "auto" as any }}>→</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Recent solicitudes */}
