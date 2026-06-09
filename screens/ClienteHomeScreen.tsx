@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert,
+  StyleSheet, ActivityIndicator, Alert, Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,6 +19,7 @@ type Stats = {
   total_equipos: number;
   inspecciones_mes: number;
   ultima_inspeccion: string | null;
+  cotizaciones_pendientes: number;
 };
 
 export default function ClienteHomeScreen({ navigation, route }: Props) {
@@ -34,9 +35,10 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
     if (!user.client_id) return;
     (async () => {
       try {
-        const [equipRes, inspRes] = await Promise.all([
+        const [equipRes, inspRes, cotRes] = await Promise.all([
           axios.get(`${API_URL}/mobile/cliente/equipos?client_id=${user.client_id}`),
           axios.get(`${API_URL}/mobile/cliente/inspecciones?client_id=${user.client_id}`),
+          axios.get(`${API_URL}/mobile/cliente/cotizaciones?client_id=${user.client_id}`),
         ]);
         const equipos = equipRes.data.data ?? [];
         const inspecciones = inspRes.data.data ?? [];
@@ -48,6 +50,7 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
           total_equipos: equipos.length,
           inspecciones_mes: insMes.length,
           ultima_inspeccion: last ? last.slice(0, 10) : null,
+          cotizaciones_pendientes: cotRes.data.stats?.pendientes ?? 0,
         });
         setRecentInspections(inspecciones.slice(0, 5));
       } catch {
@@ -93,23 +96,23 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
               </View>
               <View style={styles.kpiCard}>
                 <Text style={styles.kpiValue}>{stats?.inspecciones_mes ?? 0}</Text>
-                <Text style={styles.kpiLabel}>Insp. este mes</Text>
+                <Text style={styles.kpiLabel}>Insp. mes</Text>
               </View>
               <View style={styles.kpiCard}>
-                <Text style={styles.kpiValue}>{stats?.ultima_inspeccion ?? "—"}</Text>
-                <Text style={styles.kpiLabel}>Última inspección</Text>
+                <Text style={styles.kpiValue}>{stats?.cotizaciones_pendientes ?? 0}</Text>
+                <Text style={styles.kpiLabel}>Cotiz. pendientes</Text>
               </View>
             </View>
 
-            {/* Acciones */}
-            <View style={styles.actionsRow}>
+            {/* Acciones 2x2 */}
+            <View style={styles.actionsGrid}>
               <TouchableOpacity
                 style={[styles.actionCard, { backgroundColor: "#1E40AF" }]}
                 onPress={() => navigation.navigate("ClienteEquipos", { user })}
               >
                 <Text style={styles.actionIcon}>🧯</Text>
                 <Text style={styles.actionLabel}>Mis Equipos</Text>
-                <Text style={styles.actionDesc}>Ver todos los equipos registrados</Text>
+                <Text style={styles.actionDesc}>Equipos registrados</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionCard, { backgroundColor: "#065F46" }]}
@@ -118,6 +121,22 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
                 <Text style={styles.actionIcon}>🔍</Text>
                 <Text style={styles.actionLabel}>Inspecciones</Text>
                 <Text style={styles.actionDesc}>Historial de reportes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionCard, { backgroundColor: "#7C3AED" }]}
+                onPress={() => navigation.navigate("ClienteCotizaciones", { user })}
+              >
+                <Text style={styles.actionIcon}>📋</Text>
+                <Text style={styles.actionLabel}>Cotizaciones</Text>
+                <Text style={styles.actionDesc}>Ver y aprobar propuestas</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionCard, { backgroundColor: "#B45309" }]}
+                onPress={() => Linking.openURL("https://wa.me/528180000000?text=Hola%20MASI%2C%20soy%20cliente%20y%20necesito%20apoyo")}
+              >
+                <Text style={styles.actionIcon}>💬</Text>
+                <Text style={styles.actionLabel}>Contacto</Text>
+                <Text style={styles.actionDesc}>WhatsApp soporte</Text>
               </TouchableOpacity>
             </View>
 
@@ -173,7 +192,8 @@ const styles = StyleSheet.create({
   kpiValue:    { color: "#fff", fontSize: 20, fontWeight: "800" },
   kpiLabel:    { color: "#7A9CBF", fontSize: 11, marginTop: 3, textAlign: "center" },
   actionsRow:  { flexDirection: "row", gap: 12, marginBottom: 24 },
-  actionCard:  { flex: 1, borderRadius: 14, padding: 18, alignItems: "center" },
+  actionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 24 },
+  actionCard:  { width: "47%", borderRadius: 14, padding: 18, alignItems: "center" },
   actionIcon:  { fontSize: 28, marginBottom: 8 },
   actionLabel: { color: "#fff", fontWeight: "800", fontSize: 15 },
   actionDesc:  { color: "rgba(255,255,255,0.6)", fontSize: 11, marginTop: 3, textAlign: "center" },

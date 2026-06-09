@@ -205,6 +205,7 @@ export type RootStackParamList = {
   ClienteHome: { user: AppUser };
   ClienteEquipos: { user: AppUser; sucursal_id?: string };
   ClienteInspecciones: { user: AppUser; equipment_id?: string; equipment_name?: string };
+  ClienteCotizaciones: { user: AppUser };
   Nomina: { user: AppUser };
   Prestamos: { user: AppUser };
 };

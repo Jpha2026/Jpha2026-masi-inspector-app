@@ -25,6 +25,7 @@ import AsistenciaScreen from "./screens/AsistenciaScreen";
 import ClienteHomeScreen from "./screens/ClienteHomeScreen";
 import ClienteEquiposScreen from "./screens/ClienteEquiposScreen";
 import ClienteInspeccionesScreen from "./screens/ClienteInspeccionesScreen";
+import ClienteCotizacionesScreen from "./screens/ClienteCotizacionesScreen";
 import NominaScreen from "./screens/NominaScreen";
 import PrestamosScreen from "./screens/PrestamosScreen";
 
@@ -93,6 +94,7 @@ export default function App() {
           if (user.role === "cliente") {
             setSavedUser(user);
             setInitialRoute("ClienteHome");
+            registerPushToken(user.id);
             return;
           }
           if (user.inspector_id) {
@@ -168,6 +170,7 @@ export default function App() {
           />
           <Stack.Screen name="ClienteEquipos" component={ClienteEquiposScreen} />
           <Stack.Screen name="ClienteInspecciones" component={ClienteInspeccionesScreen} />
+          <Stack.Screen name="ClienteCotizaciones" component={ClienteCotizacionesScreen} />
           <Stack.Screen name="Nomina" component={NominaScreen} />
           <Stack.Screen name="Prestamos" component={PrestamosScreen} />
           <Stack.Screen name="Taller" component={TallerScreen} />
