@@ -142,7 +142,7 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionCard, { backgroundColor: "#B45309" }]}
-                onPress={() => Linking.openURL("https://wa.me/528189973328?text=Hola%20MASI%2C%20soy%20cliente%20y%20necesito%20apoyo")}
+                onPress={() => Linking.openURL("https://wa.me/528181909000?text=Hola%20MASI%2C%20soy%20cliente%20y%20necesito%20apoyo")}
               >
                 <Text style={styles.actionIcon}>💬</Text>
                 <Text style={styles.actionLabel}>Contacto</Text>
