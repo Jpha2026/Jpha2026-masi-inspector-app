@@ -188,6 +188,19 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           </View>
 
+          {/* Secondary actions */}
+          <View style={s.secondaryRow}>
+            <TouchableOpacity
+              style={[s.secondaryBtn, { backgroundColor: T.isDark ? "#1D1040" : "#F5F0FF", borderColor: T.isDark ? "#3D1E80" : "#C4B5FD" }]}
+              onPress={() => navigation.navigate("MisPedidos", { user })}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 18 }}>📦</Text>
+              <Text style={[s.secondaryLabel, { color: T.isDark ? "#A78BFA" : "#5B21B6" }]}>Mis Pedidos de Insumos</Text>
+              <Text style={{ fontSize: 14, color: T.isDark ? "#7C5ABD" : "#8B5CF6", marginLeft: "auto" as any }}>→</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Recent solicitudes */}
           <Text style={[s.sectionTitle, { color: T.isDark ? "#60A5FA" : "#122B60" }]}>
             Solicitudes recientes
@@ -280,4 +293,7 @@ const s = StyleSheet.create({
   statusText:   { fontSize: 11, fontWeight: "700" },
   rhNota:       { marginTop: 10, borderRadius: 8, padding: 8 },
   rhNotaText:   { fontSize: 12, lineHeight: 16 },
+  secondaryRow: { marginBottom: 20 },
+  secondaryBtn: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 14, borderWidth: 1 },
+  secondaryLabel: { fontSize: 14, fontWeight: "700", flex: 1 },
 });

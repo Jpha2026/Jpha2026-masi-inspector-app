@@ -196,6 +196,7 @@ export type RootStackParamList = {
   MisSolicitudes: { user: AppUser };
   NuevaSolicitud: { user: AppUser };
   Pedido: { user: AppUser };
+  MisPedidos: { user: AppUser };
   Taller: { inspectorId: string; userName: string };
   Route: { inspectorId: string; ruta: Ruta };
   Chat: { userEmail: string; userName: string };
