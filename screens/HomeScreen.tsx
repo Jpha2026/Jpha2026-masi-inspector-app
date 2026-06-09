@@ -291,6 +291,16 @@ export default function HomeScreen({ navigation, route }: Props) {
           onPress: () => navigation.navigate("Taller", { inspectorId, userName: inspector?.name ?? "" }),
         },
         {
+          colors: ["#7A0D0D", "#CE0D0D"] as const,
+          shadow: "#CE0D0D",
+          icon: "🏪",
+          title: "Punto de Venta",
+          sub: "Ventas mostrador desde campo",
+          onPress: () => navigation.navigate("POS", {
+            user: { id: inspectorId, name: inspector?.name ?? "", email: inspector?.email ?? "", role: "inspector" as const, inspector_id: inspectorId, employee_id: null, client_id: null, permissions: [] },
+          }),
+        },
+        {
           colors: ["#4C1D95", "#7C3AED"] as const,
           shadow: "#7C3AED",
           icon: "🤖",

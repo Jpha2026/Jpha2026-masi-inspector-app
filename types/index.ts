@@ -208,4 +208,6 @@ export type RootStackParamList = {
   ClienteCotizaciones: { user: AppUser };
   Nomina: { user: AppUser };
   Prestamos: { user: AppUser };
+  NuevoLead: { user: AppUser };
+  POS: { user: AppUser };
 };
