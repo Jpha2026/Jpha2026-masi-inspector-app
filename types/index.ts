@@ -92,6 +92,7 @@ export type AppUser = {
   role: "admin" | "supervisor" | "inspector" | "empleado" | "cliente";
   inspector_id: string | null;
   employee_id: string | null;
+  client_id: string | null;
   permissions: string[];
 };
 
@@ -201,4 +202,7 @@ export type RootStackParamList = {
   Taller: { inspectorId: string; userName: string };
   Route: { inspectorId: string; ruta: Ruta };
   Chat: { userEmail: string; userName: string };
+  ClienteHome: { user: AppUser };
+  ClienteEquipos: { user: AppUser; sucursal_id?: string };
+  ClienteInspecciones: { user: AppUser; equipment_id?: string; equipment_name?: string };
 };

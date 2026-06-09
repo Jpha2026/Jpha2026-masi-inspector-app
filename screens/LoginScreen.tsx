@@ -58,10 +58,14 @@ export default function LoginScreen({ navigation }: Props) {
         password: inspPass,
       });
       const data = res.data;
-      await AsyncStorage.setItem("inspector_id", data.inspector_id);
-      await AsyncStorage.setItem("inspector_name", data.name);
       await AsyncStorage.setItem("masi_user", JSON.stringify(data));
-      navigation.replace("Home", { inspectorId: data.inspector_id });
+      if (data.role === "cliente") {
+        navigation.replace("ClienteHome", { user: data });
+      } else {
+        await AsyncStorage.setItem("inspector_id", data.inspector_id ?? data.id);
+        await AsyncStorage.setItem("inspector_name", data.name);
+        navigation.replace("Home", { inspectorId: data.inspector_id ?? data.id });
+      }
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) && err.response?.data?.error
         ? err.response.data.error
@@ -95,7 +99,9 @@ export default function LoginScreen({ navigation }: Props) {
       const res = await axios.post<AppUser>(`${API_URL}/mobile/verify-code`, { email: email.trim(), code: code.trim() });
       const user = res.data;
       await AsyncStorage.setItem("masi_user", JSON.stringify(user));
-      if (user.inspector_id) {
+      if (user.role === "cliente") {
+        navigation.replace("ClienteHome", { user });
+      } else if (user.inspector_id) {
         await AsyncStorage.setItem("inspector_id", user.inspector_id);
         await AsyncStorage.setItem("inspector_name", user.name);
         navigation.replace("Home", { inspectorId: user.inspector_id });

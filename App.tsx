@@ -22,6 +22,9 @@ import ChatScreen from "./screens/ChatScreen";
 import PedidoScreen from "./screens/PedidoScreen";
 import MisPedidosScreen from "./screens/MisPedidosScreen";
 import AsistenciaScreen from "./screens/AsistenciaScreen";
+import ClienteHomeScreen from "./screens/ClienteHomeScreen";
+import ClienteEquiposScreen from "./screens/ClienteEquiposScreen";
+import ClienteInspeccionesScreen from "./screens/ClienteInspeccionesScreen";
 
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
@@ -55,7 +58,7 @@ async function registerPushToken(userId: string) {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type InitRoute = "Login" | "Home" | "EmpleadoHome";
+type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome";
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<InitRoute | null>(null);
@@ -83,6 +86,11 @@ export default function App() {
             setSavedUser(user);
             setInitialRoute("EmpleadoHome");
             registerPushToken(user.id);
+            return;
+          }
+          if (user.role === "cliente") {
+            setSavedUser(user);
+            setInitialRoute("ClienteHome");
             return;
           }
           if (user.inspector_id) {
@@ -147,6 +155,17 @@ export default function App() {
           <Stack.Screen name="Pedido" component={PedidoScreen} />
           <Stack.Screen name="MisPedidos" component={MisPedidosScreen} />
           <Stack.Screen name="Asistencia" component={AsistenciaScreen} />
+          <Stack.Screen
+            name="ClienteHome"
+            component={ClienteHomeScreen}
+            initialParams={
+              initialRoute === "ClienteHome" && savedUser
+                ? { user: savedUser }
+                : undefined
+            }
+          />
+          <Stack.Screen name="ClienteEquipos" component={ClienteEquiposScreen} />
+          <Stack.Screen name="ClienteInspecciones" component={ClienteInspeccionesScreen} />
           <Stack.Screen name="Taller" component={TallerScreen} />
           <Stack.Screen name="Route" component={RouteScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
