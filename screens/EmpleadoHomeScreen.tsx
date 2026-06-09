@@ -12,6 +12,8 @@ import { RootStackParamList, Solicitud } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
 
+type VacBalance = { days_total: number; days_used: number; days_pending: number; days_available: number };
+
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "EmpleadoHome">;
   route: RouteProp<RootStackParamList, "EmpleadoHome">;
@@ -36,22 +38,25 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
   const T = useTheme();
   const { user } = route.params;
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  const [vacBalance, setVacBalance]   = useState<VacBalance | null>(null);
   const [loading, setLoading]         = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadSolicitudes();
+    loadData();
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
   }, []);
 
-  const loadSolicitudes = async () => {
+  const loadData = async () => {
     if (!user.employee_id) { setLoading(false); return; }
     try {
-      const res = await axios.get<Solicitud[]>(`${API_URL}/mobile/solicitudes?employee_id=${user.employee_id}`);
-      setSolicitudes(res.data);
-    } catch {
-      // silently fail — show empty state
-    } finally { setLoading(false); }
+      const [solRes, vacRes] = await Promise.allSettled([
+        axios.get<Solicitud[]>(`${API_URL}/mobile/solicitudes?employee_id=${user.employee_id}`),
+        axios.get<VacBalance>(`${API_URL}/mobile/vacation-balance?employee_id=${user.employee_id}`),
+      ]);
+      if (solRes.status === "fulfilled") setSolicitudes(solRes.value.data);
+      if (vacRes.status === "fulfilled") setVacBalance(vacRes.value.data);
+    } catch { /* silently fail */ } finally { setLoading(false); }
   };
 
   const handleLogout = async () => {
@@ -93,6 +98,36 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
 
         <Animated.View style={{ opacity: fadeAnim, padding: 16 }}>
 
+          {/* Vacation balance banner */}
+          {vacBalance && (
+            <View style={[s.vacBanner, { backgroundColor: T.isDark ? "#0E2040" : "#EFF6FF", borderColor: T.isDark ? "#1E4080" : "#BFDBFE" }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.vacTitle, { color: T.isDark ? "#93C5FD" : "#1D4ED8" }]}>🏖️ Días de Vacaciones {new Date().getFullYear()}</Text>
+                <View style={s.vacRow}>
+                  <View style={s.vacStat}>
+                    <Text style={[s.vacNum, { color: "#10B981" }]}>{vacBalance.days_available}</Text>
+                    <Text style={[s.vacLbl, { color: T.isDark ? "#4A6A90" : "#6B84A8" }]}>Disponibles</Text>
+                  </View>
+                  <View style={[s.vacDivider, { backgroundColor: T.isDark ? "#1E4080" : "#BFDBFE" }]} />
+                  <View style={s.vacStat}>
+                    <Text style={[s.vacNum, { color: "#EF4444" }]}>{vacBalance.days_used}</Text>
+                    <Text style={[s.vacLbl, { color: T.isDark ? "#4A6A90" : "#6B84A8" }]}>Usados</Text>
+                  </View>
+                  <View style={[s.vacDivider, { backgroundColor: T.isDark ? "#1E4080" : "#BFDBFE" }]} />
+                  <View style={s.vacStat}>
+                    <Text style={[s.vacNum, { color: "#D97706" }]}>{vacBalance.days_pending}</Text>
+                    <Text style={[s.vacLbl, { color: T.isDark ? "#4A6A90" : "#6B84A8" }]}>Pendientes</Text>
+                  </View>
+                  <View style={[s.vacDivider, { backgroundColor: T.isDark ? "#1E4080" : "#BFDBFE" }]} />
+                  <View style={s.vacStat}>
+                    <Text style={[s.vacNum, { color: T.isDark ? "#93C5FD" : "#1D4ED8" }]}>{vacBalance.days_total}</Text>
+                    <Text style={[s.vacLbl, { color: T.isDark ? "#4A6A90" : "#6B84A8" }]}>Total</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
           {/* Stats */}
           <View style={s.statsRow}>
             <View style={[s.statCard, { backgroundColor: T.isDark ? "#1E293B" : "#fff", borderColor: T.isDark ? "#2D3E56" : "#E2E8F5" }]}>
@@ -129,6 +164,16 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
               <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.actionGrad}>
                 <Text style={s.actionIcon}>📋</Text>
                 <Text style={s.actionLabel}>Mis{"\n"}Solicitudes</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.actionCard}
+              onPress={() => navigation.navigate("Pedido", { user })}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={["#5B21B6", "#8B5CF6"]} style={s.actionGrad}>
+                <Text style={s.actionIcon}>📦</Text>
+                <Text style={s.actionLabel}>Pedir{"\n"}Insumos</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity
@@ -203,6 +248,13 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
+  vacBanner:    { borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1 },
+  vacTitle:     { fontSize: 13, fontWeight: "700", marginBottom: 10 },
+  vacRow:       { flexDirection: "row", alignItems: "center" },
+  vacStat:      { flex: 1, alignItems: "center" },
+  vacNum:       { fontSize: 22, fontWeight: "900" },
+  vacLbl:       { fontSize: 10, fontWeight: "600", marginTop: 2 },
+  vacDivider:   { width: 1, height: 36, marginHorizontal: 4 },
   header:       { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20 },
   headerRow:    { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   headerGreet:  { color: "#fff", fontSize: 22, fontWeight: "900" },

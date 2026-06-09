@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, Platform,
+  ScrollView, ActivityIndicator, Alert, Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -21,6 +22,7 @@ const TIPOS = [
   { key: "vacaciones",       label: "Vacaciones",           icon: "🏖️", desc: "Días de vacaciones correspondientes" },
   { key: "permiso_con_goce", label: "Permiso con goce",     icon: "✅", desc: "Permiso con sueldo completo" },
   { key: "permiso_sin_goce", label: "Permiso sin goce",     icon: "⏸️", desc: "Permiso sin cobrar el día" },
+  { key: "llegada_tarde",    label: "Llegada tarde",        icon: "⏰", desc: "Notificación de llegada tarde con evidencia fotográfica" },
   { key: "prestamo",         label: "Préstamo",             icon: "💵", desc: "Solicitud de adelanto o préstamo" },
   { key: "incapacidad",      label: "Incapacidad",          icon: "🏥", desc: "Incapacidad médica IMSS" },
   { key: "otro",             label: "Otro",                 icon: "📋", desc: "Otro tipo de solicitud" },
@@ -36,11 +38,23 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
   const [dias, setDias]             = useState("");
   const [monto, setMonto]           = useState("");
   const [motivo, setMotivo]         = useState("");
+  const [fotoUri, setFotoUri]       = useState<string | null>(null);
   const [loading, setLoading]       = useState(false);
 
   const selectedTipo = TIPOS.find(t => t.key === tipo)!;
-  const showMonto = tipo === "prestamo";
-  const showDias  = tipo !== "prestamo" && tipo !== "incapacidad";
+  const showMonto    = tipo === "prestamo";
+  const showDias     = tipo !== "prestamo" && tipo !== "incapacidad" && tipo !== "llegada_tarde";
+  const showFoto     = tipo === "llegada_tarde" || tipo === "incapacidad";
+
+  const pickPhoto = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permiso requerido", "Necesitamos acceso a la cámara para tomar la foto de evidencia.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.6, base64: false });
+    if (!result.canceled && result.assets[0]) setFotoUri(result.assets[0].uri);
+  };
 
   const handleSubmit = async () => {
     if (!fechaInicio) {
@@ -51,8 +65,28 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
       Alert.alert("Motivo requerido", "Explica brevemente el motivo de tu solicitud.");
       return;
     }
+    if (tipo === "llegada_tarde" && !fotoUri) {
+      Alert.alert("Foto requerida", "Para notificar una llegada tarde es necesario adjuntar una foto de evidencia.");
+      return;
+    }
     setLoading(true);
     try {
+      let foto_url: string | null = null;
+
+      // Upload photo if present
+      if (fotoUri) {
+        const formData = new FormData();
+        const filename = fotoUri.split("/").pop() ?? "foto.jpg";
+        formData.append("file", { uri: fotoUri, type: "image/jpeg", name: filename } as unknown as Blob);
+        formData.append("employee_id", user.employee_id ?? "");
+        try {
+          const uploadRes = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          foto_url = uploadRes.data.url;
+        } catch { /* upload failure is non-fatal; send without photo */ }
+      }
+
       const res = await axios.post(`${API_URL}/mobile/solicitudes`, {
         employee_id: user.employee_id,
         tipo,
@@ -61,6 +95,7 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
         dias: dias ? parseInt(dias) : null,
         monto: monto ? parseFloat(monto) : null,
         motivo: motivo.trim(),
+        foto_url,
       });
       const { folio } = res.data as { folio: string };
       Alert.alert(
@@ -189,6 +224,33 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
           textAlignVertical="top"
         />
 
+        {showFoto && (
+          <>
+            <Text style={[s.fieldLabel, { color: lblColor, marginTop: 14 }]}>
+              Foto de evidencia {tipo === "llegada_tarde" ? "*" : "(opcional)"}
+            </Text>
+            <TouchableOpacity
+              style={[s.photoBtn, { backgroundColor: inputBg, borderColor: fotoUri ? "#10B981" : inputBdr }]}
+              onPress={pickPhoto}
+              activeOpacity={0.75}
+            >
+              {fotoUri ? (
+                <Image source={{ uri: fotoUri }} style={s.photoPreview} resizeMode="cover" />
+              ) : (
+                <View style={{ alignItems: "center", gap: 6 }}>
+                  <Text style={{ fontSize: 28 }}>📷</Text>
+                  <Text style={{ color: lblColor, fontSize: 13 }}>Tomar foto de evidencia</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            {fotoUri && (
+              <TouchableOpacity onPress={() => setFotoUri(null)} style={{ marginTop: 6, alignSelf: "flex-end" }}>
+                <Text style={{ color: "#EF4444", fontSize: 12 }}>✕ Quitar foto</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+
         <View style={{ height: 16 }} />
 
         <LinearGradient colors={["#CE0D0D", "#EF4444"]} style={s.submitBtn}>
@@ -220,6 +282,8 @@ const s = StyleSheet.create({
   fieldLabel:  { fontSize: 12, fontWeight: "600", marginBottom: 6, marginTop: 14 },
   input:       { borderRadius: 12, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15 },
   textArea:    { height: 100, paddingTop: 12 },
+  photoBtn:    { borderRadius: 14, borderWidth: 1.5, borderStyle: "dashed", overflow: "hidden", alignItems: "center", justifyContent: "center", minHeight: 130 },
+  photoPreview:{ width: "100%", height: 200, borderRadius: 12 },
   submitBtn:   { borderRadius: 16, overflow: "hidden", elevation: 5, shadowColor: "#CE0D0D", shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
   submitInner: { paddingVertical: 18, alignItems: "center" },
   submitText:  { color: "#fff", fontSize: 16, fontWeight: "800" },

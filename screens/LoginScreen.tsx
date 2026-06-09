@@ -8,7 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList, Inspector, AppUser } from "../types";
+import { RootStackParamList, AppUser } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
 
@@ -22,11 +22,10 @@ export default function LoginScreen({ navigation }: Props) {
   const T = useTheme();
   const [tab, setTab]                = useState<Tab>("inspector");
 
-  // Inspector tab
-  const [query, setQuery]            = useState("");
-  const [inspectors, setInspectors]  = useState<Inspector[]>([]);
-  const [selected, setSelected]      = useState<Inspector | null>(null);
-  const [fetching, setFetching]      = useState(false);
+  // Inspector tab — password login
+  const [inspEmail, setInspEmail]    = useState("");
+  const [inspPass, setInspPass]      = useState("");
+  const [showPass, setShowPass]      = useState(false);
 
   // Employee tab — OTP flow
   const [email, setEmail]            = useState("");
@@ -40,7 +39,6 @@ export default function LoginScreen({ navigation }: Props) {
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
-    fetchInspectors();
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 800, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
@@ -48,35 +46,27 @@ export default function LoginScreen({ navigation }: Props) {
     ]).start();
   }, []);
 
-  const fetchInspectors = async () => {
-    setFetching(true);
-    try {
-      const res = await axios.get<Inspector[]>(`${API_URL}/inspectors`);
-      setInspectors(Array.isArray(res.data) ? res.data : []);
-    } catch {
-      Alert.alert("Sin conexión", "No se pudo obtener la lista de inspectores.", [
-        { text: "Reintentar", onPress: fetchInspectors }, { text: "Cancelar" },
-      ]);
-    } finally { setFetching(false); }
-  };
-
-  const safeInspectors = Array.isArray(inspectors) ? inspectors : [];
-  const filtered = query.trim()
-    ? safeInspectors.filter((i) =>
-        i.email.toLowerCase().includes(query.toLowerCase()) ||
-        i.name.toLowerCase().includes(query.toLowerCase())
-      )
-    : safeInspectors;
-
   const handleInspectorLogin = async () => {
-    if (!selected) return;
+    if (!inspEmail.trim() || !inspPass.trim()) {
+      Alert.alert("Campos requeridos", "Ingresa tu correo y contraseña.");
+      return;
+    }
     setLoading(true);
     try {
-      await AsyncStorage.setItem("inspector_id", selected.id);
-      await AsyncStorage.setItem("inspector_name", selected.name);
-      navigation.replace("Home", { inspectorId: selected.id });
-    } catch {
-      Alert.alert("Error", "No se pudo guardar la sesión.");
+      const res = await axios.post(`${API_URL}/mobile/inspector-login`, {
+        email: inspEmail.trim().toLowerCase(),
+        password: inspPass,
+      });
+      const data = res.data;
+      await AsyncStorage.setItem("inspector_id", data.inspector_id);
+      await AsyncStorage.setItem("inspector_name", data.name);
+      await AsyncStorage.setItem("masi_user", JSON.stringify(data));
+      navigation.replace("Home", { inspectorId: data.inspector_id });
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) && err.response?.data?.error
+        ? err.response.data.error
+        : "Correo o contraseña incorrectos.";
+      Alert.alert("Acceso denegado", msg);
     } finally { setLoading(false); }
   };
 
@@ -177,94 +167,58 @@ export default function LoginScreen({ navigation }: Props) {
             {tab === "inspector" ? (
               <>
                 <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
-                  Seleccionar inspector
+                  Acceso Inspector
                 </Text>
-                <View style={[s.searchWrap, {
+
+                {/* Email */}
+                <View style={[s.inputWrap, {
                   backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
                   borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                  marginBottom: 12,
                 }]}>
-                  <Text style={s.searchIcon}>🔍</Text>
+                  <Text style={s.inputIcon}>✉️</Text>
                   <TextInput
                     style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
-                    value={query}
-                    onChangeText={(t) => { setQuery(t); setSelected(null); }}
-                    placeholder="Buscar por nombre o correo…"
+                    value={inspEmail}
+                    onChangeText={setInspEmail}
+                    placeholder="Correo electrónico"
                     placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
                     autoCapitalize="none"
                     autoCorrect={false}
+                    keyboardType="email-address"
                   />
                 </View>
-                <View style={s.list}>
-                  {fetching ? (
-                    <View style={s.centered}>
-                      <ActivityIndicator size="large" color="#3B82F6" />
-                      <Text style={[s.fetchingText, { color: T.isDark ? "#3D4E68" : "#9BACC8" }]}>Conectando…</Text>
-                    </View>
-                  ) : filtered.length === 0 ? (
-                    <View style={s.centered}>
-                      <Text style={{ fontSize: 34, marginBottom: 8 }}>👤</Text>
-                      <Text style={[s.emptyText, { color: T.isDark ? "#3D4E68" : "#9BACC8" }]}>
-                        {query ? "Sin resultados" : "Sin inspectores"}
-                      </Text>
-                    </View>
-                  ) : (
-                    filtered.map((insp, idx) => {
-                      const isSel = selected?.id === insp.id;
-                      return (
-                        <TouchableOpacity
-                          key={insp.id}
-                          style={[s.row, {
-                            marginTop: idx === 0 ? 0 : 8,
-                            borderColor: isSel ? "#3B82F6" : (T.isDark ? "rgba(255,255,255,0.07)" : "#E2E8F5"),
-                          }]}
-                          onPress={() => setSelected(insp)}
-                          activeOpacity={0.75}
-                        >
-                          {isSel ? (
-                            <LinearGradient colors={["#1E3A5F", "#3B82F6"]} style={s.avatar}>
-                              <Text style={s.avatarText}>{insp.name.charAt(0).toUpperCase()}</Text>
-                            </LinearGradient>
-                          ) : (
-                            <View style={[s.avatar, { backgroundColor: T.isDark ? "#1A2740" : "#E8EDF8" }]}>
-                              <Text style={[s.avatarText, { color: T.isDark ? "#60A5FA" : "#122B60" }]}>
-                                {insp.name.charAt(0).toUpperCase()}
-                              </Text>
-                            </View>
-                          )}
-                          <View style={{ flex: 1 }}>
-                            <Text style={[s.rowName, {
-                              color: isSel ? (T.isDark ? "#93C5FD" : "#1D4ED8") : (T.isDark ? "#E6EDF3" : "#1A2740"),
-                            }]}>
-                              {insp.name}
-                            </Text>
-                            <Text style={[s.rowEmail, { color: T.isDark ? "#3D4E68" : "#9BACC8" }]}>{insp.email}</Text>
-                          </View>
-                          {isSel && (
-                            <LinearGradient colors={["#2563EB", "#3B82F6"]} style={s.checkCircle}>
-                              <Text style={s.checkText}>✓</Text>
-                            </LinearGradient>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })
-                  )}
+
+                {/* Password */}
+                <View style={[s.inputWrap, {
+                  backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
+                  borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                  marginBottom: 24,
+                }]}>
+                  <Text style={s.inputIcon}>🔒</Text>
+                  <TextInput
+                    style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                    value={inspPass}
+                    onChangeText={setInspPass}
+                    placeholder="Contraseña"
+                    placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                    secureTextEntry={!showPass}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity onPress={() => setShowPass(v => !v)}>
+                    <Text style={{ fontSize: 16, opacity: 0.6 }}>{showPass ? "🙈" : "👁"}</Text>
+                  </TouchableOpacity>
                 </View>
-                {selected ? (
-                  <LinearGradient colors={["#CE0D0D", "#EF4444"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                    <TouchableOpacity style={s.btnInner} onPress={handleInspectorLogin} disabled={loading} activeOpacity={0.85}>
-                      {loading
-                        ? <ActivityIndicator color="#fff" />
-                        : <Text style={s.btnText}>Ingresar como {selected.name.split(" ")[0]}</Text>
-                      }
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
-                  <View style={[s.btn, { backgroundColor: T.isDark ? "#1E293B" : "#C5D0E8" }]}>
-                    <View style={s.btnInner}>
-                      <Text style={[s.btnText, { opacity: 0.5 }]}>Selecciona un inspector</Text>
-                    </View>
-                  </View>
-                )}
+
+                <LinearGradient colors={["#CE0D0D", "#EF4444"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <TouchableOpacity style={s.btnInner} onPress={handleInspectorLogin} disabled={loading} activeOpacity={0.85}>
+                    {loading
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text style={s.btnText}>Ingresar</Text>
+                    }
+                  </TouchableOpacity>
+                </LinearGradient>
               </>
             ) : (
               <>

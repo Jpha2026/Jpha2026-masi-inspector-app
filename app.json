@@ -55,7 +55,14 @@
           "locationAlwaysAndWhenInUsePermission": "Se usa la ubicación para registrar el lugar de la inspección."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Se accede a fotos para adjuntar evidencia en solicitudes.",
+          "cameraPermission": "Se necesita la cámara para tomar fotos de evidencia."
+        }
+      ]
     ],
     "extra": {
       "eas": {

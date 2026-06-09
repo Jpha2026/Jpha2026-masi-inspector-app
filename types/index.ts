@@ -99,17 +99,38 @@ export type Solicitud = {
   id: string;
   folio: string;
   employee_id: string;
-  tipo: "vacaciones" | "permiso_con_goce" | "permiso_sin_goce" | "prestamo" | "incapacidad" | "otro";
+  tipo: "vacaciones" | "permiso_con_goce" | "permiso_sin_goce" | "prestamo" | "incapacidad" | "llegada_tarde" | "otro";
   fecha_inicio: string;
   fecha_fin: string | null;
   dias: number | null;
   monto: number | null;
   motivo: string;
+  foto_url: string | null;
   status: "pendiente" | "aprobado" | "rechazado";
   aprobado_por: string | null;
   fecha_resolucion: string | null;
   notas_rh: string | null;
   created_at: string;
+};
+
+export type PedidoItem = {
+  id?: string;
+  category: string;
+  item_name: string;
+  quantity: number;
+  unit: string;
+  notes?: string;
+};
+
+export type Pedido = {
+  id: string;
+  folio: string;
+  employee_id: string;
+  department: string;
+  notes: string;
+  status: "pendiente" | "aprobado" | "rechazado" | "entregado";
+  created_at: string;
+  items: PedidoItem[];
 };
 
 export type KardexEntry = {
@@ -174,6 +195,7 @@ export type RootStackParamList = {
   EmpleadoHome: { user: AppUser };
   MisSolicitudes: { user: AppUser };
   NuevaSolicitud: { user: AppUser };
+  Pedido: { user: AppUser };
   Taller: { inspectorId: string; userName: string };
   Route: { inspectorId: string; ruta: Ruta };
   Chat: { userEmail: string; userName: string };
