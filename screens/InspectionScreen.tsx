@@ -469,6 +469,179 @@ const CHECKLIST_LAVAOJOS_PORTATIL_PRESION: ChecklistDef = {
   ],
 };
 
+// Unidad combinada fija — ANSI/ISEA Z358.1-2014 Sección 7
+const CHECKLIST_COMBINADA_FIJA: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1 Sección 7",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible (NOM-026 / ANSI Z358.1)",
+        "Acceso libre en ≤10 segundos (≤16.8 m)",
+        "Sin obstrucciones en la ruta de acceso",
+        "Área bien iluminada",
+        "Piso antiderrapante en zona de activación",
+      ],
+    },
+    {
+      label: "Regadera de emergencia",
+      items: [
+        "Válvula de acción única, activación en ≤1 segundo",
+        "Permanece activa sin sostener (stay-open valve)",
+        "Flujo de agua mínimo 76 L/min",
+        "Patrón de agua cubre cabeza y hombros completos",
+        "Cabezal limpio y sin obstrucciones",
+      ],
+    },
+    {
+      label: "Lavaojos",
+      items: [
+        "Ambas boquillas funcionan simultáneamente",
+        "Flujo mínimo 1.5 L/min por boquilla",
+        "Flujo suave hacia arriba (no traumático)",
+        "Boquillas limpias y con protector",
+        "Altura boquillas 83–114 cm del piso",
+      ],
+    },
+    {
+      label: "Agua y temperatura",
+      items: [
+        "Temperatura tibia 15–37 °C (ambas funciones)",
+        "Flujo continuo garantizado ≥15 minutos",
+        "Activación simultánea posible regadera + lavaojos",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Sin corrosión ni herrumbre en tubería y cuerpo",
+        "Sin fugas en válvula, tubería o conexiones",
+        "Cubierta/protector de boquillas presente",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Prueba semanal registrada y vigente",
+        "Inspección anual documentada",
+        "Placa de identificación legible",
+      ],
+    },
+  ],
+};
+
+// Unidad combinada portátil gravedad
+const CHECKLIST_COMBINADA_PORTATIL_GRAVEDAD: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1 Sección 7",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible",
+        "Acceso libre en ≤10 segundos",
+        "Área bien iluminada",
+      ],
+    },
+    {
+      label: "Nivel y contenido",
+      items: [
+        "Nivel de agua suficiente para ≥15 minutos",
+        "Agua limpia sin contaminación visible",
+        "Tapa hermética y sin daños",
+        "Sello de tamper intacto",
+      ],
+    },
+    {
+      label: "Regadera de emergencia",
+      items: [
+        "Válvula de acción única, activación en ≤1 segundo",
+        "Flujo de agua adecuado por gravedad",
+        "Cabezal limpio y funcional",
+      ],
+    },
+    {
+      label: "Lavaojos",
+      items: [
+        "Ambas boquillas funcionan simultáneamente",
+        "Flujo suave y adecuado",
+        "Boquillas limpias y con protector",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Tanque sin golpes, grietas ni deformaciones",
+        "Sin fugas en válvulas o conexiones",
+        "Soporte/base estable y seguro",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Fecha de última recarga visible y vigente",
+        "Prueba semanal registrada",
+        "Placa de identificación legible",
+      ],
+    },
+  ],
+};
+
+// Unidad combinada portátil presión
+const CHECKLIST_COMBINADA_PORTATIL_PRESION: ChecklistDef = {
+  safetyCategory: "Funcionamiento ANSI/ISEA Z358.1 Sección 7",
+  categories: [
+    {
+      label: "Acceso y señalización",
+      items: [
+        "Señalización verde visible",
+        "Acceso libre en ≤10 segundos",
+        "Área bien iluminada",
+      ],
+    },
+    {
+      label: "Presión y contenido",
+      items: [
+        "Manómetro/indicador de presión en zona verde",
+        "Presión dentro del rango especificado por fabricante",
+        "Fecha de última recarga visible y vigente",
+        "Sello de seguridad intacto",
+      ],
+    },
+    {
+      label: "Regadera de emergencia",
+      items: [
+        "Válvula de acción única, activación en ≤1 segundo",
+        "Flujo de agua adecuado y constante",
+        "Cabezal limpio y sin obstrucciones",
+      ],
+    },
+    {
+      label: "Lavaojos",
+      items: [
+        "Ambas boquillas funcionan simultáneamente",
+        "Flujo suave a presión controlada",
+        "Boquillas limpias y con protector",
+      ],
+    },
+    {
+      label: "Estado físico",
+      items: [
+        "Cilindro sin golpes, corrosión ni deformaciones",
+        "Sin fugas en válvula, manguera o boquillas",
+        "Soporte/base estable",
+      ],
+    },
+    {
+      label: "Documentación",
+      items: [
+        "Inspección anual documentada",
+        "Prueba semanal registrada",
+        "Placa de identificación legible",
+      ],
+    },
+  ],
+};
+
 // Mantener alias para compatibilidad con datos existentes
 const CHECKLIST_REGADERA = CHECKLIST_REGADERA_FIJA;
 
@@ -504,6 +677,11 @@ function getChecklist(equipmentType: string): ChecklistDef {
   if (t.includes("hidrante") || t.includes("manguera") || t.includes("caseta")) return CHECKLIST_HIDRANTE;
   if (t.includes("camilla")) return CHECKLIST_CAMILLA;
   if (t.includes("sci") || t.includes("rociador") || t.includes("supresion") || t.includes("co2") || t.includes("agente limpio")) return CHECKLIST_SCI;
+  if (t.includes("regadera") && (t.includes("lavaojo") || t.includes("lavaojos"))) {
+    if (t.includes("presion") || t.includes("presión")) return CHECKLIST_COMBINADA_PORTATIL_PRESION;
+    if (t.includes("gravedad") || t.includes("portatil") || t.includes("portátil")) return CHECKLIST_COMBINADA_PORTATIL_GRAVEDAD;
+    return CHECKLIST_COMBINADA_FIJA;
+  }
   if (t.includes("lavaojo") || t.includes("lavaojos")) {
     if (t.includes("presion") || t.includes("presión")) return CHECKLIST_LAVAOJOS_PORTATIL_PRESION;
     if (t.includes("gravedad") || t.includes("portatil") || t.includes("portátil")) return CHECKLIST_LAVAOJOS_PORTATIL_GRAVEDAD;
