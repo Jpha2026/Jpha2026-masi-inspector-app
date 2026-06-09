@@ -9,11 +9,22 @@
         "env": {
           "EXPO_PUBLIC_API_URL": "http://192.168.1.202:3000/api"
         }
+      },
+      "ios": {
+        "simulator": true,
+        "env": {
+          "EXPO_PUBLIC_API_URL": "http://192.168.1.202:3000/api"
+        }
       }
     },
     "production": {
       "android": {
         "buildType": "apk",
+        "env": {
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+        }
+      },
+      "ios": {
         "env": {
           "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
         }
