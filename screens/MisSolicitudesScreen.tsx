@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, RefreshControl,
+  ActivityIndicator, RefreshControl, Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
@@ -20,6 +20,7 @@ const TIPO_MAP: Record<string, { label: string; color: string; icon: string }> =
   vacaciones:          { label: "Vacaciones",           color: "#2563EB", icon: "🏖️" },
   permiso_con_goce:    { label: "Permiso con goce",     color: "#059669", icon: "✅" },
   permiso_sin_goce:    { label: "Permiso sin goce",     color: "#D97706", icon: "⏸️" },
+  llegada_tarde:       { label: "Llegada tarde",        color: "#F97316", icon: "⏰" },
   prestamo:            { label: "Préstamo",             color: "#7C3AED", icon: "💵" },
   incapacidad:         { label: "Incapacidad",          color: "#DC2626", icon: "🏥" },
   otro:                { label: "Otro",                 color: "#6B7280", icon: "📋" },
@@ -135,6 +136,14 @@ export default function MisSolicitudesScreen({ navigation, route }: Props) {
                       </View>
                     ) : null}
                   </View>
+
+                  {sol.foto_url ? (
+                    <Image
+                      source={{ uri: sol.foto_url }}
+                      style={{ width: "100%", height: 160, borderRadius: 10, marginTop: 10 }}
+                      resizeMode="cover"
+                    />
+                  ) : null}
 
                   {sol.notas_rh ? (
                     <View style={[s.rhBox, { backgroundColor: T.isDark ? "#0D1B3E" : "#EFF6FF" }]}>
