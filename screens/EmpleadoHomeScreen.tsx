@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, Alert, Animated,
+  ActivityIndicator, Alert, Animated, Linking,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -94,6 +94,9 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
               <Text style={s.headerGreet}>Hola, {user.name.split(" ")[0]} 👋</Text>
               <Text style={s.headerRole}>Portal de Empleado · MASI</Text>
             </View>
+            <TouchableOpacity onPress={() => Linking.openURL("https://app.masi.com.mx/manual?rol=empleado")} style={[s.logoutBtn, { marginRight: 6 }]}>
+              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "700" }}>📖</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleLogout} style={s.logoutBtn}>
               <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "700" }}>Salir ⏏</Text>
             </TouchableOpacity>
