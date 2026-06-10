@@ -17,6 +17,14 @@
         }
       }
     },
+    "internal": {
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+        }
+      }
+    },
     "production": {
       "android": {
         "buildType": "app-bundle",
