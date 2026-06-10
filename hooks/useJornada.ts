@@ -1,9 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
+import axios from "axios";
 import { queueRequest } from "./useOfflineSync";
 import { API_URL } from "../constants/api";
 import type { GeoPoint } from "./useLocation";
+
+// Send immediately; fall back to offline queue only if network fails
+async function sendNow(url: string, method: "POST" | "PATCH", data: unknown, type: string) {
+  try {
+    if (method === "POST") await axios.post(url, data, { timeout: 8000 });
+    else await axios.patch(url, data, { timeout: 8000 });
+  } catch {
+    await queueRequest(url, method, data, type);
+  }
+}
 
 const JORNADA_KEY = "masi_active_jornada";
 
@@ -61,7 +72,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
     const sendLocation = async () => {
       const loc = locationRef.current;
       if (!loc) return;
-      await queueRequest(`${API_URL}/mobile/jornada/location`, "POST", {
+      await sendNow(`${API_URL}/mobile/jornada/location`, "POST", {
         jornada_id: active.id,
         inspector_id: active.inspector_id,
         lat: loc.lat,
@@ -114,7 +125,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
     await AsyncStorage.setItem(JORNADA_KEY, JSON.stringify(jornada));
     setActive(jornada);
 
-    await queueRequest(`${API_URL}/mobile/jornada`, "POST", {
+    await sendNow(`${API_URL}/mobile/jornada`, "POST", {
       id: jornada.id,
       inspector_id: inspectorId,
       start_time: jornada.start_time,
@@ -127,7 +138,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
     if (!active) return;
     const loc = locationRef.current;
     const end_time = new Date().toISOString();
-    await queueRequest(`${API_URL}/mobile/jornada`, "PATCH", {
+    await sendNow(`${API_URL}/mobile/jornada`, "PATCH", {
       id: active.id,
       end_time,
       end_lat: loc?.lat ?? null,
