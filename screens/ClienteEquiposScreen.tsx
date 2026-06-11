@@ -52,6 +52,8 @@ export default function ClienteEquiposScreen({ navigation, route }: Props) {
       const res = await axios.get(url);
       setEquipos(res.data.data ?? []);
       if (sucursales.length === 0) setSucursales(res.data.sucursales ?? []);
+    } catch {
+      setEquipos([]);
     } finally {
       setLoading(false);
     }

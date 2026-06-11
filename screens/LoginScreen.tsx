@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, AppUser } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, "Login"> };
 
@@ -20,6 +21,7 @@ type Tab = "inspector" | "vendedor" | "empleado" | "cliente";
 
 export default function LoginScreen({ navigation }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const [tab, setTab]                = useState<Tab>("inspector");
 
   // Inspector tab — password login
@@ -133,7 +135,7 @@ export default function LoginScreen({ navigation }: Props) {
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
 
           {/* Logo */}
-          <Animated.View style={[s.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
+          <Animated.View style={[s.header, { paddingTop: insets.top + 16, opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
             <Image
               source={require("../assets/icon.png")}
               style={s.logoImage}
@@ -408,7 +410,7 @@ const s = StyleSheet.create({
   container:       { paddingBottom: 40 },
   orb1:            { position: "absolute", top: -100, left: -80, width: 300, height: 300, borderRadius: 150, backgroundColor: "rgba(59,130,246,0.12)" },
   orb2:            { position: "absolute", bottom: 60, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: "rgba(206,13,13,0.1)" },
-  header:          { alignItems: "center", paddingTop: 28, paddingBottom: 12 },
+  header:          { alignItems: "center", paddingBottom: 12 },
   logoImage:       { width: 72, height: 72, marginBottom: 8, backgroundColor: "rgba(255,255,255,0.95)", borderRadius: 14, padding: 4 },
   tagPill:         { marginTop: 14, paddingHorizontal: 18, paddingVertical: 7, borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
   tagText:         { color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: 0.3 },
