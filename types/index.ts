@@ -38,6 +38,7 @@ export type Levantamiento = {
   status: "pendiente" | "en_proceso" | "completada";
   comments: string;
   created_at: string;
+  equipment_type?: string;
   inspector_name?: string;
   cliente_name?: string;
   sucursal_name?: string;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  ActivityIndicator, Alert, Modal, Image,
+  ActivityIndicator, Alert, Image,
   KeyboardAvoidingView, Platform, FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,10 +21,29 @@ type Props = {
 
 type Step = "list" | "header" | "puntos" | "camera";
 
-const TIPOS = ["PQS ABC", "CO2", "Agua", "Clase K", "Halón", "Espuma", "Polvo BC"];
-const CAPS = ["1 KG", "2.5 KG", "4 KG", "4.5 KG", "6 KG", "9 KG", "12 KG", "20 KG", "2.5 LB", "5 LB", "10 LB", "2.5 GAL", "2.5 KG CO2", "5 KG CO2", "10 KG CO2"];
+const TIPOS_EXTINTOR = ["PQS ABC", "CO2", "Agua", "Clase K", "Halón", "Espuma", "Polvo BC"];
+const CAPS_EXTINTOR = ["1 KG", "2.5 KG", "4 KG", "4.5 KG", "6 KG", "9 KG", "12 KG", "20 KG", "2.5 LB", "5 LB", "10 LB", "2.5 GAL", "2.5 KG CO2", "5 KG CO2", "10 KG CO2"];
+const TIPO_LINEA = ["Vertical", "Horizontal"];
 const OK_OPTS = ["OK", "MAL", "N/A"];
 const SI_NO = ["SI", "NO", "N/A"];
+
+const EQ_TYPES = [
+  { value: "extintor", label: "Extintor" },
+  { value: "linea_vida", label: "Línea de Vida" },
+  { value: "hidrante", label: "Hidrante / Manguera" },
+  { value: "sistema_incendio", label: "Sist. Incendio" },
+  { value: "era", label: "ERA" },
+  { value: "otro", label: "Otro" },
+];
+
+const EQ_LABELS: Record<string, string> = {
+  extintor: "Extintor",
+  linea_vida: "Equipo",
+  hidrante: "Punto",
+  sistema_incendio: "Punto",
+  era: "ERA",
+  otro: "Equipo",
+};
 
 function OKPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const T = useTheme();
@@ -102,13 +121,20 @@ function Selector({ options, value, onChange }: { options: string[]; value: stri
 }
 
 const emptyPunto = () => ({
+  // Common
   area: "", serial_number: "", brand: "", manufacture_date: "",
-  extinguisher_type: "PQS ABC", capacity: "4.5 KG", review_date: "",
-  accessible: "SI", signaled: "SI", cabinet: "OK", charge_status: "OK",
-  hose_nozzle: "OK", safety_pin: "OK", cylinder: "OK", collar_status: "OK",
-  wheel_status: "N/A", charge_date: "", expiry_date: "", inspection_card: "OK",
-  hydrostatic_test: "N/A", height: "SI", nom002: "SI", co2_weight: "N/A",
+  capacity: "", expiry_date: "", accessible: "SI", signaled: "SI",
   observations: "", photoUri: "",
+  // Extintor-specific
+  extinguisher_type: "PQS ABC", review_date: "",
+  cabinet: "OK", charge_status: "OK", hose_nozzle: "OK", safety_pin: "OK",
+  cylinder: "OK", collar_status: "OK", wheel_status: "N/A",
+  charge_date: "", inspection_card: "OK", hydrostatic_test: "N/A",
+  height: "SI", nom002: "SI", co2_weight: "N/A",
+  // Generic extra fields
+  tipo_linea: "", cable_state: "OK", connectors: "OK",
+  anchor_upper: "OK", anchor_lower: "OK", shock_absorber: "OK",
+  estado_general: "OK",
 });
 
 export default function LevantamientoScreen({ navigation, route }: Props) {
@@ -128,6 +154,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
   const [sucursalId, setSucursalId] = useState("");
   const [dept, setDept] = useState("");
   const [comments, setComments] = useState("");
+  const [equipmentType, setEquipmentType] = useState("extintor");
 
   // Active levantamiento
   const [activeLev, setActiveLev] = useState<Levantamiento | null>(null);
@@ -167,12 +194,13 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     if (!clientId) { Alert.alert("Falta", "Selecciona una compañía"); return; }
     setLoading(true);
     try {
-      const res = await axios.post<{ id: string; folio: string }>(`${API_URL}/levantamientos`, {
+      const res = await axios.post<{ id: string; folio: string; equipment_type: string }>(`${API_URL}/levantamientos`, {
         inspector_id: inspectorId,
         client_id: clientId,
         sucursal_id: sucursalId || null,
         department: dept,
         comments,
+        equipment_type: equipmentType,
         scheduled_at: new Date().toISOString().slice(0, 10),
       });
       const newLev: Levantamiento = {
@@ -180,9 +208,11 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
         inspector_id: inspectorId, client_id: clientId, sucursal_id: sucursalId,
         department: dept, scheduled_at: null, completed_at: null,
         status: "en_proceso", comments, created_at: new Date().toISOString(),
+        equipment_type: res.data.equipment_type,
       };
       setActiveLev(newLev);
       setPuntos([]);
+      setCurrentPunto(emptyPunto());
       setStep("puntos");
     } catch {
       Alert.alert("Error", "No se pudo crear el levantamiento.");
@@ -229,8 +259,9 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       setPuntos(prev => [...prev, currentPunto]);
+      const eqLabel = EQ_LABELS[activeLev.equipment_type || "extintor"] || "Equipo";
+      Alert.alert("✓ Guardado", `${eqLabel} #${puntos.length + 1} registrado.`);
       setCurrentPunto(emptyPunto());
-      Alert.alert("✓ Guardado", `Extintor #${puntos.length + 1} registrado.`);
     } catch {
       Alert.alert("Error", "No se pudo guardar el punto.");
     } finally {
@@ -291,6 +322,10 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
 
   // ─── ADD PUNTO FORM ───────────────────────────────────────
   if (step === "puntos" && activeLev) {
+    const eqType = activeLev.equipment_type || "extintor";
+    const eqLabel = EQ_LABELS[eqType] || "Equipo";
+    const isExtintor = eqType === "extintor";
+
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={["top"]}>
         <LinearGradient colors={["#0D1B3E", "#122B60"]}
@@ -301,7 +336,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
           <View style={{ flex: 1 }}>
             <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>{activeLev.folio}</Text>
             <Text style={{ color: "rgba(255,255,255,0.55)", fontSize: 11, marginTop: 1 }}>
-              {puntos.length} extintore{puntos.length !== 1 ? "s" : ""} agregado{puntos.length !== 1 ? "s" : ""}
+              {puntos.length} {eqLabel.toLowerCase()}{puntos.length !== 1 ? "s" : ""} agregado{puntos.length !== 1 ? "s" : ""}
             </Text>
           </View>
           <TouchableOpacity onPress={completeLevantamiento}
@@ -313,9 +348,10 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
             <Text style={{ fontSize: 14, fontWeight: "800", color: T.text, marginBottom: 16 }}>
-              Agregar Extintor #{puntos.length + 1}
+              Agregar {eqLabel} #{puntos.length + 1}
             </Text>
 
+            {/* Common fields */}
             <FieldRow label="Área / Ubicación">
               <Inp value={currentPunto.area} onChange={v => setCurrentPunto(p => ({ ...p, area: v }))} placeholder="ej. Lobby, Piso 2" />
             </FieldRow>
@@ -328,33 +364,70 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
             <FieldRow label="Fecha de Fabricación">
               <DatePickerField label="" value={currentPunto.manufacture_date} onChange={v => setCurrentPunto(p => ({ ...p, manufacture_date: v }))} textColor={T.text} borderColor={T.border} bgColor={T.bg} placeholder="Seleccionar" />
             </FieldRow>
-            <FieldRow label="Tipo">
-              <Selector options={TIPOS} value={currentPunto.extinguisher_type} onChange={v => setCurrentPunto(p => ({ ...p, extinguisher_type: v }))} />
-            </FieldRow>
-            <FieldRow label="Capacidad">
-              <Selector options={CAPS} value={currentPunto.capacity} onChange={v => setCurrentPunto(p => ({ ...p, capacity: v }))} />
+            <FieldRow label="Capacidad / Longitud">
+              {isExtintor
+                ? <Selector options={CAPS_EXTINTOR} value={currentPunto.capacity} onChange={v => setCurrentPunto(p => ({ ...p, capacity: v }))} />
+                : <Inp value={currentPunto.capacity} onChange={v => setCurrentPunto(p => ({ ...p, capacity: v }))} placeholder="ej. 20 M, 30 M, 1 TON" />
+              }
             </FieldRow>
             <FieldRow label="Fecha de Vencimiento">
               <DatePickerField label="" value={currentPunto.expiry_date} onChange={v => setCurrentPunto(p => ({ ...p, expiry_date: v }))} textColor={T.text} borderColor={T.border} bgColor={T.bg} placeholder="Seleccionar" />
             </FieldRow>
-            <FieldRow label="Fecha de Carga">
-              <DatePickerField label="" value={currentPunto.charge_date} onChange={v => setCurrentPunto(p => ({ ...p, charge_date: v }))} textColor={T.text} borderColor={T.border} bgColor={T.bg} placeholder="Seleccionar" />
-            </FieldRow>
+
+            {/* Extintor-only fields */}
+            {isExtintor && <>
+              <FieldRow label="Tipo de Extintor">
+                <Selector options={TIPOS_EXTINTOR} value={currentPunto.extinguisher_type} onChange={v => setCurrentPunto(p => ({ ...p, extinguisher_type: v }))} />
+              </FieldRow>
+              <FieldRow label="Fecha de Carga">
+                <DatePickerField label="" value={currentPunto.charge_date} onChange={v => setCurrentPunto(p => ({ ...p, charge_date: v }))} textColor={T.text} borderColor={T.border} bgColor={T.bg} placeholder="Seleccionar" />
+              </FieldRow>
+            </>}
 
             <View style={{ height: 1, backgroundColor: T.border, marginVertical: 16 }} />
             <Text style={{ fontSize: 12, fontWeight: "700", color: T.textSub, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 14 }}>Revisión Visual</Text>
 
             <FieldRow label="Accesible"><SIPicker value={currentPunto.accessible} onChange={v => setCurrentPunto(p => ({ ...p, accessible: v }))} /></FieldRow>
             <FieldRow label="Señalizado"><SIPicker value={currentPunto.signaled} onChange={v => setCurrentPunto(p => ({ ...p, signaled: v }))} /></FieldRow>
-            <FieldRow label="Gabinete"><OKPicker value={currentPunto.cabinet} onChange={v => setCurrentPunto(p => ({ ...p, cabinet: v }))} /></FieldRow>
-            <FieldRow label="Estado de Carga"><OKPicker value={currentPunto.charge_status} onChange={v => setCurrentPunto(p => ({ ...p, charge_status: v }))} /></FieldRow>
-            <FieldRow label="Manguera / Boquilla"><OKPicker value={currentPunto.hose_nozzle} onChange={v => setCurrentPunto(p => ({ ...p, hose_nozzle: v }))} /></FieldRow>
-            <FieldRow label="Seguro (Cola de Rata)"><OKPicker value={currentPunto.safety_pin} onChange={v => setCurrentPunto(p => ({ ...p, safety_pin: v }))} /></FieldRow>
-            <FieldRow label="Cilindro"><OKPicker value={currentPunto.cylinder} onChange={v => setCurrentPunto(p => ({ ...p, cylinder: v }))} /></FieldRow>
-            <FieldRow label="Estado Collarín"><OKPicker value={currentPunto.collar_status} onChange={v => setCurrentPunto(p => ({ ...p, collar_status: v }))} /></FieldRow>
-            <FieldRow label="Tarjeta de Inspección"><OKPicker value={currentPunto.inspection_card} onChange={v => setCurrentPunto(p => ({ ...p, inspection_card: v }))} /></FieldRow>
-            <FieldRow label="Altura NOM"><SIPicker value={currentPunto.height} onChange={v => setCurrentPunto(p => ({ ...p, height: v }))} /></FieldRow>
-            <FieldRow label="NOM-002"><SIPicker value={currentPunto.nom002} onChange={v => setCurrentPunto(p => ({ ...p, nom002: v }))} /></FieldRow>
+
+            {/* Extintor inspection fields */}
+            {isExtintor && <>
+              <FieldRow label="Gabinete"><OKPicker value={currentPunto.cabinet} onChange={v => setCurrentPunto(p => ({ ...p, cabinet: v }))} /></FieldRow>
+              <FieldRow label="Estado de Carga"><OKPicker value={currentPunto.charge_status} onChange={v => setCurrentPunto(p => ({ ...p, charge_status: v }))} /></FieldRow>
+              <FieldRow label="Manguera / Boquilla"><OKPicker value={currentPunto.hose_nozzle} onChange={v => setCurrentPunto(p => ({ ...p, hose_nozzle: v }))} /></FieldRow>
+              <FieldRow label="Seguro (Cola de Rata)"><OKPicker value={currentPunto.safety_pin} onChange={v => setCurrentPunto(p => ({ ...p, safety_pin: v }))} /></FieldRow>
+              <FieldRow label="Cilindro"><OKPicker value={currentPunto.cylinder} onChange={v => setCurrentPunto(p => ({ ...p, cylinder: v }))} /></FieldRow>
+              <FieldRow label="Estado Collarín"><OKPicker value={currentPunto.collar_status} onChange={v => setCurrentPunto(p => ({ ...p, collar_status: v }))} /></FieldRow>
+              <FieldRow label="Tarjeta de Inspección"><OKPicker value={currentPunto.inspection_card} onChange={v => setCurrentPunto(p => ({ ...p, inspection_card: v }))} /></FieldRow>
+              <FieldRow label="Altura NOM"><SIPicker value={currentPunto.height} onChange={v => setCurrentPunto(p => ({ ...p, height: v }))} /></FieldRow>
+              <FieldRow label="NOM-002"><SIPicker value={currentPunto.nom002} onChange={v => setCurrentPunto(p => ({ ...p, nom002: v }))} /></FieldRow>
+            </>}
+
+            {/* Línea de Vida fields */}
+            {eqType === "linea_vida" && <>
+              <FieldRow label="Tipo de Línea">
+                <Selector options={TIPO_LINEA} value={currentPunto.tipo_linea} onChange={v => setCurrentPunto(p => ({ ...p, tipo_linea: v }))} />
+              </FieldRow>
+              <FieldRow label="Estado del Cable"><OKPicker value={currentPunto.cable_state} onChange={v => setCurrentPunto(p => ({ ...p, cable_state: v }))} /></FieldRow>
+              <FieldRow label="Conectores"><OKPicker value={currentPunto.connectors} onChange={v => setCurrentPunto(p => ({ ...p, connectors: v }))} /></FieldRow>
+              <FieldRow label="Ancla Superior"><OKPicker value={currentPunto.anchor_upper} onChange={v => setCurrentPunto(p => ({ ...p, anchor_upper: v }))} /></FieldRow>
+              <FieldRow label="Ancla Inferior"><OKPicker value={currentPunto.anchor_lower} onChange={v => setCurrentPunto(p => ({ ...p, anchor_lower: v }))} /></FieldRow>
+              <FieldRow label="Absorbedor de Choque"><OKPicker value={currentPunto.shock_absorber} onChange={v => setCurrentPunto(p => ({ ...p, shock_absorber: v }))} /></FieldRow>
+            </>}
+
+            {/* Hidrante / ERA / sistema_incendio / otro fields */}
+            {(eqType === "hidrante" || eqType === "sistema_incendio" || eqType === "era" || eqType === "otro") && <>
+              <FieldRow label="Estado General"><OKPicker value={currentPunto.estado_general} onChange={v => setCurrentPunto(p => ({ ...p, estado_general: v }))} /></FieldRow>
+            </>}
+
+            {(eqType === "hidrante" || eqType === "era") && <>
+              <FieldRow label={eqType === "hidrante" ? "Estado Manguera" : "Estado Cilindro"}>
+                <OKPicker value={currentPunto.cable_state} onChange={v => setCurrentPunto(p => ({ ...p, cable_state: v }))} />
+              </FieldRow>
+              <FieldRow label={eqType === "hidrante" ? "Acoplamiento" : "Arnés"}>
+                <OKPicker value={currentPunto.connectors} onChange={v => setCurrentPunto(p => ({ ...p, connectors: v }))} />
+              </FieldRow>
+            </>}
 
             <FieldRow label="Observaciones">
               <Inp value={currentPunto.observations} onChange={v => setCurrentPunto(p => ({ ...p, observations: v }))} multiline placeholder="Notas adicionales..." />
@@ -374,7 +447,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
                 <TouchableOpacity onPress={openCamera}
                   style={{ padding: 18, borderRadius: 10, borderWidth: 2, borderColor: T.border, borderStyle: "dashed", alignItems: "center", gap: 6 }}>
                   <Text style={{ fontSize: 28 }}>📷</Text>
-                  <Text style={{ color: T.textSub, fontSize: 13 }}>Tomar foto del extintor</Text>
+                  <Text style={{ color: T.textSub, fontSize: 13 }}>Tomar foto del equipo</Text>
                 </TouchableOpacity>
               )}
             </FieldRow>
@@ -386,7 +459,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
             >
               {savingPunto
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>💾 Guardar Extintor</Text>
+                : <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>💾 Guardar {eqLabel}</Text>
               }
             </TouchableOpacity>
           </ScrollView>
@@ -409,6 +482,21 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+
+            <FieldRow label="Tipo de Equipo *">
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
+                {EQ_TYPES.map(t => (
+                  <TouchableOpacity key={t.value} onPress={() => setEquipmentType(t.value)}
+                    style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                      backgroundColor: equipmentType === t.value ? "#1D4ED8" : T.card,
+                      borderWidth: 1, borderColor: equipmentType === t.value ? "#1D4ED8" : T.border }}>
+                    <Text style={{ color: equipmentType === t.value ? "#fff" : T.textSub, fontSize: 12, fontWeight: "600" }}>{t.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </FieldRow>
+
             <FieldRow label="Compañía *">
               <ScrollView horizontal showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
@@ -453,7 +541,9 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>Crear y agregar extintores →</Text>
+                : <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>
+                    Crear y agregar {EQ_LABELS[equipmentType] || "equipos"}s →
+                  </Text>
               }
             </TouchableOpacity>
           </ScrollView>
@@ -501,6 +591,8 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
           renderItem={({ item }) => {
             const statusColor = item.status === "completada" ? "#22C55E" : item.status === "en_proceso" ? "#3B82F6" : "#F59E0B";
             const statusLabel = item.status === "completada" ? "Completada" : item.status === "en_proceso" ? "En proceso" : "Pendiente";
+            const eqTypeLabel = EQ_TYPES.find(t => t.value === item.equipment_type)?.label || "Extintor";
+            const eqLabelItem = EQ_LABELS[item.equipment_type || "extintor"] || "Equipo";
             return (
               <TouchableOpacity
                 onPress={() => item.status !== "completada" && resumeLevantamiento(item)}
@@ -517,6 +609,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
                     <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{statusLabel}</Text>
                   </View>
                 </View>
+                <Text style={{ fontSize: 11, color: "#1D4ED8", fontWeight: "700", marginTop: 4 }}>{eqTypeLabel}</Text>
                 {item.cliente_name && (
                   <Text style={{ fontSize: 13, color: T.textSub, marginTop: 5 }}>🏢 {item.cliente_name}</Text>
                 )}
@@ -532,7 +625,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
                   </Text>
                   {typeof item.puntos_count === "number" && (
                     <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D4ED8" }}>
-                      {item.puntos_count} extintor{item.puntos_count !== 1 ? "es" : ""}
+                      {item.puntos_count} {eqLabelItem.toLowerCase()}{item.puntos_count !== 1 ? "s" : ""}
                     </Text>
                   )}
                 </View>
