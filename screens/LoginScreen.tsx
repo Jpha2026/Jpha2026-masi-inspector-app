@@ -16,7 +16,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, "Login"
 
 const { width } = Dimensions.get("window");
 
-type Tab = "inspector" | "empleado" | "cliente";
+type Tab = "inspector" | "vendedor" | "empleado" | "cliente";
 
 export default function LoginScreen({ navigation }: Props) {
   const T = useTheme();
@@ -61,6 +61,8 @@ export default function LoginScreen({ navigation }: Props) {
       await AsyncStorage.setItem("masi_user", JSON.stringify(data));
       if (data.role === "cliente") {
         navigation.replace("ClienteHome", { user: data });
+      } else if (data.role === "vendedor") {
+        navigation.replace("VendedorHome", { user: data });
       } else {
         await AsyncStorage.setItem("inspector_id", data.inspector_id ?? data.id);
         await AsyncStorage.setItem("inspector_name", data.name);
@@ -157,7 +159,15 @@ export default function LoginScreen({ navigation }: Props) {
                 onPress={() => { setTab("inspector"); setCodeSent(false); setCode(""); }}
               >
                 <Text style={[s.tabText, { color: tab === "inspector" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  🔍 Inspector
+                  🔍{"\n"}Inspector
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.tabBtn, tab === "vendedor" && { backgroundColor: "#1D4ED8" }]}
+                onPress={() => { setTab("vendedor"); setCodeSent(false); setCode(""); }}
+              >
+                <Text style={[s.tabText, { color: tab === "vendedor" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
+                  💼{"\n"}Vendedor
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -165,7 +175,7 @@ export default function LoginScreen({ navigation }: Props) {
                 onPress={() => { setTab("empleado"); setCodeSent(false); setCode(""); }}
               >
                 <Text style={[s.tabText, { color: tab === "empleado" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  👤 Empleado
+                  👤{"\n"}Empleado
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -173,15 +183,18 @@ export default function LoginScreen({ navigation }: Props) {
                 onPress={() => { setTab("cliente"); setCodeSent(false); setCode(""); }}
               >
                 <Text style={[s.tabText, { color: tab === "cliente" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  🏢 Cliente
+                  🏢{"\n"}Cliente
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {tab === "inspector" ? (
+            {(tab === "inspector" || tab === "vendedor") ? (
               <>
-                <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
-                  Acceso Inspector
+                <Text style={[s.cardTitle, {
+                  color: tab === "vendedor" ? "#3B82F6" : (T.isDark ? "#60A5FA" : "#122B60"),
+                  marginTop: 18,
+                }]}>
+                  {tab === "vendedor" ? "Acceso Vendedor" : "Acceso Inspector"}
                 </Text>
 
                 {/* Email */}
@@ -225,7 +238,12 @@ export default function LoginScreen({ navigation }: Props) {
                   </TouchableOpacity>
                 </View>
 
-                <LinearGradient colors={["#CE0D0D", "#EF4444"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <LinearGradient
+                  colors={tab === "vendedor" ? ["#1D4ED8", "#3B82F6"] : ["#CE0D0D", "#EF4444"]}
+                  style={s.btn}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
                   <TouchableOpacity style={s.btnInner} onPress={handleInspectorLogin} disabled={loading} activeOpacity={0.85}>
                     {loading
                       ? <ActivityIndicator color="#fff" />
@@ -398,7 +416,7 @@ const s = StyleSheet.create({
   tabRow:          { flexDirection: "row", borderRadius: 14, padding: 4, gap: 4 },
   tabBtn:          { flex: 1, paddingVertical: 10, borderRadius: 11, alignItems: "center" },
   tabActive:       { backgroundColor: "#122B60" },
-  tabText:         { fontSize: 12, fontWeight: "700" },
+  tabText:         { fontSize: 11, fontWeight: "700", textAlign: "center" },
   cardTitle:       { fontSize: 13, fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 18 },
   searchWrap:      { flexDirection: "row", alignItems: "center", borderRadius: 14, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 18 },
   inputWrap:       { flexDirection: "row", alignItems: "center", borderRadius: 14, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 11 },

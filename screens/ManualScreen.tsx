@@ -1,0 +1,298 @@
+import React, { useRef, useEffect } from "react";
+import {
+  View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../types";
+import { useTheme } from "../hooks/useTheme";
+
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList, "Manual">;
+  route: RouteProp<RootStackParamList, "Manual">;
+};
+
+type Section = { title: string; icon: string; items: string[] };
+
+const MANUALS: Record<string, { label: string; color: string; sections: Section[] }> = {
+  inspector: {
+    label: "Manual del Inspector",
+    color: "#CE0D0D",
+    sections: [
+      {
+        title: "Inicio de sesión",
+        icon: "🔐",
+        items: [
+          "Usa la pestaña 'Inspector' en la pantalla de inicio.",
+          "Ingresa tu correo y contraseña asignados por MASI.",
+          "Si olvidaste tu contraseña, contacta al administrador.",
+        ],
+      },
+      {
+        title: "Inspecciones",
+        icon: "🔍",
+        items: [
+          "En el Home, toca 'Mis Inspecciones' para ver el listado.",
+          "Escanea el código QR del equipo para iniciar una inspección.",
+          "Responde cada ítem del checklist: PASS / FAIL / N/A.",
+          "Los ítems marcados en rojo son CRÍTICOS — requieren comentario.",
+          "Al finalizar, toca 'Enviar Inspección'. Se sincroniza automáticamente.",
+          "Si no hay internet, la inspección se guarda offline y se envía al reconectar.",
+        ],
+      },
+      {
+        title: "Rutas de inspección",
+        icon: "🗺️",
+        items: [
+          "Las rutas asignadas aparecen en 'Mis Rutas'.",
+          "Cada ruta muestra los equipos a inspeccionar en orden.",
+          "Escanea el QR de cada equipo para marcarlo como inspeccionado.",
+          "El progreso se actualiza en tiempo real en la plataforma.",
+        ],
+      },
+      {
+        title: "Levantamientos",
+        icon: "📋",
+        items: [
+          "Un levantamiento es el registro inicial de equipos en un sitio.",
+          "Accede desde 'Levantamiento' en el menú principal.",
+          "Registra cada extintor / equipo con sus datos y fotos.",
+          "Al completar, el levantamiento queda disponible en la plataforma.",
+        ],
+      },
+      {
+        title: "Normativas aplicables",
+        icon: "📜",
+        items: [
+          "Extintores: NOM-002-STPS-2010.",
+          "Líneas de vida: NOM-009-STPS-2011.",
+          "ERA (Respiración autónoma): NOM-116-STPS-2009.",
+          "Sistemas contra incendio: NFPA 25 / NOM-002-STPS.",
+          "Puertas de emergencia: NOM-003-SEGOB-2011.",
+        ],
+      },
+      {
+        title: "Soporte",
+        icon: "🛠️",
+        items: [
+          "Problemas técnicos: escribe al chat de la app o llama a soporte.",
+          "Para resetear contraseña o permisos: contacta al administrador.",
+          "Versión mínima recomendada: APK versionCode 7+.",
+        ],
+      },
+    ],
+  },
+  vendedor: {
+    label: "Manual del Vendedor",
+    color: "#2563EB",
+    sections: [
+      {
+        title: "Inicio de sesión",
+        icon: "🔐",
+        items: [
+          "Usa la pestaña 'Vendedor' en la pantalla de inicio.",
+          "Ingresa tu correo y contraseña asignados por MASI.",
+          "Tu perfil de vendedor te da acceso a CRM, POS y cotizaciones.",
+        ],
+      },
+      {
+        title: "Cotizaciones en campo",
+        icon: "📋",
+        items: [
+          "Toca 'Cotizaciones' para ver el listado y crear una nueva.",
+          "Para un cliente nuevo: escribe el nombre y marca 'Guardar como cliente'.",
+          "Para un cliente existente: selecciónalo del catálogo — el correo se autocompleta.",
+          "Agrega los productos/servicios con descripción, cantidad y precio.",
+          "Al enviar, puedes agregar correos CC adicionales para copias.",
+          "La cotización llega al cliente con logo y datos fiscales de MASI.",
+        ],
+      },
+      {
+        title: "Punto de Venta (POS)",
+        icon: "🏪",
+        items: [
+          "Accede a 'Punto de Venta' para ventas de mostrador.",
+          "Escanea el código de barras o QR del producto para agregarlo automáticamente.",
+          "También puedes buscar por nombre en la barra de búsqueda.",
+          "Selecciona método de pago: efectivo, tarjeta, transferencia o crédito.",
+          "Al cobrar, el stock se descuenta automáticamente y se registra en finanzas.",
+        ],
+      },
+      {
+        title: "Nuevos Leads",
+        icon: "➕",
+        items: [
+          "Captura prospectos en campo desde 'Nuevo Lead'.",
+          "Registra nombre, empresa, teléfono, correo y necesidad.",
+          "El lead queda disponible para seguimiento en la plataforma.",
+        ],
+      },
+      {
+        title: "Pedidos internos",
+        icon: "📦",
+        items: [
+          "Si necesitas material o muestra para una venta, usa 'Mis Pedidos'.",
+          "El pedido es revisado por el almacén y te notifican cuando está listo.",
+        ],
+      },
+      {
+        title: "Soporte",
+        icon: "🛠️",
+        items: [
+          "Dudas sobre precios o disponibilidad: usa el Chat de la app.",
+          "Para acceso a nuevos clientes o actualización de catálogo: contacta al admin.",
+        ],
+      },
+    ],
+  },
+  empleado: {
+    label: "Manual del Empleado",
+    color: "#7C3AED",
+    sections: [
+      {
+        title: "Solicitudes",
+        icon: "📝",
+        items: [
+          "Accede a 'Mis Solicitudes' para ver el historial.",
+          "Toca 'Nueva Solicitud' para vacaciones, permisos o préstamos.",
+          "Recibirás notificación cuando se apruebe o rechace.",
+        ],
+      },
+      {
+        title: "Asistencia",
+        icon: "⏰",
+        items: [
+          "Registra tu entrada y salida desde 'Asistencia'.",
+          "La ubicación GPS se captura automáticamente al registrar.",
+        ],
+      },
+      {
+        title: "Nómina y Préstamos",
+        icon: "💵",
+        items: [
+          "Consulta tus recibos de nómina en 'Nómina'.",
+          "Revisa el saldo de préstamos activos en 'Préstamos'.",
+        ],
+      },
+      {
+        title: "Pedidos de material",
+        icon: "📦",
+        items: [
+          "Solicita material para tu área en 'Mis Pedidos'.",
+          "El pedido pasa por aprobación antes de surtirse.",
+        ],
+      },
+    ],
+  },
+  cliente: {
+    label: "Manual del Cliente",
+    color: "#059669",
+    sections: [
+      {
+        title: "Portal de cliente",
+        icon: "🏢",
+        items: [
+          "Accede con la pestaña 'Cliente' usando tu correo registrado.",
+          "Se enviará un código de 6 dígitos a tu correo — ingrésalo para entrar.",
+          "El portal es solo de lectura: podrás ver reportes, equipos e inspecciones.",
+        ],
+      },
+      {
+        title: "Reportes de inspección",
+        icon: "📄",
+        items: [
+          "En 'Inspecciones' ves el historial de cada equipo.",
+          "Toca 'PDF' para descargar el reporte oficial con datos de MASI.",
+          "Los reportes muestran: resultado, ítems revisados, norm aplicada y observaciones.",
+        ],
+      },
+      {
+        title: "Equipos y vencimientos",
+        icon: "⚠️",
+        items: [
+          "En 'Mis Equipos' ves todos los equipos registrados en tus sucursales.",
+          "Los equipos próximos a vencer aparecen en amarillo/rojo.",
+          "Contacta a MASI para agendar el servicio antes de la fecha de vencimiento.",
+        ],
+      },
+      {
+        title: "Cotizaciones",
+        icon: "📋",
+        items: [
+          "Revisa las cotizaciones que MASI te ha enviado.",
+          "Puedes ver el detalle, aceptar o solicitar cambios desde la app.",
+        ],
+      },
+    ],
+  },
+};
+
+export default function ManualScreen({ navigation, route }: Props) {
+  const T = useTheme();
+  const { role, userName } = route.params;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const manual = MANUALS[role] ?? MANUALS.inspector;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+  }, []);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: T.isDark ? "#060C1A" : "#F0F4FB" }}>
+      {/* Header */}
+      <LinearGradient colors={["#0D1B3E", manual.color]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+          <Text style={s.backText}>← Atrás</Text>
+        </TouchableOpacity>
+        <Text style={s.headerTitle}>{manual.label}</Text>
+        <Text style={s.headerSub}>Hola, {userName.split(" ")[0]} · MASI®</Text>
+      </LinearGradient>
+
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          {manual.sections.map((sec, si) => (
+            <View
+              key={si}
+              style={[s.section, { backgroundColor: T.isDark ? "rgba(255,255,255,0.04)" : "#fff", borderColor: T.isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB" }]}
+            >
+              <View style={s.secHeader}>
+                <Text style={s.secIcon}>{sec.icon}</Text>
+                <Text style={[s.secTitle, { color: manual.color }]}>{sec.title}</Text>
+              </View>
+              {sec.items.map((item, ii) => (
+                <View key={ii} style={s.item}>
+                  <View style={[s.bullet, { backgroundColor: manual.color }]} />
+                  <Text style={[s.itemText, { color: T.isDark ? "#CBD5E1" : "#374151" }]}>{item}</Text>
+                </View>
+              ))}
+            </View>
+          ))}
+
+          <View style={s.footer}>
+            <Text style={s.footerText}>Multiservicios y Artículos de Seguridad Industrial, S.A. de C.V.®</Text>
+            <Text style={[s.footerText, { marginTop: 2 }]}>RFC MAS900706QH1 · Monterrey, N.L.</Text>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  header:      { paddingTop: 52, paddingBottom: 24, paddingHorizontal: 20 },
+  backBtn:     { marginBottom: 12 },
+  backText:    { color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "600" },
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#fff", marginBottom: 4 },
+  headerSub:   { fontSize: 12, color: "rgba(255,255,255,0.55)" },
+  content:     { padding: 16, paddingBottom: 48 },
+  section:     { borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 12 },
+  secHeader:   { flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 8 },
+  secIcon:     { fontSize: 20 },
+  secTitle:    { fontSize: 14, fontWeight: "800", flex: 1 },
+  item:        { flexDirection: "row", alignItems: "flex-start", marginBottom: 8, gap: 8 },
+  bullet:      { width: 6, height: 6, borderRadius: 3, marginTop: 6, flexShrink: 0 },
+  itemText:    { fontSize: 13, lineHeight: 20, flex: 1 },
+  footer:      { alignItems: "center", marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: "rgba(0,0,0,0.08)" },
+  footerText:  { fontSize: 11, color: "#9CA3AF", textAlign: "center" },
+});

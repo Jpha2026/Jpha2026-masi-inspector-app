@@ -89,7 +89,7 @@ export type AppUser = {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "supervisor" | "inspector" | "empleado" | "cliente";
+  role: "admin" | "supervisor" | "inspector" | "empleado" | "cliente" | "vendedor";
   inspector_id: string | null;
   employee_id: string | null;
   client_id: string | null;
@@ -211,4 +211,6 @@ export type RootStackParamList = {
   NuevoLead: { user: AppUser };
   POS: { user: AppUser };
   Activos: { user: AppUser };
+  VendedorHome: { user: AppUser };
+  Manual: { role: string; userName: string };
 };

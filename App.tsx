@@ -31,6 +31,8 @@ import PrestamosScreen from "./screens/PrestamosScreen";
 import NuevoLeadScreen from "./screens/NuevoLeadScreen";
 import POSScreen from "./screens/POSScreen";
 import ActivosScreen from "./screens/ActivosScreen";
+import VendedorHomeScreen from "./screens/VendedorHomeScreen";
+import ManualScreen from "./screens/ManualScreen";
 
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
@@ -64,7 +66,7 @@ async function registerPushToken(userId: string) {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome";
+type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome" | "VendedorHome";
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<InitRoute | null>(null);
@@ -97,6 +99,12 @@ export default function App() {
           if (user.role === "cliente") {
             setSavedUser(user);
             setInitialRoute("ClienteHome");
+            registerPushToken(user.id);
+            return;
+          }
+          if (user.role === "vendedor") {
+            setSavedUser(user);
+            setInitialRoute("VendedorHome");
             registerPushToken(user.id);
             return;
           }
@@ -182,6 +190,16 @@ export default function App() {
           <Stack.Screen name="NuevoLead" component={NuevoLeadScreen} />
           <Stack.Screen name="POS" component={POSScreen} />
           <Stack.Screen name="Activos" component={ActivosScreen} />
+          <Stack.Screen
+            name="VendedorHome"
+            component={VendedorHomeScreen}
+            initialParams={
+              initialRoute === "VendedorHome" && savedUser
+                ? { user: savedUser }
+                : undefined
+            }
+          />
+          <Stack.Screen name="Manual" component={ManualScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

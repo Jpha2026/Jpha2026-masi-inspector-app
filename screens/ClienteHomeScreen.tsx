@@ -89,8 +89,8 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
             <Text style={styles.name}>{user.name}</Text>
             <Text style={styles.subtitle}>Portal Cliente · MASI</Text>
           </View>
-          <TouchableOpacity onPress={() => Linking.openURL("https://app.masi.com.mx/manual?rol=cliente")} style={[styles.logoutBtn, { marginRight: 6, backgroundColor: "rgba(255,255,255,0.08)" }]}>
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontWeight: "700", fontSize: 13 }}>📖</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Manual", { role: "cliente", userName: user.name })} style={[styles.logoutBtn, { marginRight: 6, backgroundColor: "rgba(255,255,255,0.08)" }]}>
+            <Text style={{ color: "rgba(255,255,255,0.8)", fontWeight: "700", fontSize: 13 }}>📖 Manual</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
             <Text style={styles.logoutText}>Salir</Text>

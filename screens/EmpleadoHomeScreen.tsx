@@ -94,8 +94,8 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
               <Text style={s.headerGreet}>Hola, {user.name.split(" ")[0]} 👋</Text>
               <Text style={s.headerRole}>Portal de Empleado · MASI</Text>
             </View>
-            <TouchableOpacity onPress={() => Linking.openURL("https://app.masi.com.mx/manual?rol=empleado")} style={[s.logoutBtn, { marginRight: 6 }]}>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "700" }}>📖</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Manual", { role: "empleado", userName: user.name })} style={[s.logoutBtn, { marginRight: 6 }]}>
+              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "700" }}>📖 Manual</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleLogout} style={s.logoutBtn}>
               <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "700" }}>Salir ⏏</Text>
