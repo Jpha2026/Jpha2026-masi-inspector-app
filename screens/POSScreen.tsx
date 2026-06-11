@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "POS">;
@@ -22,6 +23,7 @@ const MC: Record<string, string> = { efectivo: "#10B981", tarjeta: "#3B82F6", tr
 
 export default function POSScreen({ navigation, route }: Props) {
   const { user } = route.params;
+  const insets = useSafeAreaInsets();
   const [products, setProducts]     = useState<Product[]>([]);
   const [filtered, setFiltered]     = useState<Product[]>([]);
   const [search, setSearch]         = useState("");
@@ -116,7 +118,7 @@ export default function POSScreen({ navigation, route }: Props) {
   return (
     <LinearGradient colors={["#07101f", "#0D1B3E"]} style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backTxt}>← Salir</Text>
         </TouchableOpacity>
@@ -218,7 +220,7 @@ export default function POSScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingTop: 52, paddingHorizontal: 16, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 14, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" },
+  header: { paddingHorizontal: 16, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 14, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" },
   backBtn: {},
   backTxt: { color: "#60A5FA", fontSize: 13 },
   title: { color: "#fff", fontSize: 18, fontWeight: "800" },

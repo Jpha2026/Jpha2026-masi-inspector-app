@@ -8,6 +8,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Asistencia">;
@@ -23,6 +24,7 @@ type AttRecord = {
 
 export default function AsistenciaScreen({ navigation, route }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = route.params;
   const [record, setRecord]     = useState<AttRecord | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -71,7 +73,7 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
 
   return (
     <LinearGradient colors={T.isDark ? ["#050C1A", "#0D1B3E"] as const : ["#F0F4FA", "#E8EFF8"] as const} style={{ flex: 1 }}>
-      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={s.nav}>
+      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={[s.nav, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
@@ -184,7 +186,7 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  nav:          { paddingTop: 56, paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  nav:          { paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   backBtn:      { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   backArrow:    { color: "#fff", fontSize: 22, fontWeight: "700" },
   navTitle:     { color: "#fff", fontSize: 17, fontWeight: "800" },

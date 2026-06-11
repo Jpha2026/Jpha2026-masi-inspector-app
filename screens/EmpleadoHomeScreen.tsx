@@ -11,6 +11,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList, Solicitud } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type VacBalance = { days_total: number; days_used: number; days_pending: number; days_available: number };
 type LoanSummary = { folio: string; monto_total: number; saldo: number };
@@ -37,6 +38,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export default function EmpleadoHomeScreen({ navigation, route }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = route.params;
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [vacBalance, setVacBalance]   = useState<VacBalance | null>(null);
@@ -88,7 +90,7 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={["#0D1B3E", "#122B60"]} style={s.header}>
+        <LinearGradient colors={["#0D1B3E", "#122B60"]} style={[s.header, { paddingTop: insets.top + 16 }]}>
           <View style={s.headerRow}>
             <View>
               <Text style={s.headerGreet}>Hola, {user.name.split(" ")[0]} 👋</Text>
@@ -338,7 +340,7 @@ const s = StyleSheet.create({
   vacNum:       { fontSize: 22, fontWeight: "900" },
   vacLbl:       { fontSize: 10, fontWeight: "600", marginTop: 2 },
   vacDivider:   { width: 1, height: 36, marginHorizontal: 4 },
-  header:       { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20 },
+  header:       { paddingBottom: 20, paddingHorizontal: 20 },
   headerRow:    { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   headerGreet:  { color: "#fff", fontSize: 22, fontWeight: "900" },
   headerRole:   { color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 4 },

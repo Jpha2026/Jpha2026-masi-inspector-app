@@ -10,6 +10,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Asset = {
   id: string; asset_no: string; name: string; category: string; brand: string;
@@ -26,6 +27,7 @@ type Props = {
 
 export default function ActivosScreen({ navigation, route }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = route.params;
 
   const [assets, setAssets]       = useState<Asset[]>([]);
@@ -90,7 +92,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={["#0D1B3E", "#122B60"]} style={s.header}>
+        <LinearGradient colors={["#0D1B3E", "#122B60"]} style={[s.header, { paddingTop: insets.top + 16 }]}>
           <View style={s.headerRow}>
             <View>
               <Text style={s.headerTitle}>🏭 Mis Activos</Text>
@@ -236,7 +238,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  header:       { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20 },
+  header:       { paddingBottom: 20, paddingHorizontal: 20 },
   headerRow:    { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   headerTitle:  { color: "#fff", fontSize: 22, fontWeight: "900" },
   headerSub:    { color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 4 },

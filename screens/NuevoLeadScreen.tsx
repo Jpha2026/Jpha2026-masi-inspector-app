@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "NuevoLead">;
@@ -19,6 +20,7 @@ const SOURCES = ["campo","referido","instagram","facebook","web","directo","feri
 
 export default function NuevoLeadScreen({ navigation, route }: Props) {
   const { user } = route.params;
+  const insets = useSafeAreaInsets();
 
   const [name, setName]         = useState("");
   const [company, setCompany]   = useState("");
@@ -66,7 +68,7 @@ export default function NuevoLeadScreen({ navigation, route }: Props) {
   return (
     <LinearGradient colors={["#07101f", "#0D1B3E", "#122B60"]} style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backTxt}>← Regresar</Text>
           </TouchableOpacity>
@@ -142,7 +144,7 @@ export default function NuevoLeadScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingTop: 56, paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" },
+  header: { paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" },
   backBtn: { marginBottom: 12 },
   backTxt: { color: "#60A5FA", fontSize: 14 },
   title: { color: "#fff", fontSize: 22, fontWeight: "800", marginBottom: 2 },

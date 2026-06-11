@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Manual">;
@@ -230,6 +231,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
 
 export default function ManualScreen({ navigation, route }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const { role, userName } = route.params;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const manual = MANUALS[role] ?? MANUALS.inspector;
@@ -241,7 +243,7 @@ export default function ManualScreen({ navigation, route }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: T.isDark ? "#060C1A" : "#F0F4FB" }}>
       {/* Header */}
-      <LinearGradient colors={["#0D1B3E", manual.color]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.header}>
+      <LinearGradient colors={["#0D1B3E", manual.color]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.header, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
           <Text style={s.backText}>← Atrás</Text>
         </TouchableOpacity>
@@ -280,7 +282,7 @@ export default function ManualScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  header:      { paddingTop: 52, paddingBottom: 24, paddingHorizontal: 20 },
+  header:      { paddingBottom: 24, paddingHorizontal: 20 },
   backBtn:     { marginBottom: 12 },
   backText:    { color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "600" },
   headerTitle: { fontSize: 22, fontWeight: "900", color: "#fff", marginBottom: 4 },

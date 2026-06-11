@@ -11,6 +11,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "VendedorHome">;
@@ -21,6 +22,7 @@ type CotStats = { total: number; borrador: number; enviada: number; aceptada: nu
 
 export default function VendedorHomeScreen({ navigation, route }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = route.params;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [cotStats, setCotStats] = useState<CotStats | null>(null);
@@ -72,7 +74,7 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
 
   return (
     <LinearGradient colors={bg} locations={[0, 0.4, 1]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[s.container, { paddingTop: insets.top + 16 }]} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
         <Animated.View style={[s.header, { opacity: fadeAnim }]}>
@@ -139,7 +141,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 }
 
 const s = StyleSheet.create({
-  container:  { paddingTop: 56, paddingBottom: 40 },
+  container:  { paddingBottom: 40 },
   header:     { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 20 },
   greeting:   { fontSize: 22, fontWeight: "800", color: "#fff" },
   subtitle:   { fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 },

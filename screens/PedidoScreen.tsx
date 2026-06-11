@@ -10,6 +10,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList, PedidoItem } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Pedido">;
@@ -32,6 +33,7 @@ type ItemDraft = PedidoItem & { tempId: string };
 
 export default function PedidoScreen({ navigation, route }: Props) {
   const T    = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = route.params;
 
   const [step, setStep]             = useState<"category" | "items" | "review">("category");
@@ -96,7 +98,7 @@ export default function PedidoScreen({ navigation, route }: Props) {
   return (
     <LinearGradient colors={bg} style={{ flex: 1 }}>
       {/* Navbar */}
-      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={s.nav}>
+      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={[s.nav, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity onPress={() => step === "category" ? navigation.goBack() : setStep(step === "review" ? "items" : "category")} style={s.backBtn}>
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
@@ -290,7 +292,7 @@ export default function PedidoScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  nav:          { paddingTop: 56, paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  nav:          { paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   backBtn:      { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   backArrow:    { color: "#fff", fontSize: 22, fontWeight: "700" },
   navTitle:     { color: "#fff", fontSize: 17, fontWeight: "800", flex: 1, textAlign: "center" },

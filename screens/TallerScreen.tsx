@@ -11,6 +11,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList, OrdenTrabajo } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Taller">;
@@ -61,6 +62,7 @@ const PRIORIDADES = [
 
 export default function TallerScreen({ navigation, route }: Props) {
   const T = useTheme();
+  const insets = useSafeAreaInsets();
   const { inspectorId, userName } = route.params;
 
   const [orders, setOrders]         = useState<OrdenTrabajo[]>([]);
@@ -155,7 +157,7 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F0F4FA" }}>
-      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={s.nav}>
+      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={[s.nav, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
@@ -375,7 +377,7 @@ export default function TallerScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  nav:          { paddingTop: 56, paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  nav:          { paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   backBtn:      { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   backArrow:    { color: "#fff", fontSize: 22, fontWeight: "700" },
   navTitle:     { color: "#fff", fontSize: 17, fontWeight: "800" },
