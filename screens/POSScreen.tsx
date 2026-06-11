@@ -15,7 +15,7 @@ type Props = {
   route: RouteProp<RootStackParamList, "POS">;
 };
 
-type Product = { id: string; name: string; code: string; sale_price: number; stock: number; unit: string };
+type Product = { id: string; name: string; code: string; price_sale: number; stock: number; unit: string };
 type TicketItem = { product_id: string; description: string; qty: number; unit_price: number; subtotal: number };
 const METHODS = ["efectivo", "tarjeta", "transferencia", "credito"];
 const MC: Record<string, string> = { efectivo: "#10B981", tarjeta: "#3B82F6", transferencia: "#8B5CF6", credito: "#F59E0B" };
@@ -50,7 +50,7 @@ export default function POSScreen({ navigation, route }: Props) {
     setItems(prev => {
       const ex = prev.find(i => i.product_id === p.id);
       if (ex) return prev.map(i => i.product_id === p.id ? { ...i, qty: i.qty + 1, subtotal: (i.qty + 1) * i.unit_price } : i);
-      return [...prev, { product_id: p.id, description: p.name, qty: 1, unit_price: p.sale_price, subtotal: p.sale_price }];
+      return [...prev, { product_id: p.id, description: p.name, qty: 1, unit_price: p.price_sale, subtotal: p.price_sale }];
     });
   };
 
@@ -145,7 +145,7 @@ export default function POSScreen({ navigation, route }: Props) {
               renderItem={({ item: p }) => (
                 <TouchableOpacity style={styles.prodCard} onPress={() => addProduct(p)}>
                   <Text style={styles.prodName} numberOfLines={2}>{p.name}</Text>
-                  <Text style={styles.prodPrice}>{fmt(p.sale_price)}</Text>
+                  <Text style={styles.prodPrice}>{fmt(p.price_sale)}</Text>
                   <Text style={styles.prodStock}>{p.stock > 0 ? `${p.stock} ${p.unit || "pza"}` : "Sin stock"}</Text>
                 </TouchableOpacity>
               )}
