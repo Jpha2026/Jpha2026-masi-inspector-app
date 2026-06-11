@@ -60,6 +60,7 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
 
   // Process legacy inspection queue
   const legRaw = await AsyncStorage.getItem(LEGACY_KEY);
+  let legFailed = 0;
   if (legRaw) {
     const legQueue: PendingInspection[] = JSON.parse(legRaw);
     const legRemaining: PendingInspection[] = [];
@@ -71,6 +72,7 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
         legRemaining.push(item);
       }
     }
+    legFailed = legRemaining.length;
     await AsyncStorage.setItem(LEGACY_KEY, JSON.stringify(legRemaining));
   }
 
@@ -93,7 +95,7 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
   }
 
-  return { synced, failed: remaining.length };
+  return { synced, failed: remaining.length + legFailed };
 }
 
 export function useOfflineSync(onSynced?: (count: number) => void) {
