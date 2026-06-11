@@ -10,6 +10,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Chat">;
@@ -28,6 +29,7 @@ const SUGGESTIONS = [
 export default function ChatScreen({ navigation, route }: Props) {
   const T = useTheme();
   const { userEmail, userName } = route.params;
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,7 @@ export default function ChatScreen({ navigation, route }: Props) {
       style={{ flex: 1 }}
     >
       {/* Nav */}
-      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={s.nav}>
+      <LinearGradient colors={["#0D1B3E", "#122B60"]} style={[s.nav, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
@@ -191,7 +193,7 @@ export default function ChatScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  nav:          { paddingTop: 56, paddingBottom: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center" },
+  nav:          { paddingBottom: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center" },
   backBtn:      { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   backArrow:    { color: "#fff", fontSize: 22, fontWeight: "700" },
   navTitle:     { color: "#fff", fontSize: 16, fontWeight: "900" },

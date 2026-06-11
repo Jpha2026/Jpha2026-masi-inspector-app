@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, RefreshControl,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -188,6 +188,17 @@ export default function HomeScreen({ navigation, route }: Props) {
         )}
       </LinearGradient>
 
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); load(true); }}
+            colors={["#122B60"]} tintColor={"#122B60"}
+          />
+        }
+      >
       {/* Stats card */}
       <View style={{
         flexDirection: "row", backgroundColor: T.card,
@@ -270,70 +281,69 @@ export default function HomeScreen({ navigation, route }: Props) {
         </LinearGradient>
       </View>
 
-      {/* Action buttons */}
-      {[
-        {
-          colors: ["#CE0D0D", "#EF4444"] as const,
-          shadow: RED,
-          icon: "📷",
-          title: "Inspección",
-          sub: "Escanear QR",
-          onPress: () => navigation.navigate("Scan", { inspectorId }),
-        },
-        {
-          colors: ["#1D4ED8", "#3B82F6"] as const,
-          shadow: "#1D4ED8",
-          icon: "📋",
-          title: "Levantamiento",
-          sub: "Nuevo / Ver",
-          onPress: () => navigation.navigate("Levantamiento", { inspectorId }),
-        },
-        {
-          colors: ["#065F46", "#059669"] as const,
-          shadow: "#059669",
-          icon: "🔧",
-          title: "Taller",
-          sub: "Órdenes de trabajo asignadas",
-          onPress: () => navigation.navigate("Taller", { inspectorId, userName: inspector?.name ?? "" }),
-        },
-        {
-          colors: ["#7A0D0D", "#CE0D0D"] as const,
-          shadow: "#CE0D0D",
-          icon: "🏪",
-          title: "Punto de Venta",
-          sub: "Ventas mostrador desde campo",
-          onPress: () => navigation.navigate("POS", {
-            user: { id: inspectorId, name: inspector?.name ?? "", email: inspector?.email ?? "", role: "inspector" as const, inspector_id: inspectorId, employee_id: null, client_id: null, permissions: [] },
-          }),
-        },
-        {
-          colors: ["#4C1D95", "#7C3AED"] as const,
-          shadow: "#7C3AED",
-          icon: "🤖",
-          title: "MASI-IA",
-          sub: "Asistente de seguridad industrial",
-          onPress: () => navigation.navigate("Chat", { userEmail: inspector?.email ?? "", userName: inspector?.name ?? "" }),
-        },
-      ].map((btn) => (
-        <TouchableOpacity
-          key={btn.title}
-          style={{ marginHorizontal: 16, marginTop: 10, borderRadius: 16, overflow: "hidden",
-            elevation: 5, shadowColor: btn.shadow, shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}
-          onPress={btn.onPress}
-          activeOpacity={0.85}
-        >
-          <LinearGradient colors={btn.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingVertical: 14, gap: 14 }}
+      {/* Action buttons — 2 columns so caben todos en pantalla */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, marginTop: 6, gap: 8 }}>
+        {[
+          {
+            colors: ["#CE0D0D", "#EF4444"] as const,
+            shadow: RED,
+            icon: "📷",
+            title: "Inspección",
+            sub: "Escanear QR",
+            onPress: () => navigation.navigate("Scan", { inspectorId }),
+          },
+          {
+            colors: ["#4C1D95", "#7C3AED"] as const,
+            shadow: "#7C3AED",
+            icon: "🤖",
+            title: "MASI-IA",
+            sub: "Asistente industrial",
+            onPress: () => navigation.navigate("Chat", { userEmail: inspector?.email ?? "", userName: inspector?.name ?? "" }),
+          },
+          {
+            colors: ["#1D4ED8", "#3B82F6"] as const,
+            shadow: "#1D4ED8",
+            icon: "📋",
+            title: "Levantamiento",
+            sub: "Nuevo / Ver",
+            onPress: () => navigation.navigate("Levantamiento", { inspectorId }),
+          },
+          {
+            colors: ["#065F46", "#059669"] as const,
+            shadow: "#059669",
+            icon: "🔧",
+            title: "Taller",
+            sub: "Órdenes asignadas",
+            onPress: () => navigation.navigate("Taller", { inspectorId, userName: inspector?.name ?? "" }),
+          },
+          {
+            colors: ["#7A0D0D", "#CE0D0D"] as const,
+            shadow: "#CE0D0D",
+            icon: "🏪",
+            title: "Punto de Venta",
+            sub: "Ventas desde campo",
+            onPress: () => navigation.navigate("POS", {
+              user: { id: inspectorId, name: inspector?.name ?? "", email: inspector?.email ?? "", role: "inspector" as const, inspector_id: inspectorId, employee_id: null, client_id: null, permissions: [] },
+            }),
+          },
+        ].map((btn) => (
+          <TouchableOpacity
+            key={btn.title}
+            style={{ width: "47%", borderRadius: 14, overflow: "hidden",
+              elevation: 5, shadowColor: btn.shadow, shadowOpacity: 0.35, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}
+            onPress={btn.onPress}
+            activeOpacity={0.85}
           >
-            <Text style={{ fontSize: 24 }}>{btn.icon}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "900" }} numberOfLines={1}>{btn.title}</Text>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, marginTop: 2 }} numberOfLines={1}>{btn.sub}</Text>
-            </View>
-            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 22 }}>›</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      ))}
+            <LinearGradient colors={btn.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={{ alignItems: "center", paddingHorizontal: 12, paddingVertical: 16, gap: 6 }}
+            >
+              <Text style={{ fontSize: 28 }}>{btn.icon}</Text>
+              <Text style={{ color: "#fff", fontSize: 13, fontWeight: "900", textAlign: "center" }} numberOfLines={1}>{btn.title}</Text>
+              <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, textAlign: "center" }} numberOfLines={1}>{btn.sub}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Rutas asignadas */}
       {rutas.length > 0 && (
@@ -394,59 +404,47 @@ export default function HomeScreen({ navigation, route }: Props) {
         Inspecciones recientes
       </Text>
 
-      <FlatList
-        data={inspections.slice(0, 20)}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => { setRefreshing(true); load(true); }}
-            colors={["#122B60"]} tintColor={"#122B60"}
-          />
-        }
-        ListEmptyComponent={
-          <View style={{ alignItems: "center", paddingVertical: 40 }}>
-            <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: T.textSub }}>
-              Sin inspecciones registradas.
-            </Text>
-            <Text style={{ fontSize: 13, color: T.textSub, marginTop: 6, textAlign: "center" }}>
-              Escanea un equipo para comenzar.
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <View style={{
-            backgroundColor: T.card, borderRadius: 12, padding: 14, marginBottom: 10,
-            flexDirection: "row", alignItems: "center",
-            elevation: 2, shadowColor: "#000", shadowOpacity: T.isDark ? 0.2 : 0.05,
-            shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
-            borderWidth: T.isDark ? 1 : 0, borderColor: T.border,
-          }}>
-            <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: T.text }} numberOfLines={1}>
-                {item.equipment_name || `Equipo #${item.equipment_id.slice(0, 8)}`}
-              </Text>
-              {item.submitted_at && (
-                <Text style={{ fontSize: 12, color: T.textSub, marginTop: 3 }}>
-                  {new Date(item.submitted_at).toLocaleString("es-MX")}
+      {inspections.length === 0 ? (
+        <View style={{ alignItems: "center", paddingVertical: 40, paddingHorizontal: 16 }}>
+          <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: T.textSub }}>Sin inspecciones registradas.</Text>
+          <Text style={{ fontSize: 13, color: T.textSub, marginTop: 6, textAlign: "center" }}>Escanea un equipo para comenzar.</Text>
+        </View>
+      ) : (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+          {inspections.slice(0, 20).map(item => (
+            <View key={item.id} style={{
+              backgroundColor: T.card, borderRadius: 12, padding: 14, marginBottom: 10,
+              flexDirection: "row", alignItems: "center",
+              elevation: 2, shadowColor: "#000", shadowOpacity: T.isDark ? 0.2 : 0.05,
+              shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+              borderWidth: T.isDark ? 1 : 0, borderColor: T.border,
+            }}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: T.text }} numberOfLines={1}>
+                  {item.equipment_name || `Equipo #${item.equipment_id.slice(0, 8)}`}
                 </Text>
-              )}
-              {item.notes ? (
-                <Text style={{ fontSize: 12, color: T.textSub, marginTop: 3, fontStyle: "italic" }} numberOfLines={1}>
-                  {item.notes}
+                {item.submitted_at && (
+                  <Text style={{ fontSize: 12, color: T.textSub, marginTop: 3 }}>
+                    {new Date(item.submitted_at).toLocaleString("es-MX")}
+                  </Text>
+                )}
+                {item.notes ? (
+                  <Text style={{ fontSize: 12, color: T.textSub, marginTop: 3, fontStyle: "italic" }} numberOfLines={1}>
+                    {item.notes}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: resultColor(item.overall_result) }}>
+                <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 }}>
+                  {resultLabel(item.overall_result)}
                 </Text>
-              ) : null}
+              </View>
             </View>
-            <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: resultColor(item.overall_result) }}>
-              <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 }}>
-                {resultLabel(item.overall_result)}
-              </Text>
-            </View>
-          </View>
-        )}
-      />
+          ))}
+        </View>
+      )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
