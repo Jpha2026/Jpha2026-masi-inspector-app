@@ -116,6 +116,12 @@ export default function App() {
             registerPushToken(user.inspector_id ?? user.id);
             return;
           }
+          if (user.role === "supervisor") {
+            setSavedInspectorId(user.inspector_id ?? user.id);
+            setInitialRoute("Home");
+            registerPushToken(user.inspector_id ?? user.id);
+            return;
+          }
           if (user.inspector_id) {
             setSavedInspectorId(user.inspector_id);
             setInitialRoute("Home");

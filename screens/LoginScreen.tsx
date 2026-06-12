@@ -80,7 +80,9 @@ export default function LoginScreen({ navigation }: Props) {
       } else if (data.role === "taller") {
         navigation.replace("Taller", { inspectorId: data.inspector_id ?? data.id, userName: data.name });
       } else {
-        await AsyncStorage.setItem("inspector_id", data.inspector_id ?? data.id);
+        if (data.inspector_id != null) {
+          await AsyncStorage.setItem("inspector_id", data.inspector_id);
+        }
         await AsyncStorage.setItem("inspector_name", data.name);
         navigation.replace("Home", { inspectorId: data.inspector_id ?? data.id });
       }
@@ -208,7 +210,7 @@ export default function LoginScreen({ navigation }: Props) {
                   ] as { key: Tab; icon: string; label: string; bg: string }[]).map((t) => (
                     <TouchableOpacity key={t.key}
                       style={[s.tabBtn, { flex: 1 }, tab === t.key && { backgroundColor: t.bg }]}
-                      onPress={() => { setTab(t.key); setCodeSent(false); setCode(""); }}
+                      onPress={() => { setTab(t.key); setCodeSent(false); setCode(""); setInspEmail(""); setInspPass(""); }}
                     >
                       <Text style={[s.tabText, { color: tab === t.key ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
                         {t.icon}{"\n"}{t.label}
