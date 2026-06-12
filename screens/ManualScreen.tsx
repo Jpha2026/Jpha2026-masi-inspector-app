@@ -25,8 +25,8 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         title: "Inicio de sesión",
         icon: "🔐",
         items: [
-          "Usa la pestaña 'Inspector' en la pantalla de inicio.",
-          "Ingresa tu correo y contraseña asignados por MASI.",
+          "En la pantalla inicial toca el botón azul oscuro 'MASI'.",
+          "Selecciona la pestaña 'Inspector' y escribe tu correo y contraseña.",
           "Si olvidaste tu contraseña, contacta al administrador.",
         ],
       },
@@ -79,7 +79,71 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Problemas técnicos: escribe al chat de la app o llama a soporte.",
           "Para resetear contraseña o permisos: contacta al administrador.",
-          "Versión mínima recomendada: APK versionCode 7+.",
+          "Versión mínima recomendada: APK versionCode 10+.",
+        ],
+      },
+    ],
+  },
+  taller: {
+    label: "Manual del Técnico de Taller",
+    color: "#D97706",
+    sections: [
+      {
+        title: "Inicio de sesión",
+        icon: "🔐",
+        items: [
+          "En la pantalla inicial toca el botón azul oscuro 'MASI'.",
+          "Selecciona la pestaña 'Taller' y escribe tu correo y contraseña.",
+          "Entrarás directamente al módulo de taller.",
+        ],
+      },
+      {
+        title: "Órdenes de trabajo",
+        icon: "📋",
+        items: [
+          "Al entrar verás las órdenes de trabajo asignadas.",
+          "Filtra por estado: Todas, Abiertas, En proceso o Cerradas.",
+          "Toca una orden para ver detalle y actualizar su estado.",
+          "Avanza la orden: Abierta → En proceso → Cerrada.",
+        ],
+      },
+      {
+        title: "Prueba Hidrostática (PH)",
+        icon: "💧",
+        items: [
+          "Toca 'Nueva PH' en el menú inferior.",
+          "Escanea el código QR del cilindro o ingrésalo manualmente.",
+          "Llena: tipo de cilindro, presión de trabajo y presión de prueba.",
+          "Selecciona resultado: PASS o FAIL y agrega observaciones.",
+          "Al guardar se genera un folio PH-YYYY-NNNN automáticamente.",
+        ],
+      },
+      {
+        title: "Prueba de Mangueras",
+        icon: "🔴",
+        items: [
+          "Toca 'Nueva Manguera' en el menú inferior.",
+          "Escanea el código QR de la manguera o ingrésalo manualmente.",
+          "Selecciona diámetro, ingresa longitud y presión de prueba.",
+          "Al guardar se genera un folio MAN-YYYY-NNNN automáticamente.",
+        ],
+      },
+      {
+        title: "Bitácora de Recarga",
+        icon: "🔧",
+        items: [
+          "Usa 'Bitácora' para registrar recargas de múltiples equipos.",
+          "Agrega cada equipo con tipo, serie y cantidad.",
+          "Puedes tomar hasta 4 fotos como evidencia.",
+          "Al guardar se crea una OT por cada grupo de equipos.",
+        ],
+      },
+      {
+        title: "Soporte",
+        icon: "🛠️",
+        items: [
+          "Dudas sobre órdenes o clientes: usa el Chat de la app.",
+          "Para permisos o contraseña: contacta al administrador.",
         ],
       },
     ],
@@ -92,8 +156,8 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         title: "Inicio de sesión",
         icon: "🔐",
         items: [
-          "Usa la pestaña 'Vendedor' en la pantalla de inicio.",
-          "Ingresa tu correo y contraseña asignados por MASI.",
+          "En la pantalla inicial toca el botón azul oscuro 'MASI'.",
+          "Selecciona la pestaña 'Vendedor' y escribe tu correo y contraseña.",
           "Tu perfil de vendedor te da acceso a CRM, POS y cotizaciones.",
         ],
       },
@@ -152,6 +216,15 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
     color: "#7C3AED",
     sections: [
       {
+        title: "Inicio de sesión",
+        icon: "🔐",
+        items: [
+          "En la pantalla inicial toca el botón azul oscuro 'MASI'.",
+          "Selecciona la pestaña 'Empleado' — recibirás un código de 6 dígitos por correo.",
+          "Ingresa el código para acceder al portal de empleado.",
+        ],
+      },
+      {
         title: "Solicitudes",
         icon: "📝",
         items: [
@@ -194,7 +267,8 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         title: "Portal de cliente",
         icon: "🏢",
         items: [
-          "Accede con la pestaña 'Cliente' usando tu correo registrado.",
+          "En la pantalla inicial toca el botón verde oscuro 'Portal Cliente'.",
+          "Ingresa tu correo registrado con MASI.",
           "Se enviará un código de 6 dígitos a tu correo — ingrésalo para entrar.",
           "El portal es solo de lectura: podrás ver reportes, equipos e inspecciones.",
         ],
