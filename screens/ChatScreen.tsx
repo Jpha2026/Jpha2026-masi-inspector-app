@@ -158,6 +158,7 @@ export default function ChatScreen({ navigation, route }: Props) {
         <View style={[s.inputRow, {
           backgroundColor: T.isDark ? "#0D1B3E" : "#fff",
           borderTopColor: T.isDark ? "#1D3050" : "#E2E8F0",
+          paddingBottom: Math.max(insets.bottom, 12),
         }]}>
           <TextInput
             style={[s.input, {

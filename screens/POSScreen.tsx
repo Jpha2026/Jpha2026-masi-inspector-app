@@ -201,13 +201,13 @@ export default function POSScreen({ navigation, route }: Props) {
           </View>
 
           {/* Method */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
             {METHODS.map(m => (
               <TouchableOpacity key={m} style={[styles.methodBtn, method === m && { borderColor: MC[m], backgroundColor: MC[m] + "18" }]} onPress={() => setMethod(m)}>
                 <Text style={[styles.methodTxt, method === m && { color: MC[m] }]}>{m}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
 
           <TouchableOpacity style={styles.cobrarBtn} onPress={handleCobrar} disabled={saving || !items.length}>
             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.cobrarTxt}>COBRAR</Text>}
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   title: { color: "#fff", fontSize: 18, fontWeight: "800" },
   layout: { flex: 1, flexDirection: "row", gap: 0 },
   leftPane: { flex: 1, padding: 10, borderRightWidth: 1, borderRightColor: "rgba(255,255,255,0.06)" },
-  rightPane: { width: 200, padding: 10, backgroundColor: "rgba(0,0,0,0.2)" },
+  rightPane: { width: 200, padding: 10, backgroundColor: "rgba(0,0,0,0.2)", flex: 0 },
   searchBar: { backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 9, color: "#fff", fontSize: 13, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", marginBottom: 8 },
   prodCard: { flex: 1, backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 9, padding: 10, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", minHeight: 80 },
   prodName: { color: "#fff", fontSize: 12, fontWeight: "700", marginBottom: 4, lineHeight: 16 },

@@ -106,7 +106,7 @@ function Inp({ value, onChange, placeholder, multiline }: {
 function Selector({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   const T = useTheme();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}
+    <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
       {options.map(o => (
         <TouchableOpacity key={o} onPress={() => onChange(o)}
@@ -484,7 +484,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
 
             <FieldRow label="Tipo de Equipo *">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}
+              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
                 {EQ_TYPES.map(t => (
                   <TouchableOpacity key={t.value} onPress={() => setEquipmentType(t.value)}
@@ -498,7 +498,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
             </FieldRow>
 
             <FieldRow label="Compañía *">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}
+              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
                 {clientes.map(c => (
                   <TouchableOpacity key={c.id} onPress={() => { setClientId(c.id); setSucursalId(""); loadSucursales(c.id); }}
@@ -513,7 +513,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
 
             {sucursales.length > 0 && (
               <FieldRow label="Sucursal">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
                   {sucursales.map(s => (
                     <TouchableOpacity key={s.id} onPress={() => setSucursalId(s.id)}

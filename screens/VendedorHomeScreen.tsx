@@ -12,6 +12,7 @@ import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useJornada } from "../hooks/useJornada";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "VendedorHome">;
@@ -27,6 +28,9 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [cotStats, setCotStats] = useState<CotStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [jornadaLoading, setJornadaLoading] = useState(false);
+
+  const { active: jornada, start: startJornada, end: endJornada, formatElapsed } = useJornada(user.id, null);
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
@@ -40,9 +44,34 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
       });
       setCotStats(res.data);
     } catch {
-      // Stats not critical — fail silently
+      // Stats not critical
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleJornada = async () => {
+    if (jornada) {
+      Alert.alert("Finalizar jornada", `¿Terminar jornada? (${formatElapsed()})`, [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Finalizar", style: "destructive", onPress: async () => {
+          setJornadaLoading(true);
+          try { await endJornada(); } catch { Alert.alert("Error", "No se pudo finalizar la jornada."); }
+          finally { setJornadaLoading(false); }
+        }},
+      ]);
+    } else {
+      setJornadaLoading(true);
+      try {
+        await startJornada();
+      } catch (e: unknown) {
+        const code = (e as { code?: string })?.code;
+        if (code === "GPS_PERMISSION_DENIED") Alert.alert("GPS requerido", "Activa el permiso de ubicación para iniciar la jornada.");
+        else if (code === "GPS_NOT_AVAILABLE") Alert.alert("GPS no disponible", "Espera unos segundos y vuelve a intentar.");
+        else Alert.alert("Error", "No se pudo iniciar la jornada.");
+      } finally {
+        setJornadaLoading(false);
+      }
     }
   };
 
@@ -63,19 +92,12 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
     ? ["#050C1A", "#0D1B3E", "#122B60"] as const
     : ["#0D1B3E", "#122B60", "#1a3575"] as const;
 
-  const modules = [
-    { icon: "📋", label: "Cotizaciones", color: "#2563EB", onPress: () => navigation.navigate("ClienteCotizaciones", { user }) },
-    { icon: "🏪", label: "Punto de Venta", color: "#10B981", onPress: () => navigation.navigate("POS", { user }) },
-    { icon: "➕", label: "Nuevo Lead", color: "#7C3AED", onPress: () => navigation.navigate("NuevoLead", { user }) },
-    { icon: "📦", label: "Mis Pedidos", color: "#F59E0B", onPress: () => navigation.navigate("MisPedidos", { user }) },
-    { icon: "💬", label: "Chat", color: "#EC4899", onPress: () => navigation.navigate("Chat", { userEmail: user.email, userName: user.name }) },
-    { icon: "📖", label: "Manual Vendedor", color: "#6B7280", onPress: () => navigation.navigate("Manual", { role: "vendedor", userName: user.name }) },
-  ];
-
   return (
     <LinearGradient colors={bg} locations={[0, 0.4, 1]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={[s.container, { paddingTop: insets.top + 16 }]} showsVerticalScrollIndicator={false}>
-
+      <ScrollView
+        contentContainerStyle={[s.container, { paddingTop: insets.top + 16 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <Animated.View style={[s.header, { opacity: fadeAnim }]}>
           <View style={{ flex: 1 }}>
@@ -99,19 +121,62 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
           </Animated.View>
         ) : null}
 
-        {/* Modules grid */}
+        {/* Jornada card */}
+        <Animated.View style={[{ opacity: fadeAnim, marginHorizontal: 20, marginBottom: 14 }]}>
+          <TouchableOpacity onPress={handleJornada} disabled={jornadaLoading} activeOpacity={0.85}>
+            <LinearGradient
+              colors={jornada ? ["#064E3B", "#065F46"] : ["#1E293B", "#334155"]}
+              style={s.jornadaCard}
+            >
+              <Text style={{ fontSize: 28 }}>{jornada ? "🟢" : "🕐"}</Text>
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                {jornada ? (
+                  <>
+                    <Text style={s.jornadaTitle}>Jornada activa — {formatElapsed()}</Text>
+                    <Text style={s.jornadaSub}>
+                      Inicio: {new Date(jornada.start_time).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={s.jornadaTitle}>Sin jornada activa</Text>
+                    <Text style={s.jornadaSub}>Toca para iniciar</Text>
+                  </>
+                )}
+              </View>
+              {jornadaLoading
+                ? <ActivityIndicator color="#fff" />
+                : <View style={[s.jornadaBtn, { backgroundColor: jornada ? "#DC2626" : "#22C55E" }]}>
+                    <Text style={s.jornadaBtnTxt}>{jornada ? "Finalizar" : "Iniciar"}</Text>
+                  </View>
+              }
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* 2 main modules */}
         <Animated.View style={[s.grid, { opacity: fadeAnim }]}>
-          {modules.map((m) => (
-            <TouchableOpacity key={m.label} style={s.tile} onPress={m.onPress} activeOpacity={0.8}>
-              <LinearGradient
-                colors={[m.color + "33", m.color + "18"]}
-                style={s.tileGrad}
-              >
-                <Text style={s.tileIcon}>{m.icon}</Text>
-                <Text style={[s.tileLabel, { color: T.isDark ? "#E2E8F0" : "#1E293B" }]}>{m.label}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            style={s.tile}
+            onPress={() => navigation.navigate("ClienteCotizaciones", { user })}
+            activeOpacity={0.8}
+          >
+            <LinearGradient colors={["#2563EB33", "#2563EB18"]} style={s.tileGrad}>
+              <Text style={s.tileIcon}>📋</Text>
+              <Text style={[s.tileLabel, { color: T.isDark ? "#E2E8F0" : "#1E293B" }]}>Cotizaciones</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={s.tile}
+            onPress={() => navigation.navigate("Chat", { userEmail: user.email, userName: user.name })}
+            activeOpacity={0.8}
+          >
+            <LinearGradient colors={["#7C3AED33", "#7C3AED18"]} style={s.tileGrad}>
+              <Text style={s.tileIcon}>🤖</Text>
+              <Text style={[s.tileLabel, { color: T.isDark ? "#E2E8F0" : "#1E293B" }]}>MASI-IA</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Quick-create cotización CTA */}
@@ -120,12 +185,16 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate("ClienteCotizaciones", { user })}
             activeOpacity={0.85}
           >
-            <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.ctaBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <Text style={s.ctaText}>+ Nueva Cotización rápida</Text>
+            <LinearGradient
+              colors={["#1D4ED8", "#3B82F6"]}
+              style={s.ctaBtn}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={s.ctaText}>+ Nueva Cotización</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
-
       </ScrollView>
     </LinearGradient>
   );
@@ -141,21 +210,26 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 }
 
 const s = StyleSheet.create({
-  container:  { paddingBottom: 40 },
-  header:     { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 20 },
-  greeting:   { fontSize: 22, fontWeight: "800", color: "#fff" },
-  subtitle:   { fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 },
-  logoutBtn:  { backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7 },
-  logoutText: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  statsRow:   { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 22, flexWrap: "wrap" },
-  statCard:   { flex: 1, minWidth: 70, backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 12, borderWidth: 1, padding: 12, alignItems: "center" },
-  statVal:    { fontSize: 24, fontWeight: "900" },
-  statLbl:    { fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 3, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.4 },
-  grid:       { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 14, gap: 10, marginBottom: 24 },
-  tile:       { width: "30%", flexGrow: 1, borderRadius: 16, overflow: "hidden" },
-  tileGrad:   { padding: 16, alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", borderRadius: 16 },
-  tileIcon:   { fontSize: 28, marginBottom: 8 },
-  tileLabel:  { fontSize: 11, fontWeight: "700", textAlign: "center" },
-  ctaBtn:     { borderRadius: 16, paddingVertical: 16, alignItems: "center", elevation: 6, shadowColor: "#1D4ED8", shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
-  ctaText:    { color: "#fff", fontSize: 15, fontWeight: "800" },
+  container:    { paddingBottom: 40 },
+  header:       { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 20 },
+  greeting:     { fontSize: 22, fontWeight: "800", color: "#fff" },
+  subtitle:     { fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 },
+  logoutBtn:    { backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7 },
+  logoutText:   { color: "#fff", fontSize: 12, fontWeight: "700" },
+  statsRow:     { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 22, flexWrap: "wrap" },
+  statCard:     { flex: 1, minWidth: 70, backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 12, borderWidth: 1, padding: 12, alignItems: "center" },
+  statVal:      { fontSize: 24, fontWeight: "900" },
+  statLbl:      { fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 3, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.4 },
+  jornadaCard:  { borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  jornadaTitle: { color: "#fff", fontSize: 14, fontWeight: "800" },
+  jornadaSub:   { color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 2 },
+  jornadaBtn:   { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  jornadaBtnTxt:{ color: "#fff", fontSize: 12, fontWeight: "700" },
+  grid:         { flexDirection: "row", paddingHorizontal: 14, gap: 10, marginBottom: 16 },
+  tile:         { flex: 1, borderRadius: 16, overflow: "hidden" },
+  tileGrad:     { padding: 20, alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", borderRadius: 16 },
+  tileIcon:     { fontSize: 32, marginBottom: 10 },
+  tileLabel:    { fontSize: 13, fontWeight: "700", textAlign: "center" },
+  ctaBtn:       { borderRadius: 16, paddingVertical: 16, alignItems: "center", elevation: 6, shadowColor: "#1D4ED8", shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+  ctaText:      { color: "#fff", fontSize: 15, fontWeight: "800" },
 });
