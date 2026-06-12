@@ -17,24 +17,36 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, "Login"
 
 const { width } = Dimensions.get("window");
 
-type Tab = "inspector" | "taller" | "vendedor" | "empleado" | "cliente";
+type Tab  = "inspector" | "taller" | "vendedor" | "empleado";
+type Step = "main" | "staff" | "cliente";
 
 export default function LoginScreen({ navigation }: Props) {
   const T = useTheme();
   const insets = useSafeAreaInsets();
+  const [step, setStep]              = useState<Step>("main");
   const [tab, setTab]                = useState<Tab>("inspector");
 
-  // Inspector tab — password login
+  // Password login (inspector/taller/vendedor)
   const [inspEmail, setInspEmail]    = useState("");
   const [inspPass, setInspPass]      = useState("");
   const [showPass, setShowPass]      = useState(false);
 
-  // Employee tab — OTP flow
+  // OTP flow (empleado / cliente)
   const [email, setEmail]            = useState("");
   const [codeSent, setCodeSent]      = useState(false);
   const [code, setCode]              = useState("");
 
   const [loading, setLoading]        = useState(false);
+
+  const goBack = () => {
+    setStep("main");
+    setTab("inspector");
+    setCodeSent(false);
+    setCode("");
+    setInspEmail("");
+    setInspPass("");
+    setEmail("");
+  };
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -156,58 +168,63 @@ export default function LoginScreen({ navigation }: Props) {
             transform: [{ translateY: slideAnim }],
           }]}>
 
-            {/* Tab selector */}
-            <View style={[s.tabRow, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB", flexWrap: "wrap" }]}>
-              <TouchableOpacity
-                style={[s.tabBtn, tab === "inspector" && s.tabActive]}
-                onPress={() => { setTab("inspector"); setCodeSent(false); setCode(""); }}
-              >
-                <Text style={[s.tabText, { color: tab === "inspector" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  🔍{"\n"}Inspector
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.tabBtn, tab === "taller" && { backgroundColor: "#D97706" }]}
-                onPress={() => { setTab("taller"); setCodeSent(false); setCode(""); }}
-              >
-                <Text style={[s.tabText, { color: tab === "taller" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  🔧{"\n"}Taller
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.tabBtn, tab === "vendedor" && { backgroundColor: "#1D4ED8" }]}
-                onPress={() => { setTab("vendedor"); setCodeSent(false); setCode(""); }}
-              >
-                <Text style={[s.tabText, { color: tab === "vendedor" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  💼{"\n"}Vendedor
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.tabBtn, tab === "empleado" && s.tabActive]}
-                onPress={() => { setTab("empleado"); setCodeSent(false); setCode(""); }}
-              >
-                <Text style={[s.tabText, { color: tab === "empleado" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  👤{"\n"}Empleado
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.tabBtn, tab === "cliente" && { backgroundColor: "#065F46" }]}
-                onPress={() => { setTab("cliente"); setCodeSent(false); setCode(""); }}
-              >
-                <Text style={[s.tabText, { color: tab === "cliente" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
-                  🏢{"\n"}Cliente
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {(tab === "inspector" || tab === "taller" || tab === "vendedor") ? (
+            {/* ── Paso 1: selección de tipo ── */}
+            {step === "main" ? (
               <>
-                <Text style={[s.cardTitle, {
-                  color: tab === "vendedor" ? "#3B82F6" : tab === "taller" ? "#D97706" : (T.isDark ? "#60A5FA" : "#122B60"),
-                  marginTop: 18,
-                }]}>
-                  {tab === "vendedor" ? "Acceso Vendedor" : tab === "taller" ? "Acceso Taller" : "Acceso Inspector"}
+                <Text style={{ color: T.isDark ? "#8B949E" : "#5A6E8C", fontSize: 12, fontWeight: "700", textAlign: "center", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 20 }}>
+                  ¿Cómo deseas ingresar?
                 </Text>
+
+                <TouchableOpacity onPress={() => setStep("staff")} activeOpacity={0.85}
+                  style={{ backgroundColor: "#0D1B3E", borderRadius: 18, padding: 22, marginBottom: 12, alignItems: "center", borderWidth: 1, borderColor: "rgba(100,140,220,0.25)" }}
+                >
+                  <Text style={{ fontSize: 36, marginBottom: 6 }}>🛡️</Text>
+                  <Text style={{ color: "#fff", fontSize: 20, fontWeight: "900", letterSpacing: 2 }}>MASI</Text>
+                  <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, marginTop: 5 }}>Inspector · Taller · Vendedor · Empleado</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setStep("cliente")} activeOpacity={0.85}
+                  style={{ backgroundColor: "#064E3B", borderRadius: 18, padding: 22, alignItems: "center", borderWidth: 1, borderColor: "rgba(16,185,129,0.25)" }}
+                >
+                  <Text style={{ fontSize: 36, marginBottom: 6 }}>🏢</Text>
+                  <Text style={{ color: "#fff", fontSize: 20, fontWeight: "900", letterSpacing: 2 }}>Portal Cliente</Text>
+                  <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, marginTop: 5 }}>Acceso exclusivo para clientes MASI</Text>
+                </TouchableOpacity>
+              </>
+
+            ) : step === "staff" ? (
+              <>
+                {/* Back + 4 tabs */}
+                <TouchableOpacity onPress={goBack} style={{ marginBottom: 14 }}>
+                  <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 13, fontWeight: "600" }}>← Regresar</Text>
+                </TouchableOpacity>
+
+                <View style={[s.tabRow, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB", flexDirection: "row" }]}>
+                  {([
+                    { key: "inspector", icon: "🔍", label: "Inspector", bg: "#122B60" },
+                    { key: "taller",    icon: "🔧", label: "Taller",    bg: "#D97706" },
+                    { key: "vendedor",  icon: "💼", label: "Vendedor",  bg: "#1D4ED8" },
+                    { key: "empleado",  icon: "👤", label: "Empleado",  bg: "#122B60" },
+                  ] as { key: Tab; icon: string; label: string; bg: string }[]).map((t) => (
+                    <TouchableOpacity key={t.key}
+                      style={[s.tabBtn, { flex: 1 }, tab === t.key && { backgroundColor: t.bg }]}
+                      onPress={() => { setTab(t.key); setCodeSent(false); setCode(""); }}
+                    >
+                      <Text style={[s.tabText, { color: tab === t.key ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
+                        {t.icon}{"\n"}{t.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {(tab === "inspector" || tab === "taller" || tab === "vendedor") ? (
+                  <>
+                    <Text style={[s.cardTitle, {
+                      color: tab === "vendedor" ? "#3B82F6" : tab === "taller" ? "#D97706" : (T.isDark ? "#60A5FA" : "#122B60"),
+                      marginTop: 18,
+                    }]}>
+                      {tab === "vendedor" ? "Acceso Vendedor" : tab === "taller" ? "Acceso Taller" : "Acceso Inspector"}
+                    </Text>
 
                 {/* Email */}
                 <View style={[s.inputWrap, {
@@ -263,70 +280,6 @@ export default function LoginScreen({ navigation }: Props) {
                     }
                   </TouchableOpacity>
                 </LinearGradient>
-              </>
-            ) : tab === "cliente" ? (
-              <>
-                <Text style={[s.cardTitle, { color: "#065F46", marginTop: 18 }]}>
-                  {codeSent ? "Ingresa tu código" : "Acceso Cliente"}
-                </Text>
-                <View style={[s.inputWrap, {
-                  backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4",
-                  borderColor: codeSent ? "rgba(16,185,129,0.4)" : "#A7F3D0",
-                }]}>
-                  <Text style={s.inputIcon}>✉️</Text>
-                  <TextInput
-                    style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
-                    value={email}
-                    onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
-                    placeholder="Correo electrónico"
-                    placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    editable={!codeSent}
-                  />
-                  {codeSent && <Text style={{ color: "#10B981", fontSize: 18 }}>✓</Text>}
-                </View>
-                {codeSent ? (
-                  <>
-                    <View style={[s.inputWrap, {
-                      backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4",
-                      borderColor: "#A7F3D0", marginTop: 12,
-                    }]}>
-                      <Text style={s.inputIcon}>🔑</Text>
-                      <TextInput
-                        style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
-                        value={code}
-                        onChangeText={setCode}
-                        placeholder="000000"
-                        placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        autoFocus
-                      />
-                    </View>
-                    <TouchableOpacity onPress={() => { setCodeSent(false); setCode(""); }} style={{ marginTop: 10, alignSelf: "center" }}>
-                      <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>
-                        ← Cambiar correo o reenviar código
-                      </Text>
-                    </TouchableOpacity>
-                    <View style={{ height: 16 }} />
-                    <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                      <TouchableOpacity style={s.btnInner} onPress={handleVerifyCode} disabled={loading} activeOpacity={0.85}>
-                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Verificar y entrar</Text>}
-                      </TouchableOpacity>
-                    </LinearGradient>
-                  </>
-                ) : (
-                  <>
-                    <View style={{ height: 20 }} />
-                    <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                      <TouchableOpacity style={s.btnInner} onPress={handleSendCode} disabled={loading} activeOpacity={0.85}>
-                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Enviar código al correo</Text>}
-                      </TouchableOpacity>
-                    </LinearGradient>
-                  </>
-                )}
               </>
             ) : (
               <>
@@ -403,6 +356,71 @@ export default function LoginScreen({ navigation }: Props) {
                 )}
               </>
             )}
+          </>
+
+        ) : (
+          /* ── Paso 2b: Portal Cliente ── */
+          <>
+            <TouchableOpacity onPress={goBack} style={{ marginBottom: 16 }}>
+              <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 13, fontWeight: "600" }}>← Regresar</Text>
+            </TouchableOpacity>
+
+            <Text style={[s.cardTitle, { color: "#065F46", marginTop: 4 }]}>
+              {codeSent ? "Ingresa tu código" : "Acceso Cliente"}
+            </Text>
+
+            <View style={[s.inputWrap, {
+              backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4",
+              borderColor: codeSent ? "rgba(16,185,129,0.4)" : "#A7F3D0",
+            }]}>
+              <Text style={s.inputIcon}>✉️</Text>
+              <TextInput
+                style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                value={email}
+                onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
+                placeholder="Correo electrónico"
+                placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                editable={!codeSent}
+              />
+              {codeSent && <Text style={{ color: "#10B981", fontSize: 18 }}>✓</Text>}
+            </View>
+
+            {codeSent ? (
+              <>
+                <View style={[s.inputWrap, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4", borderColor: "#A7F3D0", marginTop: 12 }]}>
+                  <Text style={s.inputIcon}>🔑</Text>
+                  <TextInput
+                    style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
+                    value={code} onChangeText={setCode}
+                    placeholder="000000" placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                    keyboardType="number-pad" maxLength={6} autoFocus
+                  />
+                </View>
+                <TouchableOpacity onPress={() => { setCodeSent(false); setCode(""); }} style={{ marginTop: 10, alignSelf: "center" }}>
+                  <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>← Cambiar correo o reenviar código</Text>
+                </TouchableOpacity>
+                <View style={{ height: 16 }} />
+                <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <TouchableOpacity style={s.btnInner} onPress={handleVerifyCode} disabled={loading} activeOpacity={0.85}>
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Verificar y entrar</Text>}
+                  </TouchableOpacity>
+                </LinearGradient>
+              </>
+            ) : (
+              <>
+                <View style={{ height: 20 }} />
+                <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <TouchableOpacity style={s.btnInner} onPress={handleSendCode} disabled={loading} activeOpacity={0.85}>
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Enviar código al correo</Text>}
+                  </TouchableOpacity>
+                </LinearGradient>
+              </>
+            )}
+          </>
+        )}
           </Animated.View>
 
           <Animated.View style={[s.footer, { opacity: fadeAnim }]}>
@@ -425,8 +443,8 @@ const s = StyleSheet.create({
   tagPill:         { marginTop: 14, paddingHorizontal: 18, paddingVertical: 7, borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
   tagText:         { color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: 0.3 },
   card:            { marginHorizontal: 16, borderRadius: 26, padding: 26, borderWidth: 1, elevation: 24, shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } },
-  tabRow:          { flexDirection: "row", borderRadius: 14, padding: 4, gap: 4 },
-  tabBtn:          { flex: 1, paddingVertical: 10, borderRadius: 11, alignItems: "center" },
+  tabRow:          { borderRadius: 14, padding: 4 },
+  tabBtn:          { width: 72, paddingVertical: 9, borderRadius: 11, alignItems: "center", marginRight: 4 },
   tabActive:       { backgroundColor: "#122B60" },
   tabText:         { fontSize: 11, fontWeight: "700", textAlign: "center" },
   cardTitle:       { fontSize: 13, fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 18 },
