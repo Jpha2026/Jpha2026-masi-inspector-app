@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   ActivityIndicator, RefreshControl, Alert, Modal,
-  TextInput, KeyboardAvoidingView, Platform,
+  TextInput, KeyboardAvoidingView, Platform, Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
-import { RootStackParamList, OrdenTrabajo } from "../types";
+import { RootStackParamList, OrdenTrabajo, OTItem } from "../types";
 import { API_URL } from "../constants/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,6 +21,7 @@ type Props = {
 
 type Cliente = { id: string; name: string };
 type EqLookup = { found: boolean; id?: string; name?: string; qr_code?: string; type?: string; serial_number?: string; client_name?: string };
+type BitItem = { uid: string; type: string; serial: string; qty: number };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
   abierta:    { label: "Abierta",     color: "#D97706", icon: "⏳" },
@@ -30,10 +32,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 const NEXT_STATUS: Record<string, string> = { abierta: "en_proceso", en_proceso: "cerrada" };
 const TIPOS_OT = ["Mantenimiento preventivo","Mantenimiento correctivo","Prueba hidrostática","Recarga de extintor","Reparación","Inspección","Otro"];
 const PRIORIDADES = [
-  { key: "baja",  label: "Baja",  color: "#059669" },
-  { key: "media", label: "Media", color: "#D97706" },
-  { key: "alta",  label: "Alta",  color: "#DC2626" },
+  { key: "baja",   label: "Baja",   color: "#059669" },
+  { key: "media",  label: "Media",  color: "#D97706" },
+  { key: "alta",   label: "Alta",   color: "#DC2626" },
+  { key: "urgente",label: "Urgente",color: "#7C2D12" },
 ];
+const TIPOS_EQUIPO = [
+  "Extintor CO2","Extintor PQS","Extintor AFFF","Extintor HCFC","Extintor Agua",
+  "Manguera SCI","Cilindro N2","Cilindro Aire","Otro",
+];
+
+const uid = () => Math.random().toString(36).slice(2);
 
 export default function TallerScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
@@ -47,12 +56,12 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [filter, setFilter]         = useState<string>("all");
 
   // OT modal
-  const [showOT, setShowOT]         = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [otTipo, setOtTipo]         = useState(TIPOS_OT[0]);
-  const [otDesc, setOtDesc]         = useState("");
+  const [showOT, setShowOT]           = useState(false);
+  const [submitting, setSubmitting]   = useState(false);
+  const [otTipo, setOtTipo]           = useState(TIPOS_OT[0]);
+  const [otDesc, setOtDesc]           = useState("");
   const [otPrioridad, setOtPrioridad] = useState("media");
-  const [otClientId, setOtClientId] = useState("");
+  const [otClientId, setOtClientId]   = useState("");
 
   // PH Test modal
   const [showPH, setShowPH]           = useState(false);
@@ -78,9 +87,17 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [manSaving, setManSaving]     = useState(false);
   const [manDiameter, setManDiameter] = useState('1.5"');
 
-  // Camera scanner state
+  // Bitácora de Recarga modal
+  const [showBit, setShowBit]         = useState(false);
+  const [bitClientId, setBitClientId] = useState("");
+  const [bitItems, setBitItems]       = useState<BitItem[]>([]);
+  const [bitNotes, setBitNotes]       = useState("");
+  const [bitPhotos, setBitPhotos]     = useState<string[]>([]);
+  const [bitSaving, setBitSaving]     = useState(false);
+
+  // Camera scanner
   const [scanning, setScanning]       = useState(false);
-  const [scanTarget, setScanTarget]   = useState<"ph"|"man"|"ot">("ph");
+  const [scanTarget, setScanTarget]   = useState<"ph"|"man">("ph");
   const [lookingUp, setLookingUp]     = useState(false);
 
   const load = async (isRefresh = false) => {
@@ -99,14 +116,15 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   useEffect(() => { load(); }, []);
 
+  // ─── Equipment lookup ───────────────────────────────────────────────────────
   const lookupEquipment = async (code: string, target: "ph" | "man") => {
     if (!code.trim()) return;
     setLookingUp(true);
     try {
       const r = await axios.get<EqLookup>(`${API_URL.replace("/mobile", "")}/equipment/lookup?code=${encodeURIComponent(code)}`);
       const data = r.data;
-      if (target === "ph") { setPhEq(data); if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base. Llena los datos manualmente.`); }
-      else { setManEq(data); if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base. Llena los datos manualmente.`); }
+      if (target === "ph") { setPhEq(data); if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base.`); }
+      else                 { setManEq(data); if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base.`); }
     } catch {
       if (target === "ph") setPhEq({ found: false });
       else setManEq({ found: false });
@@ -125,9 +143,10 @@ export default function TallerScreen({ navigation, route }: Props) {
   const onBarcode = ({ data }: { data: string }) => {
     setScanning(false);
     if (scanTarget === "ph") { setPhCode(data); lookupEquipment(data, "ph"); }
-    else { setManCode(data); lookupEquipment(data, "man"); }
+    else                     { setManCode(data); lookupEquipment(data, "man"); }
   };
 
+  // ─── PH Submit ──────────────────────────────────────────────────────────────
   const submitPH = async () => {
     if (!phCylType.trim() || !phWorkPsi || !phTestPsi) {
       Alert.alert("Faltan datos", "Tipo de cilindro, presión de trabajo y presión de prueba son requeridos.");
@@ -136,24 +155,19 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhSaving(true);
     try {
       const r = await axios.post<{ folio: string; result: string }>(`${API_URL}/taller/ph`, {
-        equipment_id: phEq?.id,
-        equipment_code: phCode || undefined,
-        cylinder_type: phCylType,
-        working_pressure_psi: Number(phWorkPsi),
-        test_pressure_psi: Number(phTestPsi),
-        result: phResult,
-        observations: phObs,
-        tested_by: phBy,
-        duration_seconds: 60,
+        equipment_id: phEq?.id, equipment_code: phCode || undefined,
+        cylinder_type: phCylType, working_pressure_psi: Number(phWorkPsi),
+        test_pressure_psi: Number(phTestPsi), result: phResult,
+        observations: phObs, tested_by: phBy, duration_seconds: 60,
       });
       Alert.alert("✅ Prueba PH guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowPH(false); resetPH(); } },
       ]);
-    } catch {
-      Alert.alert("Error", "No se pudo guardar la prueba hidrostática.");
-    } finally { setPhSaving(false); }
+    } catch { Alert.alert("Error", "No se pudo guardar la prueba hidrostática."); }
+    finally { setPhSaving(false); }
   };
 
+  // ─── Manguera Submit ────────────────────────────────────────────────────────
   const submitMAN = async () => {
     if (!manLength || !manPressure) {
       Alert.alert("Faltan datos", "Longitud y presión de prueba son requeridos.");
@@ -162,24 +176,19 @@ export default function TallerScreen({ navigation, route }: Props) {
     setManSaving(true);
     try {
       const r = await axios.post<{ folio: string; result: string }>(`${API_URL}/taller/mangueras`, {
-        equipment_id: manEq?.id,
-        equipment_code: manCode || undefined,
-        hose_diameter_in: manDiameter,
-        hose_length_m: Number(manLength),
-        test_pressure_lbs: Number(manPressure),
-        result: manResult,
-        observations: manObs,
-        tested_by: manBy,
-        duration_min: 3,
+        equipment_id: manEq?.id, equipment_code: manCode || undefined,
+        hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
+        test_pressure_lbs: Number(manPressure), result: manResult,
+        observations: manObs, tested_by: manBy, duration_min: 3,
       });
       Alert.alert("✅ Prueba de manguera guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowMAN(false); resetMAN(); } },
       ]);
-    } catch {
-      Alert.alert("Error", "No se pudo guardar la prueba.");
-    } finally { setManSaving(false); }
+    } catch { Alert.alert("Error", "No se pudo guardar la prueba."); }
+    finally { setManSaving(false); }
   };
 
+  // ─── OT Submit ──────────────────────────────────────────────────────────────
   const handleCreateOT = async () => {
     if (!otDesc.trim()) { Alert.alert("Descripción requerida"); return; }
     setSubmitting(true);
@@ -195,6 +204,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     finally { setSubmitting(false); }
   };
 
+  // ─── Status Update ──────────────────────────────────────────────────────────
   const handleUpdateStatus = async (order: OrdenTrabajo) => {
     const next = NEXT_STATUS[order.status];
     if (!next) return;
@@ -209,18 +219,110 @@ export default function TallerScreen({ navigation, route }: Props) {
     ]);
   };
 
+  // ─── Bitácora de Recarga ────────────────────────────────────────────────────
+  const addBitItem = () => {
+    setBitItems(prev => [...prev, { uid: uid(), type: TIPOS_EQUIPO[0], serial: "", qty: 1 }]);
+  };
+
+  const updateBitItem = (id: string, field: keyof Omit<BitItem, "uid">, val: string | number) => {
+    setBitItems(prev => prev.map(i => i.uid === id ? { ...i, [field]: val } : i));
+  };
+
+  const removeBitItem = (id: string) => {
+    setBitItems(prev => prev.filter(i => i.uid !== id));
+  };
+
+  const takeBitPhoto = async () => {
+    if (bitPhotos.length >= 4) { Alert.alert("Máximo 4 fotos"); return; }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permiso de cámara requerido"); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.6 });
+    if (!result.canceled && result.assets[0]?.uri) setBitPhotos(prev => [...prev, result.assets[0].uri]);
+  };
+
+  const pickBitPhoto = async () => {
+    if (bitPhotos.length >= 4) { Alert.alert("Máximo 4 fotos"); return; }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permiso de galería requerido"); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.6 });
+    if (!result.canceled && result.assets[0]?.uri) setBitPhotos(prev => [...prev, result.assets[0].uri]);
+  };
+
+  const submitBitacora = async () => {
+    if (bitItems.length === 0) { Alert.alert("Agrega al menos un equipo a la bitácora"); return; }
+    setBitSaving(true);
+    try {
+      // Upload photos
+      let photoUrls: string[] = [];
+      if (bitPhotos.length > 0) {
+        const uploadBase = API_URL.replace("/mobile", "");
+        for (const uri of bitPhotos) {
+          try {
+            const fd = new FormData();
+            fd.append("file", { uri, name: `bit_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
+            const r = await axios.post<{ url: string }>(`${uploadBase}/mobile/upload`, fd, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+            if (r.data?.url) photoUrls.push(r.data.url);
+          } catch { /* skip */ }
+        }
+      }
+
+      const items = bitItems.map(i => ({
+        description: `${i.type}${i.serial.trim() ? ` | SN: ${i.serial.trim()}` : ""}`,
+        qty: i.qty,
+      }));
+
+      const summaryLine = `Bitácora de recarga — ${items.length} equipo(s): ${bitItems.map(i => i.type).join(", ")}`;
+      const noteLine = bitNotes.trim() ? `\n${bitNotes.trim()}` : "";
+      const photoLine = photoUrls.length > 0 ? `\nFotos: ${photoUrls.join(" | ")}` : "";
+
+      const res = await axios.post<{ folio: string }>(`${API_URL}/mobile/taller`, {
+        inspector_id: inspectorId,
+        client_id: bitClientId || undefined,
+        tipo: "Recarga de extintor",
+        description: summaryLine + noteLine + photoLine,
+        priority: "normal",
+        items,
+      });
+      Alert.alert("📋 Bitácora enviada al taller", `Folio: ${res.data?.folio}`, [
+        { text: "OK", onPress: () => { setShowBit(false); resetBit(); load(true); } },
+      ]);
+    } catch { Alert.alert("Error", "No se pudo enviar la bitácora."); }
+    finally { setBitSaving(false); }
+  };
+
+  // ─── Item qty edit ──────────────────────────────────────────────────────────
+  const updateItemQty = async (orderId: string, itemId: string, newQty: number) => {
+    if (newQty < 1) return;
+    try {
+      await axios.patch(`${API_URL}/mobile/taller`, {
+        id: orderId, action: "update_item_qty", item_id: itemId, qty: newQty,
+      });
+      setOrders(prev => prev.map(o =>
+        o.id === orderId
+          ? { ...o, items: o.items?.map(i => i.id === itemId ? { ...i, qty: newQty } : i) }
+          : o
+      ));
+    } catch { Alert.alert("Error", "No se pudo actualizar la cantidad."); }
+  };
+
+  // ─── Resets ─────────────────────────────────────────────────────────────────
   const resetOT  = () => { setOtTipo(TIPOS_OT[0]); setOtDesc(""); setOtPrioridad("media"); setOtClientId(""); };
   const resetPH  = () => { setPhEq(null); setPhCode(""); setPhCylType(""); setPhWorkPsi(""); setPhTestPsi(""); setPhResult("PASS"); setPhObs(""); };
   const resetMAN = () => { setManEq(null); setManCode(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); };
+  const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
   const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
 
-  // ─── Camera Overlay ───
+  // ─── Camera Overlay ─────────────────────────────────────────────────────────
   if (scanning) {
     return (
       <View style={{ flex: 1, backgroundColor: "#000" }}>
-        <CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ["qr","code128","code39","ean13","ean8","pdf417","aztec","datamatrix"] }} onBarcodeScanned={onBarcode} />
+        <CameraView style={{ flex: 1 }} facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ["qr","code128","code39","ean13","ean8","pdf417","aztec","datamatrix"] }}
+          onBarcodeScanned={onBarcode} />
         <View style={{ position: "absolute", top: insets.top + 20, left: 0, right: 0, alignItems: "center" }}>
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", backgroundColor: "rgba(0,0,0,0.5)", paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20 }}>
             Apunta al código del equipo
@@ -240,7 +342,7 @@ export default function TallerScreen({ navigation, route }: Props) {
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
         <View style={{ alignItems: "center" }}>
-          <Text style={s.navTitle}>Taller</Text>
+          <Text style={s.navTitle}>🔧 Taller</Text>
           {!!userName && <Text style={s.navSub}>{userName}</Text>}
         </View>
         <TouchableOpacity style={s.newOtBtn} onPress={() => { resetOT(); setShowOT(true); }}>
@@ -250,6 +352,10 @@ export default function TallerScreen({ navigation, route }: Props) {
 
       {/* Quick action row */}
       <View style={s.quickRow}>
+        <TouchableOpacity style={[s.quickBtn, { borderColor: "#D9770044", backgroundColor: "#D977000A" }]} onPress={() => { resetBit(); addBitItem(); setShowBit(true); }}>
+          <Text style={{ fontSize: 18 }}>📋</Text>
+          <Text style={[s.quickTxt, { color: "#D97700" }]}>Bitácora</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={[s.quickBtn, { borderColor: "#7C3AED44", backgroundColor: "#7C3AED0A" }]} onPress={() => { resetPH(); setShowPH(true); }}>
           <Text style={{ fontSize: 18 }}>🔬</Text>
           <Text style={[s.quickTxt, { color: "#7C3AED" }]}>Prueba PH</Text>
@@ -286,35 +392,70 @@ export default function TallerScreen({ navigation, route }: Props) {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#3B82F6" />}>
+
           {filtered.length === 0 ? (
             <View style={[s.emptyCard, { backgroundColor: "#fff", borderColor: "#E2E8F5" }]}>
               <Text style={{ fontSize: 36, marginBottom: 10 }}>🔧</Text>
               <Text style={{ color: "#9BACC8", fontSize: 14, textAlign: "center" }}>Sin órdenes en esta categoría</Text>
             </View>
           ) : filtered.map((order, idx) => {
-            const cfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.abierta;
-            const next = NEXT_STATUS[order.status];
+            const cfg     = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.abierta;
+            const next    = NEXT_STATUS[order.status];
             const nextCfg = next ? STATUS_CONFIG[next] : null;
+            const isRecarga = order.tipo === "Recarga de extintor";
+
             return (
-              <View key={order.id ?? String(idx)} style={[s.orderCard, { backgroundColor: "#fff", borderColor: "#E2E8F5" }]}>
+              <View key={order.id ?? String(idx)} style={[s.orderCard, { backgroundColor: "#fff", borderColor: isRecarga ? "#FDE68A" : "#E2E8F5", borderLeftWidth: isRecarga ? 3 : 1, borderLeftColor: isRecarga ? "#D97706" : "#E2E8F5" }]}>
                 <View style={s.orderTop}>
                   <View style={[s.statusDot, { backgroundColor: cfg.color + "22", borderColor: cfg.color }]}>
                     <Text style={{ fontSize: 16 }}>{cfg.icon}</Text>
                   </View>
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={[s.orderFolio, { color: "#122B60" }]}>{order.folio || "OT"}</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <Text style={[s.orderFolio, { color: "#122B60" }]}>{order.folio || "OT"}</Text>
+                      {isRecarga && <View style={{ backgroundColor: "#FEF3C7", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                        <Text style={{ fontSize: 10, fontWeight: "800", color: "#92400E" }}>RECARGA</Text>
+                      </View>}
+                    </View>
                     <Text style={[s.orderTipo, { color: "#1A2740" }]}>{order.tipo || "Orden de trabajo"}</Text>
                   </View>
                   <View style={[s.statusBadge, { backgroundColor: cfg.color + "22" }]}>
                     <Text style={[s.statusText, { color: cfg.color }]}>{cfg.label}</Text>
                   </View>
                 </View>
+
                 <View style={[s.orderMeta, { borderColor: "#EEF2FB" }]}>
                   {!!order.client_name && <Text style={[s.metaLine, { color: "#6B84A8" }]}>🏢 {order.client_name}</Text>}
-                  {!!order.notes && <Text style={[s.metaLine, { color: "#6B84A8" }]} numberOfLines={2}>📝 {order.notes}</Text>}
+                  {!!order.notes && !isRecarga && <Text style={[s.metaLine, { color: "#6B84A8" }]} numberOfLines={2}>📝 {order.notes}</Text>}
                   <Text style={[s.metaDate, { color: "#B0BDCE" }]}>{new Date(order.created_at).toLocaleDateString("es-MX")}</Text>
                 </View>
-                {nextCfg && (
+
+                {/* Items list for recarga orders */}
+                {isRecarga && order.items && order.items.length > 0 && (
+                  <View style={s.itemsList}>
+                    <Text style={s.itemsTitle}>🔥 Equipos a recargar</Text>
+                    {order.items.map((item: OTItem) => (
+                      <View key={item.id} style={s.itemRow}>
+                        <Text style={s.itemDesc} numberOfLines={1}>{item.description}</Text>
+                        <View style={s.qtyRow}>
+                          <TouchableOpacity onPress={() => updateItemQty(order.id, item.id, item.qty - 1)} style={s.qtyBtn}>
+                            <Text style={{ color: "#1D4ED8", fontWeight: "900", fontSize: 16 }}>−</Text>
+                          </TouchableOpacity>
+                          <Text style={s.qtyNum}>{item.qty}</Text>
+                          <TouchableOpacity onPress={() => updateItemQty(order.id, item.id, item.qty + 1)} style={s.qtyBtn}>
+                            <Text style={{ color: "#1D4ED8", fontWeight: "900", fontSize: 16 }}>+</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ))}
+                    <Text style={{ fontSize: 10, color: "#9BACC8", marginTop: 6, fontStyle: "italic" }}>
+                      Solo el taller puede cerrar esta orden. Puedes editar las cantidades.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Status action — recarga orders cannot be closed from field */}
+                {nextCfg && !(isRecarga && next === "cerrada") && (
                   <TouchableOpacity style={[s.actionBtn, { backgroundColor: nextCfg.color + "15", borderColor: nextCfg.color }]} onPress={() => handleUpdateStatus(order)} activeOpacity={0.75}>
                     <Text style={[s.actionText, { color: nextCfg.color }]}>{nextCfg.icon} Marcar como {nextCfg.label}</Text>
                   </TouchableOpacity>
@@ -325,7 +466,7 @@ export default function TallerScreen({ navigation, route }: Props) {
         </ScrollView>
       )}
 
-      {/* ─── Nueva OT Modal ─── */}
+      {/* ─── Nueva OT Modal ────────────────────────────────────────────────── */}
       <Modal visible={showOT} animationType="slide" transparent statusBarTranslucent>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowOT(false)} />
@@ -357,134 +498,235 @@ export default function TallerScreen({ navigation, route }: Props) {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ─── Prueba PH Modal ─── */}
-      <Modal visible={showPH} animationType="slide" transparent statusBarTranslucent>
+      {/* ─── Bitácora de Recarga Modal ─────────────────────────────────────── */}
+      <Modal visible={showBit} animationType="slide" transparent statusBarTranslucent>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowPH(false)} />
-          <View style={s.modalCard}>
-              <ModalHeader title="🔬 Prueba Hidrostática" onClose={() => setShowPH(false)} />
-              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                <FieldLabel>Código del equipo</FieldLabel>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowBit(false)} />
+          <View style={[s.modalCard, { maxHeight: "95%" }]}>
+            <ModalHeader title="📋 Bitácora de Recarga" onClose={() => setShowBit(false)} />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <View style={s.bitInfoBox}>
+                <Text style={{ fontSize: 12, color: "#92400E", fontWeight: "600", lineHeight: 18 }}>
+                  Registra los extintores o equipos que llevas al taller para recargar.
+                  Una vez enviada, solo el taller puede cerrarla.
+                </Text>
+              </View>
+
+              {/* Client */}
+              {clientes.length > 0 && <>
+                <FieldLabel>Cliente (opcional)</FieldLabel>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+                  <Chip label="Sin cliente" selected={!bitClientId} onPress={() => setBitClientId("")} />
+                  {clientes.slice(0, 15).map(c => <Chip key={c.id} label={c.name} selected={bitClientId === c.id} onPress={() => setBitClientId(c.id)} />)}
+                </ScrollView>
+              </>}
+
+              {/* Items */}
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8, marginBottom: 8 }}>
+                <FieldLabel>Equipos a recargar *</FieldLabel>
+                <TouchableOpacity onPress={addBitItem} style={s.addItemBtn}>
+                  <Text style={{ color: "#1D4ED8", fontWeight: "700", fontSize: 13 }}>+ Agregar</Text>
+                </TouchableOpacity>
+              </View>
+
+              {bitItems.length === 0 && (
+                <Text style={{ fontSize: 13, color: "#9BACC8", textAlign: "center", paddingVertical: 12, fontStyle: "italic" }}>
+                  Toca "+ Agregar" para agregar equipos
+                </Text>
+              )}
+
+              {bitItems.map((item, idx) => (
+                <View key={item.uid} style={s.bitItemCard}>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                    <Text style={{ fontWeight: "700", color: "#122B60", fontSize: 13, flex: 1 }}>Equipo #{idx + 1}</Text>
+                    <TouchableOpacity onPress={() => removeBitItem(item.uid)} style={{ padding: 4 }}>
+                      <Text style={{ color: "#EF4444", fontSize: 16, fontWeight: "700" }}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                    {TIPOS_EQUIPO.map(t => (
+                      <Chip key={t} label={t} selected={item.type === t} onPress={() => updateBitItem(item.uid, "type", t)} />
+                    ))}
+                  </ScrollView>
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <TextInput
+                      style={[s.textInput, { flex: 2 }]}
+                      value={item.serial}
+                      onChangeText={v => updateBitItem(item.uid, "serial", v)}
+                      placeholder="No. serie (opcional)"
+                      placeholderTextColor="#9BACC8"
+                      autoCapitalize="characters"
+                    />
+                    <View style={s.qtyRow}>
+                      <TouchableOpacity onPress={() => updateBitItem(item.uid, "qty", Math.max(1, item.qty - 1))} style={s.qtyBtn}>
+                        <Text style={{ color: "#1D4ED8", fontWeight: "900", fontSize: 16 }}>−</Text>
+                      </TouchableOpacity>
+                      <Text style={s.qtyNum}>{item.qty}</Text>
+                      <TouchableOpacity onPress={() => updateBitItem(item.uid, "qty", item.qty + 1)} style={s.qtyBtn}>
+                        <Text style={{ color: "#1D4ED8", fontWeight: "900", fontSize: 16 }}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+
+              {/* Photos */}
+              <FieldLabel style={{ marginTop: 12 }}>Fotos de bitácora en papel (opcional)</FieldLabel>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: "row", gap: 8 }}>
-                  <TextInput
-                    style={[s.textInput, { flex: 1, fontFamily: "monospace" }]}
-                    value={phCode} onChangeText={setPhCode}
-                    placeholder="Ingresa o escanea el código..."
-                    placeholderTextColor="#9BACC8"
-                    autoCapitalize="characters"
-                    onSubmitEditing={() => lookupEquipment(phCode, "ph")}
-                  />
-                  <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("ph")}>
-                    <Text style={{ fontSize: 22 }}>📷</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(phCode, "ph")} disabled={lookingUp}>
-                    {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
-                  </TouchableOpacity>
+                  {bitPhotos.map((uri, i) => (
+                    <View key={i} style={{ position: "relative" }}>
+                      <Image source={{ uri }} style={s.photoThumb} />
+                      <TouchableOpacity
+                        style={s.photoRemove}
+                        onPress={() => setBitPhotos(p => p.filter((_, j) => j !== i))}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {bitPhotos.length < 4 && <>
+                    <TouchableOpacity style={s.photoAdd} onPress={takeBitPhoto}>
+                      <Text style={{ fontSize: 22 }}>📷</Text>
+                      <Text style={{ fontSize: 10, color: "#6B84A8", marginTop: 2 }}>Cámara</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={s.photoAdd} onPress={pickBitPhoto}>
+                      <Text style={{ fontSize: 22 }}>🖼️</Text>
+                      <Text style={{ fontSize: 10, color: "#6B84A8", marginTop: 2 }}>Galería</Text>
+                    </TouchableOpacity>
+                  </>}
                 </View>
-                {phEq && (
-                  <View style={[s.eqBanner, { backgroundColor: phEq.found ? "#DCFCE7" : "#FEF3C7", borderColor: phEq.found ? "#22C55E" : "#F59E0B" }]}>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: phEq.found ? "#15803D" : "#92400E" }}>
-                      {phEq.found ? `✓ ${phEq.name} · ${phEq.serial_number || ""}${phEq.client_name ? ` (${phEq.client_name})` : ""}` : "⚠ Equipo no encontrado — llena los datos manualmente"}
-                    </Text>
-                  </View>
-                )}
-                <FieldLabel style={{ marginTop: 12 }}>Tipo de cilindro *</FieldLabel>
-                <TextInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="PQS, CO₂, SCBA, Agua, AFFF..." placeholderTextColor="#9BACC8" />
-                <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-                  <View style={{ flex: 1 }}>
-                    <FieldLabel>Presión trabajo (PSI) *</FieldLabel>
-                    <TextInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder="150" placeholderTextColor="#9BACC8" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <FieldLabel>Presión prueba (PSI) *</FieldLabel>
-                    <TextInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder="225" placeholderTextColor="#9BACC8" />
-                  </View>
-                </View>
-                <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: phResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setPhResult("PASS")}>
-                    <Text style={{ fontWeight: "800", color: phResult === "PASS" ? "#fff" : "#15803D" }}>✓ APROBADA</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[s.resultBtn, { borderColor: "#EF4444", backgroundColor: phResult === "FAIL" ? "#EF4444" : "#FFF1F2" }]} onPress={() => setPhResult("FAIL")}>
-                    <Text style={{ fontWeight: "800", color: phResult === "FAIL" ? "#fff" : "#DC2626" }}>✗ RECHAZADA</Text>
-                  </TouchableOpacity>
-                </View>
-                <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
-                <TextInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
-                <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
-                <TextInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
-                <View style={{ height: 16 }} />
-                <SubmitBtn label="Guardar prueba hidrostática" onPress={submitPH} loading={phSaving} color="#7C3AED" />
-                <View style={{ height: 20 }} />
               </ScrollView>
+
+              {/* Notes */}
+              <FieldLabel>Observaciones</FieldLabel>
+              <TextInput
+                style={s.textArea}
+                value={bitNotes}
+                onChangeText={setBitNotes}
+                placeholder="Observaciones, datos del cliente, notas adicionales..."
+                placeholderTextColor="#9BACC8"
+                multiline numberOfLines={3}
+                textAlignVertical="top"
+              />
+              <View style={{ height: 16 }} />
+              <SubmitBtn label={`Enviar bitácora al taller (${bitItems.length} equipo${bitItems.length !== 1 ? "s" : ""})`} onPress={submitBitacora} loading={bitSaving} color="#D97700" />
+              <View style={{ height: 24 }} />
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ─── Prueba Manguera Modal ─── */}
+      {/* ─── Prueba PH Modal ───────────────────────────────────────────────── */}
+      <Modal visible={showPH} animationType="slide" transparent statusBarTranslucent>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowPH(false)} />
+          <View style={s.modalCard}>
+            <ModalHeader title="🔬 Prueba Hidrostática" onClose={() => setShowPH(false)} />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <FieldLabel>Código del equipo</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={phCode} onChangeText={setPhCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(phCode, "ph")} />
+                <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("ph")}><Text style={{ fontSize: 22 }}>📷</Text></TouchableOpacity>
+                <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(phCode, "ph")} disabled={lookingUp}>
+                  {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
+                </TouchableOpacity>
+              </View>
+              {phEq && (
+                <View style={[s.eqBanner, { backgroundColor: phEq.found ? "#DCFCE7" : "#FEF3C7", borderColor: phEq.found ? "#22C55E" : "#F59E0B" }]}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: phEq.found ? "#15803D" : "#92400E" }}>
+                    {phEq.found ? `✓ ${phEq.name} · ${phEq.serial_number || ""}${phEq.client_name ? ` (${phEq.client_name})` : ""}` : "⚠ Equipo no encontrado — llena los datos manualmente"}
+                  </Text>
+                </View>
+              )}
+              <FieldLabel style={{ marginTop: 12 }}>Tipo de cilindro *</FieldLabel>
+              <TextInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="PQS, CO₂, SCBA, Agua, AFFF..." placeholderTextColor="#9BACC8" />
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Presión trabajo (PSI) *</FieldLabel>
+                  <TextInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder="150" placeholderTextColor="#9BACC8" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Presión prueba (PSI) *</FieldLabel>
+                  <TextInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder="225" placeholderTextColor="#9BACC8" />
+                </View>
+              </View>
+              <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: phResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setPhResult("PASS")}>
+                  <Text style={{ fontWeight: "800", color: phResult === "PASS" ? "#fff" : "#15803D" }}>✓ APROBADA</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[s.resultBtn, { borderColor: "#EF4444", backgroundColor: phResult === "FAIL" ? "#EF4444" : "#FFF1F2" }]} onPress={() => setPhResult("FAIL")}>
+                  <Text style={{ fontWeight: "800", color: phResult === "FAIL" ? "#fff" : "#DC2626" }}>✗ RECHAZADA</Text>
+                </TouchableOpacity>
+              </View>
+              <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
+              <TextInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
+              <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
+              <TextInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <View style={{ height: 16 }} />
+              <SubmitBtn label="Guardar prueba hidrostática" onPress={submitPH} loading={phSaving} color="#7C3AED" />
+              <View style={{ height: 20 }} />
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ─── Prueba Manguera Modal ─────────────────────────────────────────── */}
       <Modal visible={showMAN} animationType="slide" transparent statusBarTranslucent>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowMAN(false)} />
           <View style={s.modalCard}>
-              <ModalHeader title="🌊 Prueba de Manguera" onClose={() => setShowMAN(false)} />
-              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                <FieldLabel>Código del equipo</FieldLabel>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <TextInput
-                    style={[s.textInput, { flex: 1, fontFamily: "monospace" }]}
-                    value={manCode} onChangeText={setManCode}
-                    placeholder="Ingresa o escanea el código..."
-                    placeholderTextColor="#9BACC8"
-                    autoCapitalize="characters"
-                    onSubmitEditing={() => lookupEquipment(manCode, "man")}
-                  />
-                  <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("man")}>
-                    <Text style={{ fontSize: 22 }}>📷</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(manCode, "man")} disabled={lookingUp}>
-                    {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
-                  </TouchableOpacity>
+            <ModalHeader title="🌊 Prueba de Manguera" onClose={() => setShowMAN(false)} />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <FieldLabel>Código del equipo</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={manCode} onChangeText={setManCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(manCode, "man")} />
+                <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("man")}><Text style={{ fontSize: 22 }}>📷</Text></TouchableOpacity>
+                <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(manCode, "man")} disabled={lookingUp}>
+                  {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
+                </TouchableOpacity>
+              </View>
+              {manEq && (
+                <View style={[s.eqBanner, { backgroundColor: manEq.found ? "#DCFCE7" : "#FEF3C7", borderColor: manEq.found ? "#22C55E" : "#F59E0B" }]}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: manEq.found ? "#15803D" : "#92400E" }}>
+                    {manEq.found ? `✓ ${manEq.name}${manEq.client_name ? ` (${manEq.client_name})` : ""}` : "⚠ Equipo no encontrado — llena los datos manualmente"}
+                  </Text>
                 </View>
-                {manEq && (
-                  <View style={[s.eqBanner, { backgroundColor: manEq.found ? "#DCFCE7" : "#FEF3C7", borderColor: manEq.found ? "#22C55E" : "#F59E0B" }]}>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: manEq.found ? "#15803D" : "#92400E" }}>
-                      {manEq.found ? `✓ ${manEq.name}${manEq.client_name ? ` (${manEq.client_name})` : ""}` : "⚠ Equipo no encontrado — llena los datos manualmente"}
-                    </Text>
-                  </View>
-                )}
-                <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-                  <View style={{ flex: 1 }}>
-                    <FieldLabel>Diámetro</FieldLabel>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6 }}>
-                      {['1.5"', '2.5"', '1"', '3"'].map(d => (
-                        <Chip key={d} label={d} selected={manDiameter === d} onPress={() => setManDiameter(d)} />
-                      ))}
-                    </ScrollView>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <FieldLabel>Longitud (m) *</FieldLabel>
-                    <TextInput style={s.textInput} value={manLength} onChangeText={setManLength} keyboardType="numeric" placeholder="15" placeholderTextColor="#9BACC8" />
-                  </View>
+              )}
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Diámetro</FieldLabel>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6 }}>
+                    {['1.5"', '2.5"', '1"', '3"'].map(d => (
+                      <Chip key={d} label={d} selected={manDiameter === d} onPress={() => setManDiameter(d)} />
+                    ))}
+                  </ScrollView>
                 </View>
-                <FieldLabel style={{ marginTop: 12 }}>Presión de prueba (lbs) *</FieldLabel>
-                <TextInput style={s.textInput} value={manPressure} onChangeText={setManPressure} keyboardType="numeric" placeholder="120" placeholderTextColor="#9BACC8" />
-                <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: manResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setManResult("PASS")}>
-                    <Text style={{ fontWeight: "800", color: manResult === "PASS" ? "#fff" : "#15803D" }}>✓ APROBADA</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[s.resultBtn, { borderColor: "#EF4444", backgroundColor: manResult === "FAIL" ? "#EF4444" : "#FFF1F2" }]} onPress={() => setManResult("FAIL")}>
-                    <Text style={{ fontWeight: "800", color: manResult === "FAIL" ? "#fff" : "#DC2626" }}>✗ RECHAZADA</Text>
-                  </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Longitud (m) *</FieldLabel>
+                  <TextInput style={s.textInput} value={manLength} onChangeText={setManLength} keyboardType="numeric" placeholder="15" placeholderTextColor="#9BACC8" />
                 </View>
-                <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
-                <TextInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
-                <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
-                <TextInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
-                <View style={{ height: 16 }} />
-                <SubmitBtn label="Guardar prueba de manguera" onPress={submitMAN} loading={manSaving} color="#0891B2" />
-                <View style={{ height: 20 }} />
-              </ScrollView>
+              </View>
+              <FieldLabel style={{ marginTop: 12 }}>Presión de prueba (lbs) *</FieldLabel>
+              <TextInput style={s.textInput} value={manPressure} onChangeText={setManPressure} keyboardType="numeric" placeholder="120" placeholderTextColor="#9BACC8" />
+              <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: manResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setManResult("PASS")}>
+                  <Text style={{ fontWeight: "800", color: manResult === "PASS" ? "#fff" : "#15803D" }}>✓ APROBADA</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[s.resultBtn, { borderColor: "#EF4444", backgroundColor: manResult === "FAIL" ? "#EF4444" : "#FFF1F2" }]} onPress={() => setManResult("FAIL")}>
+                  <Text style={{ fontWeight: "800", color: manResult === "FAIL" ? "#fff" : "#DC2626" }}>✗ RECHAZADA</Text>
+                </TouchableOpacity>
+              </View>
+              <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
+              <TextInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
+              <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
+              <TextInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <View style={{ height: 16 }} />
+              <SubmitBtn label="Guardar prueba de manguera" onPress={submitMAN} loading={manSaving} color="#0891B2" />
+              <View style={{ height: 20 }} />
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -492,7 +734,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   );
 }
 
-// ─── Tiny helpers ────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
@@ -540,9 +782,9 @@ const s = StyleSheet.create({
   navSub:      { color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 1 },
   newOtBtn:    { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" },
   newOtText:   { color: "#fff", fontSize: 13, fontWeight: "700" },
-  quickRow:    { flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#F0F4FA" },
-  quickBtn:    { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, borderWidth: 1.5 },
-  quickTxt:    { fontSize: 13, fontWeight: "700" },
+  quickRow:    { flexDirection: "row", gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#F0F4FA" },
+  quickBtn:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 11, borderRadius: 12, borderWidth: 1.5 },
+  quickTxt:    { fontSize: 12, fontWeight: "700" },
   filterBar:   { flexGrow: 0 },
   filterRow:   { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   filterChip:  { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
@@ -560,7 +802,23 @@ const s = StyleSheet.create({
   metaDate:    { fontSize: 11, marginTop: 2 },
   actionBtn:   { marginTop: 12, borderRadius: 10, borderWidth: 1.5, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center" },
   actionText:  { fontSize: 14, fontWeight: "700" },
-  modalOverlay:{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  // Items list
+  itemsList:   { marginTop: 10, borderTopWidth: 1, borderTopColor: "#FDE68A", paddingTop: 10, backgroundColor: "#FFFBEB", borderRadius: 8, padding: 10 },
+  itemsTitle:  { fontSize: 11, fontWeight: "800", color: "#92400E", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 },
+  itemRow:     { flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 8 },
+  itemDesc:    { flex: 1, fontSize: 13, color: "#1A2740", fontWeight: "600" },
+  qtyRow:      { flexDirection: "row", alignItems: "center", backgroundColor: "#EFF6FF", borderRadius: 8, overflow: "hidden" },
+  qtyBtn:      { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  qtyNum:      { width: 28, textAlign: "center", fontWeight: "900", fontSize: 14, color: "#1E3A5F" },
+  // Bitácora
+  bitInfoBox:  { backgroundColor: "#FEF3C7", borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#FDE68A" },
+  bitItemCard: { backgroundColor: "#F0F4FB", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#D5DCF0" },
+  addItemBtn:  { backgroundColor: "#EFF6FF", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: "#BFDBFE" },
+  // Photos
+  photoThumb:  { width: 72, height: 72, borderRadius: 10 },
+  photoRemove: { position: "absolute", top: 2, right: 2, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 10, width: 18, height: 18, alignItems: "center", justifyContent: "center" },
+  photoAdd:    { width: 72, height: 72, borderRadius: 10, backgroundColor: "#F0F4FB", borderWidth: 1.5, borderColor: "#D5DCF0", alignItems: "center", justifyContent: "center", borderStyle: "dashed" },
+  // Modal
   modalCard:   { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 0, maxHeight: "93%" },
   textInput:   { backgroundColor: "#F0F4FB", borderRadius: 10, borderWidth: 1.5, borderColor: "#D5DCF0", paddingHorizontal: 14, paddingVertical: 11, fontSize: 13, color: "#1A2740" },
   textArea:    { backgroundColor: "#F0F4FB", borderRadius: 12, borderWidth: 1.5, borderColor: "#D5DCF0", paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: "#1A2740", minHeight: 90, paddingTop: 12 },

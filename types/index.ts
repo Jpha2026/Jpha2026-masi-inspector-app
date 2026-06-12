@@ -143,6 +143,12 @@ export type KardexEntry = {
   registrado_por: string;
 };
 
+export type OTItem = {
+  id: string;
+  description: string;
+  qty: number;
+};
+
 export type OrdenTrabajo = {
   id: string;
   folio: string;
@@ -153,6 +159,7 @@ export type OrdenTrabajo = {
   priority: string;
   due_date: string | null;
   created_at: string;
+  items?: OTItem[];
 };
 
 export type RutaItem = {
