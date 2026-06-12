@@ -75,7 +75,7 @@ export default function ScanScreen({ navigation, route }: Props) {
 
   const handleManualSubmit = () => {
     const code = manualCode.trim();
-    if (!code) return;
+    if (!code || loading) return;
     lookupEquipment(code);
   };
 

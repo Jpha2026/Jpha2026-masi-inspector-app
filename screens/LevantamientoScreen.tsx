@@ -221,11 +221,17 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     }
   };
 
-  const resumeLevantamiento = (lev: Levantamiento) => {
+  const resumeLevantamiento = async (lev: Levantamiento) => {
     setActiveLev(lev);
-    setPuntos([]);
     setCurrentPunto(emptyPunto());
     setStep("puntos");
+    try {
+      const res = await axios.get(`${API_URL}/levantamientos/${lev.id}/puntos`);
+      const existing = Array.isArray(res.data) ? res.data : (res.data?.puntos ?? []);
+      setPuntos(existing);
+    } catch {
+      setPuntos([]);
+    }
   };
 
   const takePicture = async () => {
