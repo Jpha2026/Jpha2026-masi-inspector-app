@@ -42,7 +42,8 @@ const TIPOS_EQUIPO = [
   "Manguera SCI","Cilindro N2","Cilindro Aire","Otro",
 ];
 
-const uid = () => Math.random().toString(36).slice(2);
+let _uidSeq = 0;
+const uid = () => `${Date.now().toString(36)}_${(++_uidSeq).toString(36)}`;
 
 export default function TallerScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();

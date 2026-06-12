@@ -44,10 +44,11 @@ export default function ScanScreen({ navigation, route }: Props) {
 
     setLoading(true);
     try {
-      const res = await axios.get<Equipment>(`${API_URL}/equipment/scan/${encodeURIComponent(qrCode)}`);
+      const res = await axios.get<Equipment & { found?: boolean }>(`${API_URL}/equipment/scan/${encodeURIComponent(qrCode)}`);
+      const { found: _found, ...equipment } = res.data;
       navigation.replace("Inspection", {
         inspectorId,
-        equipment: res.data,
+        equipment: equipment as Equipment,
         rutaId,
         rutaItemId,
       });
@@ -58,7 +59,8 @@ export default function ScanScreen({ navigation, route }: Props) {
         status === 404
           ? `No se encontró ningún equipo con el código "${qrCode}".`
           : "No se pudo consultar el equipo. Verifica la conexión.",
-        [{ text: "OK", onPress: () => setScanned(false) }]
+        [{ text: "OK", onPress: () => setScanned(false) }],
+        { cancelable: false }
       );
     } finally {
       setLoading(false);
