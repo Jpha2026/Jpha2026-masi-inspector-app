@@ -68,7 +68,7 @@ async function registerPushToken(userId: string) {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome" | "VendedorHome";
+type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome" | "VendedorHome" | "Taller";
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<InitRoute | null>(null);
@@ -108,6 +108,12 @@ export default function App() {
             setSavedUser(user);
             setInitialRoute("VendedorHome");
             registerPushToken(user.id);
+            return;
+          }
+          if (user.role === "taller") {
+            setSavedUser(user);
+            setInitialRoute("Taller");
+            registerPushToken(user.inspector_id ?? user.id);
             return;
           }
           if (user.inspector_id) {
@@ -186,7 +192,15 @@ export default function App() {
           <Stack.Screen name="ClienteCotizaciones" component={ClienteCotizacionesScreen} />
           <Stack.Screen name="Nomina" component={NominaScreen} />
           <Stack.Screen name="Prestamos" component={PrestamosScreen} />
-          <Stack.Screen name="Taller" component={TallerScreen} />
+          <Stack.Screen
+            name="Taller"
+            component={TallerScreen}
+            initialParams={
+              initialRoute === "Taller" && savedUser
+                ? { inspectorId: savedUser.inspector_id ?? savedUser.id, userName: savedUser.name }
+                : undefined
+            }
+          />
           <Stack.Screen name="Route" component={RouteScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="NuevoLead" component={NuevoLeadScreen} />

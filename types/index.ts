@@ -90,7 +90,7 @@ export type AppUser = {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "supervisor" | "inspector" | "empleado" | "cliente" | "vendedor";
+  role: "admin" | "supervisor" | "inspector" | "taller" | "empleado" | "cliente" | "vendedor";
   inspector_id: string | null;
   employee_id: string | null;
   client_id: string | null;

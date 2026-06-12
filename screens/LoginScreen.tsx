@@ -17,7 +17,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, "Login"
 
 const { width } = Dimensions.get("window");
 
-type Tab = "inspector" | "vendedor" | "empleado" | "cliente";
+type Tab = "inspector" | "taller" | "vendedor" | "empleado" | "cliente";
 
 export default function LoginScreen({ navigation }: Props) {
   const T = useTheme();
@@ -65,6 +65,8 @@ export default function LoginScreen({ navigation }: Props) {
         navigation.replace("ClienteHome", { user: data });
       } else if (data.role === "vendedor") {
         navigation.replace("VendedorHome", { user: data });
+      } else if (data.role === "taller") {
+        navigation.replace("Taller", { inspectorId: data.inspector_id ?? data.id, userName: data.name });
       } else {
         await AsyncStorage.setItem("inspector_id", data.inspector_id ?? data.id);
         await AsyncStorage.setItem("inspector_name", data.name);
@@ -155,13 +157,21 @@ export default function LoginScreen({ navigation }: Props) {
           }]}>
 
             {/* Tab selector */}
-            <View style={[s.tabRow, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB" }]}>
+            <View style={[s.tabRow, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB", flexWrap: "wrap" }]}>
               <TouchableOpacity
                 style={[s.tabBtn, tab === "inspector" && s.tabActive]}
                 onPress={() => { setTab("inspector"); setCodeSent(false); setCode(""); }}
               >
                 <Text style={[s.tabText, { color: tab === "inspector" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
                   🔍{"\n"}Inspector
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.tabBtn, tab === "taller" && { backgroundColor: "#D97706" }]}
+                onPress={() => { setTab("taller"); setCodeSent(false); setCode(""); }}
+              >
+                <Text style={[s.tabText, { color: tab === "taller" ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
+                  🔧{"\n"}Taller
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -190,13 +200,13 @@ export default function LoginScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
 
-            {(tab === "inspector" || tab === "vendedor") ? (
+            {(tab === "inspector" || tab === "taller" || tab === "vendedor") ? (
               <>
                 <Text style={[s.cardTitle, {
-                  color: tab === "vendedor" ? "#3B82F6" : (T.isDark ? "#60A5FA" : "#122B60"),
+                  color: tab === "vendedor" ? "#3B82F6" : tab === "taller" ? "#D97706" : (T.isDark ? "#60A5FA" : "#122B60"),
                   marginTop: 18,
                 }]}>
-                  {tab === "vendedor" ? "Acceso Vendedor" : "Acceso Inspector"}
+                  {tab === "vendedor" ? "Acceso Vendedor" : tab === "taller" ? "Acceso Taller" : "Acceso Inspector"}
                 </Text>
 
                 {/* Email */}
@@ -241,7 +251,7 @@ export default function LoginScreen({ navigation }: Props) {
                 </View>
 
                 <LinearGradient
-                  colors={tab === "vendedor" ? ["#1D4ED8", "#3B82F6"] : ["#CE0D0D", "#EF4444"]}
+                  colors={tab === "vendedor" ? ["#1D4ED8", "#3B82F6"] : tab === "taller" ? ["#B45309", "#D97706"] : ["#CE0D0D", "#EF4444"]}
                   style={s.btn}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
