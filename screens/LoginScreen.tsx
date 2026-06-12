@@ -145,7 +145,7 @@ export default function LoginScreen({ navigation }: Props) {
       <View style={s.orb1} pointerEvents="none" />
       <View style={s.orb2} pointerEvents="none" />
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
 
           {/* Logo */}

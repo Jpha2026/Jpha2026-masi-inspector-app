@@ -316,16 +316,6 @@ export default function HomeScreen({ navigation, route }: Props) {
             sub: "Órdenes asignadas",
             onPress: () => navigation.navigate("Taller", { inspectorId, userName: inspector?.name ?? "" }),
           },
-          {
-            colors: ["#7A0D0D", "#CE0D0D"] as const,
-            shadow: "#CE0D0D",
-            icon: "🏪",
-            title: "Punto de Venta",
-            sub: "Ventas desde campo",
-            onPress: () => navigation.navigate("POS", {
-              user: { id: inspectorId, name: inspector?.name ?? "", email: inspector?.email ?? "", role: "inspector" as const, inspector_id: inspectorId, employee_id: null, client_id: null, permissions: [] },
-            }),
-          },
         ].map((btn) => (
           <TouchableOpacity
             key={btn.title}
