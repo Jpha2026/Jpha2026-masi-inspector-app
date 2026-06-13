@@ -4,9 +4,11 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
+import { API_URL } from "../constants/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
@@ -29,7 +31,9 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
       {
         text: "Salir", style: "destructive",
         onPress: async () => {
-          await AsyncStorage.multiRemove(["masi_user", "inspector_id", "inspector_name"]);
+          try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
+          delete axios.defaults.headers.common["Authorization"];
+          await AsyncStorage.multiRemove(["masi_user", "masi_token", "inspector_id", "inspector_name"]);
           navigation.replace("Login");
         },
       },

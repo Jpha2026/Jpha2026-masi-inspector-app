@@ -72,7 +72,9 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
   }, [user.client_id]);
 
   async function logout() {
-    await AsyncStorage.removeItem("masi_user");
+    try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
+    delete axios.defaults.headers.common["Authorization"];
+    await AsyncStorage.multiRemove(["masi_user", "masi_token", "inspector_id", "inspector_name"]);
     navigation.reset({ index: 0, routes: [{ name: "Login" }] });
   }
 

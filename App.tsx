@@ -47,7 +47,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-async function registerPushToken(userId: string) {
+async function registerPushToken(_userId: string) {
   try {
     const { status: existing } = await Notifications.getPermissionsAsync();
     let finalStatus = existing;
@@ -59,7 +59,6 @@ async function registerPushToken(userId: string) {
 
     const tokenData = await Notifications.getExpoPushTokenAsync();
     await axios.post(`${API_URL}/mobile/push-token`, {
-      user_id: userId,
       token: tokenData.data,
       platform: Platform.OS,
     });
@@ -88,6 +87,25 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
+      // Restore session token and validate server-side
+      const token = await AsyncStorage.getItem("masi_token");
+      if (token) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        try {
+          await axios.get(`${API_URL}/mobile/me`);
+        } catch (e: unknown) {
+          if (axios.isAxiosError(e) && e.response?.status === 401) {
+            await AsyncStorage.multiRemove([
+              "masi_user", "masi_token", "inspector_id", "inspector_name",
+              "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
+            ]);
+            delete axios.defaults.headers.common["Authorization"];
+            setInitialRoute("Login");
+            return;
+          }
+        }
+      }
+
       const userJson = await AsyncStorage.getItem("masi_user");
       if (userJson) {
         try {

@@ -70,7 +70,9 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
       { text: "Cancelar", style: "cancel" },
       {
         text: "Salir", style: "destructive", onPress: async () => {
-          await AsyncStorage.multiRemove(["masi_user", "inspector_id", "inspector_name"]);
+          try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
+          delete axios.defaults.headers.common["Authorization"];
+          await AsyncStorage.multiRemove(["masi_user", "masi_token", "inspector_id", "inspector_name"]);
           navigation.replace("Login");
         },
       },

@@ -72,6 +72,10 @@ export default function LoginScreen({ navigation }: Props) {
         password: inspPass,
       });
       const data = res.data;
+      if (data.token) {
+        await AsyncStorage.setItem("masi_token", data.token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+      }
       await AsyncStorage.setItem("masi_user", JSON.stringify(data));
       if (data.role === "cliente") {
         navigation.replace("ClienteHome", { user: data });
@@ -116,8 +120,12 @@ export default function LoginScreen({ navigation }: Props) {
     }
     setLoading(true);
     try {
-      const res = await axios.post<AppUser>(`${API_URL}/mobile/verify-code`, { email: email.trim(), code: code.trim() });
+      const res = await axios.post<AppUser & { token?: string }>(`${API_URL}/mobile/verify-code`, { email: email.trim(), code: code.trim() });
       const user = res.data;
+      if (user.token) {
+        await AsyncStorage.setItem("masi_token", user.token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
+      }
       await AsyncStorage.setItem("masi_user", JSON.stringify(user));
       if (user.role === "cliente") {
         navigation.replace("ClienteHome", { user });
