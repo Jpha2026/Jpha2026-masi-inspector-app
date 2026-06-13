@@ -74,7 +74,10 @@ export default function HomeScreen({ navigation, route }: Props) {
       {
         text: "Salir", style: "destructive",
         onPress: async () => {
-          await AsyncStorage.multiRemove(["masi_user", "inspector_id", "inspector_name"]);
+          await AsyncStorage.multiRemove([
+            "masi_user", "inspector_id", "inspector_name",
+            "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
+          ]);
           navigation.replace("Login");
         },
       },

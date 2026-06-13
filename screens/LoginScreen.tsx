@@ -428,7 +428,7 @@ export default function LoginScreen({ navigation }: Props) {
           <Animated.View style={[s.footer, { opacity: fadeAnim }]}>
             <Text style={s.footerLine}>Multiservicios y Artículos de Seguridad Industrial</Text>
             <Text style={s.footerLine}>RFC MAS900706QH1 · Monterrey, N.L.</Text>
-            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v2.1 · {API_URL}</Text>
+            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v2.1</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
