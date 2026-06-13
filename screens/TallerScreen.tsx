@@ -105,11 +105,11 @@ export default function TallerScreen({ navigation, route }: Props) {
     if (isRefresh) setRefreshing(true); else setLoading(true);
     try {
       const [ordersRes, clientesRes] = await Promise.all([
-        axios.get(`${API_URL}/mobile/taller?inspector_id=${inspectorId}`),
+        axios.get(`${API_URL}/mobile/taller`),
         axios.get(`${API_URL}/clients`),
       ]);
       setOrders(Array.isArray(ordersRes.data) ? ordersRes.data : []);
-      setClientes(Array.isArray(clientesRes.data) ? clientesRes.data : []);
+      setClientes(clientesRes.data?.rows ?? []);
     } catch {
       Alert.alert("Error", "No se pudieron cargar las órdenes.");
     } finally { setLoading(false); setRefreshing(false); }

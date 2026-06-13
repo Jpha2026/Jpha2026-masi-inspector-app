@@ -170,10 +170,10 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     setLoading(true);
     try {
       const [cRes, levRes] = await Promise.all([
-        axios.get<Cliente[]>(`${API_URL}/clients`),
+        axios.get(`${API_URL}/clients`),
         axios.get<Levantamiento[]>(`${API_URL}/levantamientos?inspector_id=${inspectorId}`),
       ]);
-      setClientes(Array.isArray(cRes.data) ? cRes.data : []);
+      setClientes(cRes.data?.rows ?? []);
       setLevantamientos(Array.isArray(levRes.data) ? levRes.data : []);
     } catch {
       Alert.alert("Error", "No se pudieron cargar los datos.");
