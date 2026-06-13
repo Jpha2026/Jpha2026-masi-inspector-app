@@ -32,7 +32,7 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
         text: "Salir", style: "destructive",
         onPress: async () => {
           try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
-          delete axios.defaults.headers.common["Authorization"];
+          axios.defaults.headers.common["Authorization"] = undefined;
           await AsyncStorage.multiRemove(["masi_user", "masi_token", "inspector_id", "inspector_name"]);
           navigation.replace("Login");
         },

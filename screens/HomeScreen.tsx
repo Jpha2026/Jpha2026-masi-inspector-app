@@ -75,7 +75,7 @@ export default function HomeScreen({ navigation, route }: Props) {
         text: "Salir", style: "destructive",
         onPress: async () => {
           try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
-          delete axios.defaults.headers.common["Authorization"];
+          axios.defaults.headers.common["Authorization"] = undefined;
           await AsyncStorage.multiRemove([
             "masi_user", "masi_token", "inspector_id", "inspector_name",
             "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",

@@ -99,7 +99,7 @@ export default function App() {
               "masi_user", "masi_token", "inspector_id", "inspector_name",
               "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
             ]);
-            delete axios.defaults.headers.common["Authorization"];
+            axios.defaults.headers.common["Authorization"] = undefined;
             setInitialRoute("Login");
             return;
           }
