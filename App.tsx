@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import axios from "axios";
@@ -88,15 +89,16 @@ export default function App() {
   useEffect(() => {
     (async () => {
       // Restore session token and validate server-side
-      const token = await AsyncStorage.getItem("masi_token");
+      const token = await SecureStore.getItemAsync("masi_token");
       if (token) {
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         try {
           await axios.get(`${API_URL}/mobile/me`);
         } catch (e: unknown) {
           if (axios.isAxiosError(e) && e.response?.status === 401) {
+            await SecureStore.deleteItemAsync("masi_token");
             await AsyncStorage.multiRemove([
-              "masi_user", "masi_token", "inspector_id", "inspector_name",
+              "masi_user", "inspector_id", "inspector_name",
               "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
             ]);
             axios.defaults.headers.common["Authorization"] = undefined;

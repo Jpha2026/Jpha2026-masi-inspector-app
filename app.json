@@ -63,7 +63,8 @@
           "photosPermission": "Se accede a fotos para adjuntar evidencia en solicitudes.",
           "cameraPermission": "Se necesita la cámara para tomar fotos de evidencia."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

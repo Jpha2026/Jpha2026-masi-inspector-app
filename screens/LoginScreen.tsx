@@ -6,6 +6,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, AppUser } from "../types";
@@ -73,7 +74,7 @@ export default function LoginScreen({ navigation }: Props) {
       });
       const data = res.data;
       if (data.token) {
-        await AsyncStorage.setItem("masi_token", data.token);
+        await SecureStore.setItemAsync("masi_token", data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
       }
       await AsyncStorage.setItem("masi_user", JSON.stringify(data));
@@ -123,7 +124,7 @@ export default function LoginScreen({ navigation }: Props) {
       const res = await axios.post<AppUser & { token?: string }>(`${API_URL}/mobile/verify-code`, { email: email.trim(), code: code.trim() });
       const user = res.data;
       if (user.token) {
-        await AsyncStorage.setItem("masi_token", user.token);
+        await SecureStore.setItemAsync("masi_token", user.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
       }
       await AsyncStorage.setItem("masi_user", JSON.stringify(user));
