@@ -30,7 +30,8 @@ export async function queueRequest(
   type = "generic"
 ): Promise<void> {
   const raw = await AsyncStorage.getItem(QUEUE_KEY);
-  const queue: QueuedRequest[] = raw ? JSON.parse(raw) : [];
+  let queue: QueuedRequest[] = [];
+  if (raw) { try { queue = JSON.parse(raw); } catch { queue = []; } }
   queue.push({
     id: `req_${Date.now()}_${Math.random().toString(36).slice(2)}`,
     url, method, data, type,
@@ -49,8 +50,9 @@ export async function getPendingCount(): Promise<number> {
     AsyncStorage.getItem(LEGACY_KEY),
     AsyncStorage.getItem(QUEUE_KEY),
   ]);
-  const legacy  = legRaw ? (JSON.parse(legRaw) as unknown[]).length : 0;
-  const current = raw    ? (JSON.parse(raw)    as unknown[]).length : 0;
+  let legacy = 0, current = 0;
+  try { legacy = legRaw ? (JSON.parse(legRaw) as unknown[]).length : 0; } catch {}
+  try { current = raw ? (JSON.parse(raw) as unknown[]).length : 0; } catch {}
   return legacy + current;
 }
 
@@ -62,7 +64,8 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
   const legRaw = await AsyncStorage.getItem(LEGACY_KEY);
   let legFailed = 0;
   if (legRaw) {
-    const legQueue: PendingInspection[] = JSON.parse(legRaw);
+    let legQueue: PendingInspection[] = [];
+    try { legQueue = JSON.parse(legRaw); } catch { legQueue = []; }
     const legRemaining: PendingInspection[] = [];
     for (const item of legQueue) {
       try {
@@ -79,7 +82,8 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
   // Process generic queue
   const raw = await AsyncStorage.getItem(QUEUE_KEY);
   if (raw) {
-    const queue: QueuedRequest[] = JSON.parse(raw);
+    let queue: QueuedRequest[] = [];
+    try { queue = JSON.parse(raw); } catch { queue = []; }
     for (const req of queue) {
       try {
         if (req.method === "POST") {

@@ -95,8 +95,9 @@ export default function App() {
         try {
           await axios.get(`${API_URL}/mobile/me`);
         } catch (e: unknown) {
-          if (axios.isAxiosError(e) && e.response?.status === 401) {
+          if (axios.isAxiosError(e) && (e.response || e.code === "ECONNABORTED")) {
             await SecureStore.deleteItemAsync("masi_token");
+            await SecureStore.deleteItemAsync("masi_user");
             await AsyncStorage.multiRemove([
               "masi_user", "inspector_id", "inspector_name",
               "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
@@ -105,10 +106,11 @@ export default function App() {
             setInitialRoute("Login");
             return;
           }
+          // Pure network error (server unreachable) — let through with cached session
         }
       }
 
-      const userJson = await AsyncStorage.getItem("masi_user");
+      const userJson = await SecureStore.getItemAsync("masi_user");
       if (userJson) {
         try {
           const user: AppUser = JSON.parse(userJson);

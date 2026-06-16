@@ -77,7 +77,7 @@ export default function LoginScreen({ navigation }: Props) {
         await SecureStore.setItemAsync("masi_token", data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
       }
-      await AsyncStorage.setItem("masi_user", JSON.stringify(data));
+      await SecureStore.setItemAsync("masi_user", JSON.stringify(data));
       if (data.role === "cliente") {
         navigation.replace("ClienteHome", { user: data });
       } else if (data.role === "vendedor") {
@@ -127,7 +127,7 @@ export default function LoginScreen({ navigation }: Props) {
         await SecureStore.setItemAsync("masi_token", user.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
       }
-      await AsyncStorage.setItem("masi_user", JSON.stringify(user));
+      await SecureStore.setItemAsync("masi_user", JSON.stringify(user));
       if (user.role === "cliente") {
         navigation.replace("ClienteHome", { user });
       } else if (user.inspector_id) {
