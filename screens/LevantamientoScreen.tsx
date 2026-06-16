@@ -13,6 +13,7 @@ import { RootStackParamList, Levantamiento, Cliente, Sucursal } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
 import DatePickerField from "../components/DatePickerField";
+import { queueRequest } from "../hooks/useOfflineSync";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Levantamiento">;
@@ -250,6 +251,10 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
 
   const savePunto = async () => {
     if (!activeLev) return;
+    if (!currentPunto.area.trim()) {
+      Alert.alert("Campo requerido", "Ingresa el área o ubicación del equipo.");
+      return;
+    }
     setSavingPunto(true);
     try {
       const formData = new FormData();
@@ -268,8 +273,24 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
       const eqLabel = EQ_LABELS[activeLev.equipment_type || "extintor"] || "Equipo";
       Alert.alert("✓ Guardado", `${eqLabel} #${puntos.length + 1} registrado.`);
       setCurrentPunto(emptyPunto());
-    } catch {
-      Alert.alert("Error", "No se pudo guardar el punto.");
+    } catch (e) {
+      const is4xx = axios.isAxiosError(e) && e.response && e.response.status >= 400 && e.response.status < 500;
+      if (is4xx) {
+        Alert.alert("Error", "Dato inválido. Revisa los campos e intenta de nuevo.");
+      } else {
+        // Network error — queue JSON data (without photo) for retry
+        const { photoUri: _photo, ...data } = currentPunto;
+        await queueRequest(
+          `${API_URL}/levantamientos/${activeLev.id}/puntos`,
+          "POST",
+          data,
+          "levantamiento_punto"
+        );
+        setPuntos(prev => [...prev, currentPunto]);
+        const eqLabel = EQ_LABELS[activeLev.equipment_type || "extintor"] || "Equipo";
+        Alert.alert("Sin conexión", `${eqLabel} guardado localmente. Se sincronizará al recuperar señal.${_photo ? " (foto no incluida)" : ""}`);
+        setCurrentPunto(emptyPunto());
+      }
     } finally {
       setSavingPunto(false);
     }
