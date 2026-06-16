@@ -4,15 +4,7 @@ import * as Notifications from "expo-notifications";
 import axios from "axios";
 import { API_URL } from "../constants/api";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Handler set globally in App.tsx — do not duplicate here
 
 export function usePushNotifications(userId?: string) {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);

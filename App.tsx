@@ -99,6 +99,8 @@ export default function App() {
             await SecureStore.deleteItemAsync("masi_token");
             await SecureStore.deleteItemAsync("masi_user");
             await SecureStore.deleteItemAsync("masi_active_jornada");
+            await SecureStore.deleteItemAsync("inspector_id");
+            await SecureStore.deleteItemAsync("inspector_name");
             await AsyncStorage.multiRemove([
               "masi_user", "inspector_id", "inspector_name",
               "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
@@ -153,7 +155,7 @@ export default function App() {
           }
         } catch {}
       }
-      const id = await AsyncStorage.getItem("inspector_id");
+      const id = await SecureStore.getItemAsync("inspector_id");
       if (id) {
         setSavedInspectorId(id);
         setInitialRoute("Home");

@@ -86,9 +86,9 @@ export default function LoginScreen({ navigation }: Props) {
         navigation.replace("Taller", { inspectorId: data.inspector_id ?? data.id, userName: data.name });
       } else {
         if (data.inspector_id != null) {
-          await AsyncStorage.setItem("inspector_id", data.inspector_id);
+          await SecureStore.setItemAsync("inspector_id", data.inspector_id);
         }
-        await AsyncStorage.setItem("inspector_name", data.name);
+        await SecureStore.setItemAsync("inspector_name", data.name);
         navigation.replace("Home", { inspectorId: data.inspector_id ?? data.id });
       }
     } catch (err: unknown) {
@@ -131,8 +131,8 @@ export default function LoginScreen({ navigation }: Props) {
       if (user.role === "cliente") {
         navigation.replace("ClienteHome", { user });
       } else if (user.inspector_id) {
-        await AsyncStorage.setItem("inspector_id", user.inspector_id);
-        await AsyncStorage.setItem("inspector_name", user.name);
+        await SecureStore.setItemAsync("inspector_id", user.inspector_id);
+        await SecureStore.setItemAsync("inspector_name", user.name);
         navigation.replace("Home", { inspectorId: user.inspector_id });
       } else {
         navigation.replace("EmpleadoHome", { user });

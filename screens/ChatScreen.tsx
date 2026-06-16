@@ -51,7 +51,7 @@ export default function ChatScreen({ navigation, route }: Props) {
     try {
       const res = await axios.post<{ text: string; error?: string }>(
         `${API_URL}/mobile/ai`,
-        { email: userEmail, messages: newMessages }
+        { messages: newMessages }
       );
       if (res.data.error) throw new Error(res.data.error);
       setMessages([...newMessages, { role: "assistant", content: res.data.text }]);

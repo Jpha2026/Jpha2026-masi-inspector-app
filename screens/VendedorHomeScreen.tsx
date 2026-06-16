@@ -36,6 +36,8 @@ export default function VendedorHomeScreen({ navigation, route }: Props) {
           axios.defaults.headers.common["Authorization"] = undefined;
           await SecureStore.deleteItemAsync("masi_token");
           await SecureStore.deleteItemAsync("masi_active_jornada");
+          await SecureStore.deleteItemAsync("inspector_id");
+          await SecureStore.deleteItemAsync("inspector_name");
           await AsyncStorage.multiRemove([
             "masi_user", "inspector_id", "inspector_name",
             "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",

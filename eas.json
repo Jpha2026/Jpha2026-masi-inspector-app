@@ -7,13 +7,13 @@
       "android": {
         "buildType": "apk",
         "env": {
-          "EXPO_PUBLIC_API_URL": "http://192.168.1.202:3000/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
         }
       },
       "ios": {
         "simulator": true,
         "env": {
-          "EXPO_PUBLIC_API_URL": "http://192.168.1.202:3000/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
         }
       }
     },

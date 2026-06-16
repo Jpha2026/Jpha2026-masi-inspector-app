@@ -36,7 +36,7 @@ export default function ScanScreen({ navigation, route }: Props) {
     if (expectedQr && qrCode !== expectedQr) {
       Alert.alert(
         "QR incorrecto",
-        `Este código no corresponde al equipo asignado en la ruta.\n\nEsperado: ${expectedQr}\nLeído: ${qrCode}`,
+        "Este código no corresponde al equipo asignado en la ruta.",
         [{ text: "Reintentar", onPress: () => setScanned(false) }]
       );
       return;
