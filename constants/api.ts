@@ -1,2 +1,2 @@
 export const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.1.202:3000/api";
+  process.env.EXPO_PUBLIC_API_URL ?? "https://app.masi.com.mx/api";

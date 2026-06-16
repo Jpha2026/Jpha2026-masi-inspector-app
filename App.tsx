@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
+import { createNavigationContainerRef } from "@react-navigation/native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -38,6 +39,30 @@ import ManualScreen from "./screens/ManualScreen";
 import { RootStackParamList, AppUser } from "./types";
 import { API_URL } from "./constants/api";
 
+axios.defaults.timeout = 15000;
+
+axios.interceptors.response.use(
+  (r) => r,
+  async (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      axios.defaults.headers.common["Authorization"] = undefined;
+      await SecureStore.deleteItemAsync("masi_token");
+      await SecureStore.deleteItemAsync("masi_user");
+      await SecureStore.deleteItemAsync("masi_active_jornada");
+      await SecureStore.deleteItemAsync("inspector_id");
+      await SecureStore.deleteItemAsync("inspector_name");
+      await AsyncStorage.multiRemove([
+        "masi_user", "inspector_id", "inspector_name",
+        "masi_offline_queue_v2", "offline_inspection_queue", "masi_active_jornada",
+      ]);
+      if (navigationRef.isReady()) {
+        navigationRef.reset({ index: 0, routes: [{ name: "Login" }] });
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -67,6 +92,7 @@ async function registerPushToken(_userId: string) {
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome" | "VendedorHome" | "Taller";
 
@@ -177,7 +203,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName={initialRoute}
           screenOptions={{ headerShown: false, animation: "slide_from_right" }}

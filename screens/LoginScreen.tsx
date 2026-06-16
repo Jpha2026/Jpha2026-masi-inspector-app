@@ -100,8 +100,13 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   const handleSendCode = async () => {
-    if (!email.trim()) {
+    const emailTrimmed = email.trim();
+    if (!emailTrimmed) {
       Alert.alert("Correo requerido", "Ingresa tu correo electrónico.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+      Alert.alert("Correo inválido", "Ingresa un correo electrónico válido.");
       return;
     }
     setLoading(true);

@@ -74,8 +74,14 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
         await axios.post(`${API_URL}/inspections`, item.payload, { timeout: 12000 });
         synced++;
       } catch (e) {
-        legRemaining.push(item);
-        if (axios.isAxiosError(e) && e.response?.status === 401) legAuthFailed = true;
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          legAuthFailed = true;
+          legRemaining.push(item);
+        } else if (axios.isAxiosError(e) && e.response && e.response.status >= 400 && e.response.status < 500) {
+          // 4xx permanente — descartar
+        } else {
+          legRemaining.push(item);
+        }
       }
     }
     legFailed = legRemaining.length;
@@ -98,8 +104,14 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
         }
         synced++;
       } catch (e) {
-        remaining.push(req);
-        if (axios.isAxiosError(e) && e.response?.status === 401) authFailed = true;
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          authFailed = true;
+          remaining.push(req);
+        } else if (axios.isAxiosError(e) && e.response && e.response.status >= 400 && e.response.status < 500) {
+          // 4xx permanente (payload inválido) — descartar para no bloquear la cola
+        } else {
+          remaining.push(req);
+        }
       }
     }
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));

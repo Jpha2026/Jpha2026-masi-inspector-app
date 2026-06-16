@@ -748,6 +748,7 @@ export default function InspectionScreen({ navigation, route }: Props) {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
+  const idempotencyKey = useRef(`insp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
   const { location } = useLocation();
 
   // Try loading from DB; replace if successful
@@ -820,6 +821,7 @@ export default function InspectionScreen({ navigation, route }: Props) {
       photos,
       lat,
       lng,
+      idempotency_key: idempotencyKey.current,
     };
 
     const netState = await NetInfo.fetch();

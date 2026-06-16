@@ -11,7 +11,7 @@ export function useConnectivity() {
 
   useEffect(() => {
     NetInfo.fetch().then((state) => {
-      const connected = !!state.isConnected && !!state.isInternetReachable;
+      const connected = !!state.isConnected && state.isInternetReachable !== false;
       setIsOnline(connected);
       if (!connected) {
         setStatus("offline");
@@ -20,7 +20,7 @@ export function useConnectivity() {
     });
 
     const unsubscribe = NetInfo.addEventListener((state) => {
-      const connected = !!state.isConnected;
+      const connected = !!state.isConnected && state.isInternetReachable !== false;
       setIsOnline(connected);
 
       if (!connected) {
