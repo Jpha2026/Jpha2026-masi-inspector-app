@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
 import axios from "axios";
 import { queueRequest } from "./useOfflineSync";
@@ -43,7 +44,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
 
   // Load persisted jornada on mount
   useEffect(() => {
-    AsyncStorage.getItem(JORNADA_KEY).then((raw) => {
+    SecureStore.getItemAsync(JORNADA_KEY).then((raw) => {
       if (!raw) return;
       try {
         const j: ActiveJornada = JSON.parse(raw);
@@ -122,7 +123,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
       start_lng: gpsLng,
     };
 
-    await AsyncStorage.setItem(JORNADA_KEY, JSON.stringify(jornada));
+    await SecureStore.setItemAsync(JORNADA_KEY, JSON.stringify(jornada));
     setActive(jornada);
 
     await sendNow(`${API_URL}/mobile/jornada`, "POST", {
@@ -144,7 +145,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
       end_lat: loc?.lat ?? null,
       end_lng: loc?.lng ?? null,
     }, "jornada");
-    await AsyncStorage.removeItem(JORNADA_KEY);
+    await SecureStore.deleteItemAsync(JORNADA_KEY);
     setActive(null);
   };
 

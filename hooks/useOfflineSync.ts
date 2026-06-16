@@ -67,12 +67,15 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
     let legQueue: PendingInspection[] = [];
     try { legQueue = JSON.parse(legRaw); } catch { legQueue = []; }
     const legRemaining: PendingInspection[] = [];
+    let legAuthFailed = false;
     for (const item of legQueue) {
+      if (legAuthFailed) { legRemaining.push(item); continue; }
       try {
         await axios.post(`${API_URL}/inspections`, item.payload, { timeout: 12000 });
         synced++;
-      } catch {
+      } catch (e) {
         legRemaining.push(item);
+        if (axios.isAxiosError(e) && e.response?.status === 401) legAuthFailed = true;
       }
     }
     legFailed = legRemaining.length;
@@ -84,7 +87,9 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
   if (raw) {
     let queue: QueuedRequest[] = [];
     try { queue = JSON.parse(raw); } catch { queue = []; }
+    let authFailed = false;
     for (const req of queue) {
+      if (authFailed) { remaining.push(req); continue; }
       try {
         if (req.method === "POST") {
           await axios.post(req.url, req.data, { timeout: 12000 });
@@ -92,8 +97,9 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
           await axios.patch(req.url, req.data, { timeout: 12000 });
         }
         synced++;
-      } catch {
+      } catch (e) {
         remaining.push(req);
+        if (axios.isAxiosError(e) && e.response?.status === 401) authFailed = true;
       }
     }
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
