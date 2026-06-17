@@ -8,12 +8,16 @@ import { API_URL } from "../constants/api";
 import type { GeoPoint } from "./useLocation";
 
 // Send immediately; fall back to offline queue only if network fails
-async function sendNow(url: string, method: "POST" | "PATCH", data: unknown, type: string) {
+// Returns the response data if available
+async function sendNow(url: string, method: "POST" | "PATCH", data: unknown, type: string): Promise<unknown> {
   try {
-    if (method === "POST") await axios.post(url, data, { timeout: 8000 });
-    else await axios.patch(url, data, { timeout: 8000 });
+    const res = method === "POST"
+      ? await axios.post(url, data, { timeout: 8000 })
+      : await axios.patch(url, data, { timeout: 8000 });
+    return res.data;
   } catch {
     await queueRequest(url, method, data, type);
+    return null;
   }
 }
 
@@ -73,12 +77,17 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
     const sendLocation = async () => {
       const loc = locationRef.current;
       if (!loc) return;
-      await sendNow(`${API_URL}/mobile/jornada/location`, "POST", {
+      const res = await sendNow(`${API_URL}/mobile/jornada/location`, "POST", {
         jornada_id: active.id,
         inspector_id: active.inspector_id,
         lat: loc.lat,
         lng: loc.lng,
       }, "jornada_location");
+      // If server says jornada was closed externally (e.g. from web platform), clear local state
+      if (res && typeof res === "object" && (res as { closed?: boolean }).closed === true) {
+        await SecureStore.deleteItemAsync(JORNADA_KEY);
+        setActive(null);
+      }
     };
     // Send immediately when jornada starts, then every 5 min
     sendLocation();
