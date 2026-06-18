@@ -123,25 +123,29 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
       }
     }
 
-    // 3. Create jornada
-    const jornada: ActiveJornada = {
-      id: `j_${Date.now()}`,
+    // 3. Create jornada — get server-generated id from response
+    const start_time = new Date().toISOString();
+    const res = await sendNow(`${API_URL}/mobile/jornada`, "POST", {
       inspector_id: inspectorId,
-      start_time: new Date().toISOString(),
+      start_time,
+      start_lat: gpsLat,
+      start_lng: gpsLng,
+    }, "jornada");
+
+    const serverId = (res && typeof res === "object" && (res as { id?: string }).id)
+      ? (res as { id: string }).id
+      : `j_${Date.now()}`;
+
+    const jornada: ActiveJornada = {
+      id: serverId,
+      inspector_id: inspectorId,
+      start_time,
       start_lat: gpsLat,
       start_lng: gpsLng,
     };
 
     await SecureStore.setItemAsync(JORNADA_KEY, JSON.stringify(jornada));
     setActive(jornada);
-
-    await sendNow(`${API_URL}/mobile/jornada`, "POST", {
-      id: jornada.id,
-      inspector_id: inspectorId,
-      start_time: jornada.start_time,
-      start_lat: gpsLat,
-      start_lng: gpsLng,
-    }, "jornada");
   };
 
   const end = async () => {
