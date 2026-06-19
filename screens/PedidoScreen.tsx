@@ -81,6 +81,10 @@ export default function PedidoScreen({ navigation, route }: Props) {
 
   const handleSubmit = async () => {
     if (items.length === 0) { Alert.alert("Sin artículos", "Agrega al menos un artículo al pedido."); return; }
+    if (!user.employee_id) {
+      Alert.alert("Sesión desactualizada", "Cierra sesión y vuelve a entrar para poder enviar pedidos.");
+      return;
+    }
     setLoading(true);
     try {
       const payload = { employee_id: user.employee_id, department, notes, items };
