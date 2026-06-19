@@ -44,7 +44,14 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
   useEffect(() => { load(); }, []);
 
   const registrar = async (tipo: "entrada" | "salida") => {
-    if (!user.employee_id) return;
+    if (!user.employee_id) {
+      Alert.alert(
+        "Sesión desactualizada",
+        "Tu cuenta necesita actualizarse. Cierra sesión y vuelve a entrar para registrar asistencia.",
+        [{ text: "Entendido" }]
+      );
+      return;
+    }
     setPosting(true);
     try {
       let lat: number | undefined;
@@ -93,7 +100,15 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {loading ? (
+        {!user.employee_id ? (
+          <View style={[s.infoCard, { backgroundColor: "#FEF2F2", borderColor: "#FCA5A5", marginTop: 20 }]}>
+            <Text style={{ fontSize: 32, marginBottom: 10 }}>⚠️</Text>
+            <Text style={{ fontSize: 15, fontWeight: "800", color: "#991B1B", marginBottom: 6 }}>Sesión desactualizada</Text>
+            <Text style={{ fontSize: 13, textAlign: "center", color: "#7F1D1D", lineHeight: 20 }}>
+              Tu cuenta necesita actualizarse.{"\n"}Cierra sesión y vuelve a entrar para poder registrar tu asistencia.
+            </Text>
+          </View>
+        ) : loading ? (
           <ActivityIndicator color="#3B82F6" style={{ marginTop: 40 }} />
         ) : (
           <>
