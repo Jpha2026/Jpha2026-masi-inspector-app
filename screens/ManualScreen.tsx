@@ -249,6 +249,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Registra tu entrada y salida desde 'Asistencia'.",
           "La ubicación GPS se captura automáticamente al registrar.",
+          "Si el botón no responde o aparece un aviso rojo: cierra sesión y vuelve a entrar — esto actualiza tu cuenta.",
         ],
       },
       {
@@ -265,6 +266,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Solicita material para tu área en 'Mis Pedidos'.",
           "El pedido pasa por aprobación antes de surtirse.",
+          "Si sale error al enviar: cierra sesión y vuelve a entrar para actualizar tu cuenta.",
         ],
       },
     ],
