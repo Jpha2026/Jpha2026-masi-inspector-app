@@ -659,10 +659,11 @@ export default function TallerScreen({ navigation, route }: Props) {
                 multiline numberOfLines={3}
                 textAlignVertical="top"
               />
-              <View style={{ height: 16 }} />
-              <SubmitBtn label={`Enviar bitácora al taller (${bitItems.length} equipo${bitItems.length !== 1 ? "s" : ""})`} onPress={submitBitacora} loading={bitSaving} color="#D97700" />
-              <View style={{ height: 24 }} />
+              <View style={{ height: 8 }} />
             </ScrollView>
+            <View style={s.modalFooter}>
+              <SubmitBtn label={`Enviar bitácora al taller (${bitItems.length} equipo${bitItems.length !== 1 ? "s" : ""})`} onPress={submitBitacora} loading={bitSaving} color="#D97700" />
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -783,10 +784,11 @@ export default function TallerScreen({ navigation, route }: Props) {
               <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
               <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
-              <View style={{ height: 16 }} />
-              <SubmitBtn label="Guardar prueba hidrostática" onPress={submitPH} loading={phSaving} color="#7C3AED" />
-              <View style={{ height: 20 }} />
+              <View style={{ height: 8 }} />
             </ScrollView>
+            <View style={s.modalFooter}>
+              <SubmitBtn label="Guardar prueba hidrostática" onPress={submitPH} loading={phSaving} color="#7C3AED" />
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -842,10 +844,11 @@ export default function TallerScreen({ navigation, route }: Props) {
               <UpperInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
               <UpperInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
-              <View style={{ height: 16 }} />
-              <SubmitBtn label="Guardar prueba de manguera" onPress={submitMAN} loading={manSaving} color="#0891B2" />
-              <View style={{ height: 20 }} />
+              <View style={{ height: 8 }} />
             </ScrollView>
+            <View style={s.modalFooter}>
+              <SubmitBtn label="Guardar prueba de manguera" onPress={submitMAN} loading={manSaving} color="#0891B2" />
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -939,6 +942,7 @@ const s = StyleSheet.create({
   photoAdd:    { width: 72, height: 72, borderRadius: 10, backgroundColor: "#F0F4FB", borderWidth: 1.5, borderColor: "#D5DCF0", alignItems: "center", justifyContent: "center", borderStyle: "dashed" },
   // Modal
   modalCard:   { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 0, maxHeight: "93%" },
+  modalFooter: { paddingTop: 10, paddingBottom: 20, borderTopWidth: 1, borderTopColor: "#EEF2FB" },
   textInput:   { backgroundColor: "#F0F4FB", borderRadius: 10, borderWidth: 1.5, borderColor: "#D5DCF0", paddingHorizontal: 14, paddingVertical: 11, fontSize: 13, color: "#1A2740" },
   textArea:    { backgroundColor: "#F0F4FB", borderRadius: 12, borderWidth: 1.5, borderColor: "#D5DCF0", paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: "#1A2740", minHeight: 90, paddingTop: 12 },
   scanBtn:     { width: 46, height: 46, borderRadius: 10, backgroundColor: "#F0F4FB", borderWidth: 1.5, borderColor: "#D5DCF0", alignItems: "center", justifyContent: "center" },
