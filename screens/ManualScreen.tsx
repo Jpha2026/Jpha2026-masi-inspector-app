@@ -114,8 +114,10 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Toca 'Nueva PH' en el menú inferior.",
           "Escanea el código QR del cilindro o ingrésalo manualmente.",
-          "Llena: tipo de cilindro, presión de trabajo y presión de prueba.",
-          "Selecciona resultado: PASS o FAIL y agrega observaciones.",
+          "Selecciona la clase de presión: BAJA (extintores estándar) o ALTA (cartucho / CO₂).",
+          "Al escanear el QR, el tipo de agente, número de serie y capacidad se rellenan automáticamente.",
+          "Completa: año de fabricación, duración de prueba (segundos) y resultado PASS o FAIL.",
+          "Si el resultado es FAIL, aparece el campo 'Causa de rechazo' — es obligatorio llenarlo.",
           "Al guardar se genera un folio PH-YYYY-NNNN automáticamente.",
         ],
       },
@@ -222,11 +224,12 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "En la pantalla inicial toca 'MASI' y selecciona la pestaña 'Empleado'.",
           "Escribe tu correo (el que te asignó RH) y toca 'Continuar'.",
-          "Revisa tu correo: recibirás un código de 6 dígitos (revisa también spam).",
+          "Opción A — por correo: si tu cuenta tiene correo configurado, recibirás un código de 6 dígitos (revisa también spam).",
+          "Opción B — código manual: RH puede mostrarte el código directamente desde la plataforma para compartirlo por WhatsApp.",
           "Ingresa el código, escribe tu nueva contraseña (mín. 6 caracteres) y confírmala.",
           "Toca 'Crear contraseña y entrar'. Tu contraseña es personal — nadie más la conoce.",
           "En accesos posteriores solo escribe tu correo → toca Continuar → ingresa tu contraseña.",
-          "Si olvidaste tu contraseña, pide a RH que la restablezca; luego repite el primer acceso.",
+          "Si olvidaste tu contraseña, pide a RH que la restablezca desde la plataforma; luego repite el primer acceso.",
         ],
       },
       {
@@ -273,9 +276,9 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         icon: "🔐",
         items: [
           "En la pantalla inicial toca el botón verde oscuro 'Portal Cliente'.",
-          "Ingresa el correo y la contraseña que MASI te proporcionó.",
-          "Toca 'Ingresar'. Si necesitas cambiar tu contraseña, contáctanos.",
-          "El portal es solo de lectura: podrás ver reportes, equipos e inspecciones.",
+          "Ingresa el correo y la contraseña que el equipo de Operaciones MASI te compartió.",
+          "Toca 'Ingresar'. Si necesitas cambiar tu contraseña, contacta a tu ejecutivo MASI.",
+          "El portal es solo de lectura: podrás ver reportes, equipos, inspecciones y cotizaciones.",
         ],
       },
       {
