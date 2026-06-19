@@ -172,7 +172,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     setLoading(true);
     try {
       const [cRes, levRes] = await Promise.all([
-        axios.get(`${API_URL}/clients`),
+        axios.get(`${API_URL}/mobile/clients`),
         axios.get<Levantamiento[]>(`${API_URL}/levantamientos?inspector_id=${inspectorId}`),
       ]);
       setClientes(cRes.data?.rows ?? []);

@@ -135,7 +135,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     try {
       const [ordersRes, clientesRes] = await Promise.all([
         axios.get(`${API_URL}/mobile/taller`),
-        axios.get(`${API_URL}/clients`),
+        axios.get(`${API_URL}/mobile/clients`),
       ]);
       setOrders(Array.isArray(ordersRes.data) ? ordersRes.data : []);
       setClientes(clientesRes.data?.rows ?? []);
@@ -196,7 +196,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     }
     setPhSaving(true);
     try {
-      const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/taller/ph`, {
+      const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/ph`, {
         equipment_id: phEq?.id,
         equipment_code: phCode || undefined,
         test_type: phPressureClass === "alta" ? "alta_presion" : "baja_presion",
@@ -238,7 +238,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     }
     setManSaving(true);
     try {
-      const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/taller/mangueras`, {
+      const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/mangueras`, {
         equipment_id: manEq?.id, equipment_code: manCode || undefined,
         hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
         test_pressure_lbs: Number(manPressure), result: manResult,

@@ -53,7 +53,11 @@ export default function EmpleadoHomeScreen({ navigation, route }: Props) {
   }, []);
 
   const loadData = async () => {
-    if (!user.employee_id) { setLoading(false); return; }
+    if (!user.employee_id) {
+      setLoading(false);
+      Alert.alert("Perfil incompleto", "No se encontró un perfil de empleado asociado a tu cuenta. Contacta a RH para que vinculen tu cuenta.");
+      return;
+    }
     try {
       const [solRes, vacRes, loanRes] = await Promise.allSettled([
         axios.get<Solicitud[]>(`${API_URL}/mobile/solicitudes?employee_id=${user.employee_id}`),
