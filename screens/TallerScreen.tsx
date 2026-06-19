@@ -21,7 +21,7 @@ type Props = {
 };
 
 type Cliente = { id: string; name: string };
-type EqLookup = { found: boolean; id?: string; name?: string; qr_code?: string; type?: string; serial_number?: string; client_name?: string };
+type EqLookup = { found: boolean; id?: string; name?: string; qr_code?: string; type?: string; serial_number?: string; capacity?: string; agent_type?: string; client_name?: string };
 type BitItem = { uid: string; type: string; serial: string; qty: number };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
@@ -66,16 +66,22 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [otClientId, setOtClientId]   = useState("");
 
   // PH Test modal
-  const [showPH, setShowPH]           = useState(false);
-  const [phEq, setPhEq]               = useState<EqLookup | null>(null);
-  const [phCode, setPhCode]           = useState("");
-  const [phCylType, setPhCylType]     = useState("");
-  const [phWorkPsi, setPhWorkPsi]     = useState("");
-  const [phTestPsi, setPhTestPsi]     = useState("");
-  const [phResult, setPhResult]       = useState<"PASS"|"FAIL">("PASS");
-  const [phObs, setPhObs]             = useState("");
-  const [phBy, setPhBy]               = useState(userName);
-  const [phSaving, setPhSaving]       = useState(false);
+  const [showPH, setShowPH]               = useState(false);
+  const [phEq, setPhEq]                   = useState<EqLookup | null>(null);
+  const [phCode, setPhCode]               = useState("");
+  const [phCylType, setPhCylType]         = useState("");
+  const [phPressureClass, setPhPressureClass] = useState<"baja"|"alta">("baja");
+  const [phSerial, setPhSerial]           = useState("");
+  const [phCapacity, setPhCapacity]       = useState("");
+  const [phYearMfg, setPhYearMfg]         = useState("");
+  const [phWorkPsi, setPhWorkPsi]         = useState("");
+  const [phTestPsi, setPhTestPsi]         = useState("");
+  const [phDuration, setPhDuration]       = useState("60");
+  const [phResult, setPhResult]           = useState<"PASS"|"FAIL">("PASS");
+  const [phCauseReject, setPhCauseReject] = useState("");
+  const [phObs, setPhObs]                 = useState("");
+  const [phBy, setPhBy]                   = useState(userName);
+  const [phSaving, setPhSaving]           = useState(false);
 
   // Manguera Test modal
   const [showMAN, setShowMAN]         = useState(false);
@@ -125,8 +131,20 @@ export default function TallerScreen({ navigation, route }: Props) {
     try {
       const r = await axios.get<EqLookup>(`${API_URL.replace("/mobile", "")}/equipment/lookup?code=${encodeURIComponent(code)}`);
       const data = r.data;
-      if (target === "ph") { setPhEq(data); if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base.`); }
-      else                 { setManEq(data); if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base.`); }
+      if (target === "ph") {
+        setPhEq(data);
+        if (data.found) {
+          if (data.agent_type) setPhCylType(data.agent_type);
+          else if (data.type) setPhCylType(data.type);
+          if (data.serial_number) setPhSerial(data.serial_number);
+          if (data.capacity) setPhCapacity(data.capacity);
+        } else {
+          Alert.alert("No encontrado", `Código "${code}" no está en la base.`);
+        }
+      } else {
+        setManEq(data);
+        if (!data.found) Alert.alert("No encontrado", `Código "${code}" no está en la base.`);
+      }
     } catch {
       if (target === "ph") setPhEq({ found: false });
       else setManEq({ found: false });
@@ -157,10 +175,20 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhSaving(true);
     try {
       const r = await axios.post<{ folio: string; result: string }>(`${API_URL}/taller/ph`, {
-        equipment_id: phEq?.id, equipment_code: phCode || undefined,
-        cylinder_type: phCylType, working_pressure_psi: Number(phWorkPsi),
-        test_pressure_psi: Number(phTestPsi), result: phResult,
-        observations: phObs, tested_by: phBy, duration_seconds: 60,
+        equipment_id: phEq?.id,
+        equipment_code: phCode || undefined,
+        test_type: phPressureClass === "alta" ? "alta_presion" : "baja_presion",
+        cylinder_type: phCylType,
+        serial_number: phSerial || undefined,
+        capacity: phCapacity || undefined,
+        manufacture_year: phYearMfg ? Number(phYearMfg) : undefined,
+        working_pressure_psi: Number(phWorkPsi),
+        test_pressure_psi: Number(phTestPsi),
+        duration_seconds: Number(phDuration) || 60,
+        result: phResult,
+        rejection_reason: phResult === "FAIL" ? phCauseReject : undefined,
+        observations: phObs,
+        tested_by: phBy,
       });
       Alert.alert("✅ Prueba PH guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowPH(false); resetPH(); } },
@@ -311,7 +339,7 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   // ─── Resets ─────────────────────────────────────────────────────────────────
   const resetOT  = () => { setOtTipo(TIPOS_OT[0]); setOtDesc(""); setOtPrioridad("media"); setOtClientId(""); };
-  const resetPH  = () => { setPhEq(null); setPhCode(""); setPhCylType(""); setPhWorkPsi(""); setPhTestPsi(""); setPhResult("PASS"); setPhObs(""); };
+  const resetPH  = () => { setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja"); setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi(""); setPhTestPsi(""); setPhDuration("60"); setPhResult("PASS"); setPhCauseReject(""); setPhObs(""); };
   const resetMAN = () => { setManEq(null); setManCode(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitPhotos([]); };
 
@@ -641,19 +669,77 @@ export default function TallerScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
               )}
-              <FieldLabel style={{ marginTop: 12 }}>Tipo de cilindro *</FieldLabel>
-              <UpperInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="PQS, CO₂, SCBA, Agua, AFFF..." placeholderTextColor="#9BACC8" />
+              {/* Clasificación de presión */}
+              <FieldLabel style={{ marginTop: 12 }}>Clasificación *</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <TouchableOpacity
+                  style={[s.resultBtn, { borderColor: "#0891B2", backgroundColor: phPressureClass === "baja" ? "#0891B2" : "#F0F9FF" }]}
+                  onPress={() => setPhPressureClass("baja")}
+                >
+                  <Text style={{ fontWeight: "800", fontSize: 13, color: phPressureClass === "baja" ? "#fff" : "#0891B2" }}>⬇ BAJA PRESIÓN</Text>
+                  <Text style={{ fontSize: 10, color: phPressureClass === "baja" ? "rgba(255,255,255,0.7)" : "#64748B", marginTop: 2 }}>≤ 500 PSI</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.resultBtn, { borderColor: "#DC2626", backgroundColor: phPressureClass === "alta" ? "#DC2626" : "#FFF1F2" }]}
+                  onPress={() => setPhPressureClass("alta")}
+                >
+                  <Text style={{ fontWeight: "800", fontSize: 13, color: phPressureClass === "alta" ? "#fff" : "#DC2626" }}>⬆ ALTA PRESIÓN</Text>
+                  <Text style={{ fontSize: 10, color: phPressureClass === "alta" ? "rgba(255,255,255,0.7)" : "#64748B", marginTop: 2 }}>&gt; 500 PSI</Text>
+                </TouchableOpacity>
+              </View>
+
+              <FieldLabel style={{ marginTop: 12 }}>Tipo / Agente del cilindro *</FieldLabel>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 6 }}>
+                {["PQS","CO₂","SCBA","Agua","AFFF","HCFC","N₂","Halón","Otro"].map(t => (
+                  <Chip key={t} label={t} selected={phCylType === t} onPress={() => setPhCylType(t)} />
+                ))}
+              </ScrollView>
+              <UpperInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="O escribe el tipo..." placeholderTextColor="#9BACC8" />
+
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>No. de serie</FieldLabel>
+                  <UpperInput style={s.textInput} value={phSerial} onChangeText={setPhSerial} placeholder="SN-12345" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Capacidad</FieldLabel>
+                  <UpperInput style={s.textInput} value={phCapacity} onChangeText={setPhCapacity} placeholder="10 LBS, 6 KG..." placeholderTextColor="#9BACC8" />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Año fabricación</FieldLabel>
+                  <UpperInput style={s.textInput} value={phYearMfg} onChangeText={setPhYearMfg} keyboardType="numeric" placeholder="2018" placeholderTextColor="#9BACC8" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Duración ensayo (seg)</FieldLabel>
+                  <UpperInput style={s.textInput} value={phDuration} onChangeText={setPhDuration} keyboardType="numeric" placeholder="60" placeholderTextColor="#9BACC8" />
+                </View>
+              </View>
+
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Presión trabajo (PSI) *</FieldLabel>
-                  <UpperInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder="150" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder={phPressureClass === "alta" ? "2015" : "150"} placeholderTextColor="#9BACC8" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Presión prueba (PSI) *</FieldLabel>
-                  <UpperInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder="225" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder={phPressureClass === "alta" ? "3360" : "225"} placeholderTextColor="#9BACC8" />
                 </View>
               </View>
-              <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
+              {phPressureClass === "alta" && (
+                <Text style={{ fontSize: 11, color: "#7C3AED", marginTop: 4, fontStyle: "italic" }}>
+                  Alta presión: presión de prueba = 5/3 × presión de trabajo (DOT)
+                </Text>
+              )}
+              {phPressureClass === "baja" && (
+                <Text style={{ fontSize: 11, color: "#0891B2", marginTop: 4, fontStyle: "italic" }}>
+                  Baja presión: presión de prueba = 1.5 × presión de trabajo (NOM-002)
+                </Text>
+              )}
+
+              <FieldLabel style={{ marginTop: 14 }}>Resultado *</FieldLabel>
               <View style={{ flexDirection: "row", gap: 10 }}>
                 <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: phResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setPhResult("PASS")}>
                   <Text style={{ fontWeight: "800", color: phResult === "PASS" ? "#fff" : "#15803D" }}>✓ APROBADA</Text>
@@ -662,6 +748,17 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <Text style={{ fontWeight: "800", color: phResult === "FAIL" ? "#fff" : "#DC2626" }}>✗ RECHAZADA</Text>
                 </TouchableOpacity>
               </View>
+              {phResult === "FAIL" && (
+                <>
+                  <FieldLabel style={{ marginTop: 12 }}>Causa de rechazo *</FieldLabel>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                    {["Abolladuras","Corrosión excesiva","Pérdida de presión","Deformación","Base corroída","Fuga detectada","Expansión excesiva","Otro"].map(c => (
+                      <Chip key={c} label={c} selected={phCauseReject === c} onPress={() => setPhCauseReject(c)} />
+                    ))}
+                  </ScrollView>
+                  <UpperInput style={s.textInput} value={phCauseReject} onChangeText={setPhCauseReject} placeholder="O escribe la causa..." placeholderTextColor="#9BACC8" />
+                </>
+              )}
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
               <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
