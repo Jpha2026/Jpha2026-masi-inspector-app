@@ -83,6 +83,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [phObs, setPhObs]                 = useState("");
   const [phBy, setPhBy]                   = useState(userName);
   const [phSaving, setPhSaving]           = useState(false);
+  const [phPhotos, setPhPhotos]           = useState<string[]>([]);
 
   // Manguera Test modal
   const [showMAN, setShowMAN]         = useState(false);
@@ -94,6 +95,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [manObs, setManObs]           = useState("");
   const [manBy, setManBy]             = useState(userName);
   const [manSaving, setManSaving]     = useState(false);
+  const [manPhotos, setManPhotos]     = useState<string[]>([]);
   const [manDiameter, setManDiameter] = useState('1.5"');
 
   // Bitácora de Recarga modal
@@ -194,7 +196,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     }
     setPhSaving(true);
     try {
-      const r = await axios.post<{ folio: string; result: string }>(`${API_URL}/taller/ph`, {
+      const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/taller/ph`, {
         equipment_id: phEq?.id,
         equipment_code: phCode || undefined,
         test_type: phPressureClass === "alta" ? "alta_presion" : "baja_presion",
@@ -210,6 +212,17 @@ export default function TallerScreen({ navigation, route }: Props) {
         observations: phObs,
         tested_by: phBy,
       });
+      if (r.data.id && phPhotos.length > 0) {
+        for (const uri of phPhotos) {
+          try {
+            const fd = new FormData();
+            fd.append("file", { uri, name: `ph_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
+            fd.append("entity_type", "ph_test");
+            fd.append("entity_id", r.data.id);
+            await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+          } catch { /* non-fatal */ }
+        }
+      }
       Alert.alert("✅ Prueba PH guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowPH(false); resetPH(); } },
       ]);
@@ -225,12 +238,23 @@ export default function TallerScreen({ navigation, route }: Props) {
     }
     setManSaving(true);
     try {
-      const r = await axios.post<{ folio: string; result: string }>(`${API_URL}/taller/mangueras`, {
+      const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/taller/mangueras`, {
         equipment_id: manEq?.id, equipment_code: manCode || undefined,
         hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
         test_pressure_lbs: Number(manPressure), result: manResult,
         observations: manObs, tested_by: manBy, duration_min: 3,
       });
+      if (r.data.id && manPhotos.length > 0) {
+        for (const uri of manPhotos) {
+          try {
+            const fd = new FormData();
+            fd.append("file", { uri, name: `man_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
+            fd.append("entity_type", "hose_test");
+            fd.append("entity_id", r.data.id);
+            await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+          } catch { /* non-fatal */ }
+        }
+      }
       Alert.alert("✅ Prueba de manguera guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowMAN(false); resetMAN(); } },
       ]);
@@ -298,6 +322,38 @@ export default function TallerScreen({ navigation, route }: Props) {
     if (!result.canceled && result.assets[0]?.uri) setBitPhotos(prev => [...prev, result.assets[0].uri]);
   };
 
+  const takePhPhoto = async () => {
+    if (phPhotos.length >= 15) { Alert.alert("Máximo 15 fotos"); return; }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permiso de cámara requerido"); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.7 });
+    if (!result.canceled && result.assets[0]?.uri) setPhPhotos(prev => [...prev, result.assets[0].uri]);
+  };
+
+  const pickPhPhoto = async () => {
+    if (phPhotos.length >= 15) { Alert.alert("Máximo 15 fotos"); return; }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permiso de galería requerido"); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.7, allowsMultipleSelection: true, selectionLimit: 15 - phPhotos.length });
+    if (!result.canceled) setPhPhotos(prev => [...prev, ...result.assets.map(a => a.uri)]);
+  };
+
+  const takeManPhoto = async () => {
+    if (manPhotos.length >= 15) { Alert.alert("Máximo 15 fotos"); return; }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permiso de cámara requerido"); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.7 });
+    if (!result.canceled && result.assets[0]?.uri) setManPhotos(prev => [...prev, result.assets[0].uri]);
+  };
+
+  const pickManPhoto = async () => {
+    if (manPhotos.length >= 15) { Alert.alert("Máximo 15 fotos"); return; }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permiso de galería requerido"); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.7, allowsMultipleSelection: true, selectionLimit: 15 - manPhotos.length });
+    if (!result.canceled) setManPhotos(prev => [...prev, ...result.assets.map(a => a.uri)]);
+  };
+
   const submitBitacora = async () => {
     if (bitItems.length === 0) { Alert.alert("Agrega al menos un equipo a la bitácora"); return; }
     setBitSaving(true);
@@ -359,8 +415,8 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   // ─── Resets ─────────────────────────────────────────────────────────────────
   const resetOT  = () => { setOtTipo(TIPOS_OT[0]); setOtDesc(""); setOtPrioridad("media"); setOtClientId(""); };
-  const resetPH  = () => { setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja"); setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi(""); setPhTestPsi(""); setPhDuration("60"); setPhResult("PASS"); setPhCauseReject(""); setPhObs(""); };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); };
+  const resetPH  = () => { setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja"); setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi(""); setPhTestPsi(""); setPhDuration("60"); setPhResult("PASS"); setPhCauseReject(""); setPhObs(""); setPhPhotos([]); };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManPhotos([]); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
@@ -661,7 +717,7 @@ export default function TallerScreen({ navigation, route }: Props) {
               />
               <View style={{ height: 8 }} />
             </ScrollView>
-            <View style={s.modalFooter}>
+            <View style={[s.modalFooter, { paddingBottom: Math.max(20, insets.bottom + 10) }]}>
               <SubmitBtn label={`Enviar bitácora al taller (${bitItems.length} equipo${bitItems.length !== 1 ? "s" : ""})`} onPress={submitBitacora} loading={bitSaving} color="#D97700" />
             </View>
           </View>
@@ -784,9 +840,35 @@ export default function TallerScreen({ navigation, route }: Props) {
               <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
               <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <FieldLabel style={{ marginTop: 12 }}>Fotos de evidencia ({phPhotos.length}/15)</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
+                <TouchableOpacity onPress={takePhPhoto} style={{ flex: 1, backgroundColor: "#7C3AED11", borderRadius: 8, borderWidth: 1, borderColor: "#7C3AED44", paddingVertical: 10, alignItems: "center" }}>
+                  <Text style={{ fontSize: 20 }}>📷</Text>
+                  <Text style={{ fontSize: 11, color: "#7C3AED", fontWeight: "700", marginTop: 2 }}>Cámara</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={pickPhPhoto} style={{ flex: 1, backgroundColor: "#7C3AED11", borderRadius: 8, borderWidth: 1, borderColor: "#7C3AED44", paddingVertical: 10, alignItems: "center" }}>
+                  <Text style={{ fontSize: 20 }}>🖼</Text>
+                  <Text style={{ fontSize: 11, color: "#7C3AED", fontWeight: "700", marginTop: 2 }}>Galería</Text>
+                </TouchableOpacity>
+              </View>
+              {phPhotos.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    {phPhotos.map((uri, i) => (
+                      <View key={i} style={{ position: "relative" }}>
+                        <Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 8 }} />
+                        <TouchableOpacity onPress={() => setPhPhotos(prev => prev.filter((_, j) => j !== i))}
+                          style={{ position: "absolute", top: -6, right: -6, backgroundColor: "#EF4444", borderRadius: 10, width: 20, height: 20, alignItems: "center", justifyContent: "center" }}>
+                          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              )}
               <View style={{ height: 8 }} />
             </ScrollView>
-            <View style={s.modalFooter}>
+            <View style={[s.modalFooter, { paddingBottom: Math.max(20, insets.bottom + 10) }]}>
               <SubmitBtn label="Guardar prueba hidrostática" onPress={submitPH} loading={phSaving} color="#7C3AED" />
             </View>
           </View>
@@ -844,9 +926,35 @@ export default function TallerScreen({ navigation, route }: Props) {
               <UpperInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
               <UpperInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <FieldLabel style={{ marginTop: 12 }}>Fotos de evidencia ({manPhotos.length}/15)</FieldLabel>
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
+                <TouchableOpacity onPress={takeManPhoto} style={{ flex: 1, backgroundColor: "#0891B211", borderRadius: 8, borderWidth: 1, borderColor: "#0891B244", paddingVertical: 10, alignItems: "center" }}>
+                  <Text style={{ fontSize: 20 }}>📷</Text>
+                  <Text style={{ fontSize: 11, color: "#0891B2", fontWeight: "700", marginTop: 2 }}>Cámara</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={pickManPhoto} style={{ flex: 1, backgroundColor: "#0891B211", borderRadius: 8, borderWidth: 1, borderColor: "#0891B244", paddingVertical: 10, alignItems: "center" }}>
+                  <Text style={{ fontSize: 20 }}>🖼</Text>
+                  <Text style={{ fontSize: 11, color: "#0891B2", fontWeight: "700", marginTop: 2 }}>Galería</Text>
+                </TouchableOpacity>
+              </View>
+              {manPhotos.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    {manPhotos.map((uri, i) => (
+                      <View key={i} style={{ position: "relative" }}>
+                        <Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 8 }} />
+                        <TouchableOpacity onPress={() => setManPhotos(prev => prev.filter((_, j) => j !== i))}
+                          style={{ position: "absolute", top: -6, right: -6, backgroundColor: "#EF4444", borderRadius: 10, width: 20, height: 20, alignItems: "center", justifyContent: "center" }}>
+                          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              )}
               <View style={{ height: 8 }} />
             </ScrollView>
-            <View style={s.modalFooter}>
+            <View style={[s.modalFooter, { paddingBottom: Math.max(20, insets.bottom + 10) }]}>
               <SubmitBtn label="Guardar prueba de manguera" onPress={submitMAN} loading={manSaving} color="#0891B2" />
             </View>
           </View>
