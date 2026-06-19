@@ -1,23 +1,20 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView,
-  Platform, Animated, Dimensions, Image,
+  Platform, Animated, Image,
 } from "react-native";
 import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList, AppUser } from "../types";
+import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import { useTheme } from "../hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, "Login"> };
-
-const { width } = Dimensions.get("window");
 
 type Tab  = "inspector" | "taller" | "vendedor" | "empleado";
 type Step = "main" | "staff" | "cliente";
@@ -33,21 +30,30 @@ export default function LoginScreen({ navigation }: Props) {
   const [inspPass, setInspPass]      = useState("");
   const [showPass, setShowPass]      = useState(false);
 
-  // OTP flow (empleado / cliente)
-  const [email, setEmail]            = useState("");
-  const [codeSent, setCodeSent]      = useState(false);
-  const [code, setCode]              = useState("");
+  // Empleado self-password flow
+  const [empStep, setEmpStep]        = useState<"email" | "setup" | "login">("email");
+  const [empEmail, setEmpEmail]      = useState("");
+  const [empPass, setEmpPass]        = useState("");
+  const [empShowPass, setEmpShowPass] = useState(false);
+  const [empOtp, setEmpOtp]          = useState("");
+  const [empNewPass, setEmpNewPass]  = useState("");
+  const [empConfPass, setEmpConfPass] = useState("");
+  const [empShowNew, setEmpShowNew]  = useState(false);
+
 
   const [loading, setLoading]        = useState(false);
 
   const goBack = () => {
     setStep("main");
     setTab("inspector");
-    setCodeSent(false);
-    setCode("");
     setInspEmail("");
     setInspPass("");
-    setEmail("");
+    setEmpStep("email");
+    setEmpEmail("");
+    setEmpPass("");
+    setEmpOtp("");
+    setEmpNewPass("");
+    setEmpConfPass("");
   };
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
@@ -100,53 +106,84 @@ export default function LoginScreen({ navigation }: Props) {
     } finally { setLoading(false); }
   };
 
-  const handleSendCode = async () => {
-    const emailTrimmed = email.trim();
-    if (!emailTrimmed) {
+  const handleEmployeeInit = async () => {
+    if (!empEmail.trim()) {
       Alert.alert("Correo requerido", "Ingresa tu correo electrónico.");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
-      Alert.alert("Correo inválido", "Ingresa un correo electrónico válido.");
-      return;
-    }
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/mobile/send-code`, { email: email.trim() });
-      setCodeSent(true);
-      setCode("");
+      const res = await axios.post(`${API_URL}/mobile/employee-init`, { email: empEmail.trim().toLowerCase() });
+      const status = res.data?.status;
+      if (status === "needs_setup") {
+        setEmpStep("setup");
+      } else if (status === "has_password") {
+        setEmpStep("login");
+      } else {
+        Alert.alert("No encontrado", "No se encontró una cuenta de empleado con ese correo. Contacta a RH.");
+      }
     } catch {
-      Alert.alert("Error", "No se pudo enviar el código. Verifica tu correo.");
+      Alert.alert("Error", "No se pudo verificar el correo. Intenta de nuevo.");
     } finally { setLoading(false); }
   };
 
-  const handleVerifyCode = async () => {
-    if (!code.trim()) {
-      Alert.alert("Código requerido", "Ingresa el código que recibiste.");
+  const handleEmployeeSetup = async () => {
+    if (!empOtp.trim() || !empNewPass.trim()) {
+      Alert.alert("Campos requeridos", "Ingresa el código y tu nueva contraseña.");
+      return;
+    }
+    if (empNewPass !== empConfPass) {
+      Alert.alert("Contraseñas no coinciden", "Las contraseñas ingresadas no son iguales.");
+      return;
+    }
+    if (empNewPass.length < 6) {
+      Alert.alert("Contraseña muy corta", "Debe tener al menos 6 caracteres.");
       return;
     }
     setLoading(true);
     try {
-      const res = await axios.post<AppUser & { token?: string }>(`${API_URL}/mobile/verify-code`, { email: email.trim(), code: code.trim() });
-      const user = res.data;
-      if (user.token) {
-        await SecureStore.setItemAsync("masi_token", user.token);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
+      const res = await axios.post(`${API_URL}/mobile/employee-setup`, {
+        email: empEmail.trim().toLowerCase(),
+        otp: empOtp.trim(),
+        password: empNewPass,
+      });
+      const data = res.data;
+      if (data.token) {
+        await SecureStore.setItemAsync("masi_token", data.token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
       }
-      await SecureStore.setItemAsync("masi_user", JSON.stringify(user));
-      if (user.role === "cliente") {
-        navigation.replace("ClienteHome", { user });
-      } else if (user.inspector_id) {
-        await SecureStore.setItemAsync("inspector_id", user.inspector_id);
-        await SecureStore.setItemAsync("inspector_name", user.name);
-        navigation.replace("Home", { inspectorId: user.inspector_id });
-      } else {
-        navigation.replace("EmpleadoHome", { user });
-      }
+      await SecureStore.setItemAsync("masi_user", JSON.stringify(data));
+      navigation.replace("EmpleadoHome", { user: data });
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) && err.response?.data?.error
         ? err.response.data.error
         : "Código incorrecto o expirado.";
+      Alert.alert("Error", msg);
+    } finally { setLoading(false); }
+  };
+
+  const handleEmployeeLogin = async () => {
+    if (!empEmail.trim() || !empPass.trim()) {
+      Alert.alert("Campos requeridos", "Ingresa tu correo y contraseña.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API_URL}/mobile/inspector-login`, {
+        email: empEmail.trim().toLowerCase(),
+        password: empPass,
+      });
+      const data = res.data;
+      if (data.token) {
+        await SecureStore.setItemAsync("masi_token", data.token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+      }
+      await SecureStore.setItemAsync("masi_user", JSON.stringify(data));
+      navigation.replace("EmpleadoHome", { user: data });
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) && err.response?.data?.error
+        ? err.response.data.error
+        : "Correo o contraseña incorrectos.";
       Alert.alert("Acceso denegado", msg);
     } finally { setLoading(false); }
   };
@@ -225,7 +262,7 @@ export default function LoginScreen({ navigation }: Props) {
                   ] as { key: Tab; icon: string; label: string; bg: string }[]).map((t) => (
                     <TouchableOpacity key={t.key}
                       style={[s.tabBtn, { flex: 1 }, tab === t.key && { backgroundColor: t.bg }]}
-                      onPress={() => { setTab(t.key); setCodeSent(false); setCode(""); setInspEmail(""); setInspPass(""); setEmail(""); }}
+                      onPress={() => { setTab(t.key); setCodeSent(false); setCode(""); setInspEmail(""); setInspPass(""); setEmail(""); setEmpStep("email"); setEmpEmail(""); setEmpPass(""); setEmpOtp(""); setEmpNewPass(""); setEmpConfPass(""); }}
                     >
                       <Text style={[s.tabText, { color: tab === t.key ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
                         {t.icon}{"\n"}{t.label}
@@ -299,43 +336,57 @@ export default function LoginScreen({ navigation }: Props) {
                 </LinearGradient>
               </>
             ) : (
+              /* ── Empleado: email → OTP+setup  ó  email+password ── */
               <>
-                <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
-                  {codeSent ? "Ingresa tu código" : "Acceso por correo"}
-                </Text>
-
-                {/* Email input — siempre visible */}
-                <View style={[s.inputWrap, {
-                  backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
-                  borderColor: codeSent ? "rgba(16,185,129,0.4)" : (T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0"),
-                }]}>
-                  <Text style={s.inputIcon}>✉️</Text>
-                  <UpperInput
-                    style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
-                    value={email}
-                    onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
-                    placeholder="Correo electrónico"
-                    placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    editable={!codeSent}
-                  />
-                  {codeSent && <Text style={{ color: "#10B981", fontSize: 18 }}>✓</Text>}
-                </View>
-
-                {codeSent ? (
+                {empStep === "email" && (
                   <>
+                    <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
+                      Acceso Empleado
+                    </Text>
                     <View style={[s.inputWrap, {
                       backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
                       borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
-                      marginTop: 12,
+                    }]}>
+                      <Text style={s.inputIcon}>✉️</Text>
+                      <UpperInput
+                        style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                        value={empEmail}
+                        onChangeText={setEmpEmail}
+                        placeholder="Correo electrónico"
+                        placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        keyboardType="email-address"
+                      />
+                    </View>
+                    <View style={{ height: 20 }} />
+                    <LinearGradient colors={["#122B60", "#1D4ED8"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                      <TouchableOpacity style={s.btnInner} onPress={handleEmployeeInit} disabled={loading} activeOpacity={0.85}>
+                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Continuar</Text>}
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </>
+                )}
+
+                {empStep === "setup" && (
+                  <>
+                    <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
+                      Primer acceso — Crea tu contraseña
+                    </Text>
+                    <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12, marginBottom: 14 }}>
+                      Revisaste tu correo y recibiste un código de 6 dígitos. Úsalo para crear tu contraseña personal.
+                    </Text>
+                    {/* OTP */}
+                    <View style={[s.inputWrap, {
+                      backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
+                      borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                      marginBottom: 12,
                     }]}>
                       <Text style={s.inputIcon}>🔑</Text>
                       <UpperInput
                         style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
-                        value={code}
-                        onChangeText={setCode}
+                        value={empOtp}
+                        onChangeText={setEmpOtp}
                         placeholder="000000"
                         placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
                         keyboardType="number-pad"
@@ -343,99 +394,163 @@ export default function LoginScreen({ navigation }: Props) {
                         autoFocus
                       />
                     </View>
-                    <TouchableOpacity onPress={() => { setCodeSent(false); setCode(""); }} style={{ marginTop: 10, alignSelf: "center" }}>
-                      <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>
-                        ← Cambiar correo o reenviar código
-                      </Text>
-                    </TouchableOpacity>
-                    <View style={{ height: 16 }} />
-                    <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                      <TouchableOpacity style={s.btnInner} onPress={handleVerifyCode} disabled={loading} activeOpacity={0.85}>
-                        {loading
-                          ? <ActivityIndicator color="#fff" />
-                          : <Text style={s.btnText}>Verificar y entrar</Text>
-                        }
+                    {/* New password */}
+                    <View style={[s.inputWrap, {
+                      backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
+                      borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                      marginBottom: 12,
+                    }]}>
+                      <Text style={s.inputIcon}>🔒</Text>
+                      <UpperInput
+                        style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                        value={empNewPass}
+                        onChangeText={setEmpNewPass}
+                        placeholder="Nueva contraseña"
+                        placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                        secureTextEntry={!empShowNew}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      <TouchableOpacity onPress={() => setEmpShowNew(v => !v)}>
+                        <Text style={{ fontSize: 16, opacity: 0.6 }}>{empShowNew ? "🙈" : "👁"}</Text>
                       </TouchableOpacity>
-                    </LinearGradient>
-                  </>
-                ) : (
-                  <>
-                    <View style={{ height: 20 }} />
-                    <LinearGradient colors={["#1D4ED8", "#3B82F6"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                      <TouchableOpacity style={s.btnInner} onPress={handleSendCode} disabled={loading} activeOpacity={0.85}>
-                        {loading
-                          ? <ActivityIndicator color="#fff" />
-                          : <Text style={s.btnText}>Enviar código al correo</Text>
-                        }
+                    </View>
+                    {/* Confirm password */}
+                    <View style={[s.inputWrap, {
+                      backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
+                      borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                      marginBottom: 24,
+                    }]}>
+                      <Text style={s.inputIcon}>🔒</Text>
+                      <UpperInput
+                        style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                        value={empConfPass}
+                        onChangeText={setEmpConfPass}
+                        placeholder="Confirmar contraseña"
+                        placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                        secureTextEntry={!empShowNew}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
+                    <TouchableOpacity onPress={() => { setEmpStep("email"); setEmpOtp(""); setEmpNewPass(""); setEmpConfPass(""); }} style={{ marginBottom: 12, alignSelf: "center" }}>
+                      <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>← Cambiar correo</Text>
+                    </TouchableOpacity>
+                    <LinearGradient colors={["#122B60", "#1D4ED8"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                      <TouchableOpacity style={s.btnInner} onPress={handleEmployeeSetup} disabled={loading} activeOpacity={0.85}>
+                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Crear contraseña y entrar</Text>}
                       </TouchableOpacity>
                     </LinearGradient>
                   </>
                 )}
+
+                {empStep === "login" && (
+                  <>
+                    <Text style={[s.cardTitle, { color: T.isDark ? "#60A5FA" : "#122B60", marginTop: 18 }]}>
+                      Acceso Empleado
+                    </Text>
+                    {/* Email locked */}
+                    <View style={[s.inputWrap, {
+                      backgroundColor: T.isDark ? "rgba(255,255,255,0.03)" : "#F5F7FC",
+                      borderColor: "rgba(16,185,129,0.4)",
+                      marginBottom: 12,
+                    }]}>
+                      <Text style={s.inputIcon}>✉️</Text>
+                      <Text style={[s.searchInput, { color: T.isDark ? "#94A3B8" : "#6B84A8" }]}>{empEmail.toLowerCase()}</Text>
+                      <Text style={{ color: "#10B981", fontSize: 18 }}>✓</Text>
+                    </View>
+                    {/* Password */}
+                    <View style={[s.inputWrap, {
+                      backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0F4FB",
+                      borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",
+                      marginBottom: 24,
+                    }]}>
+                      <Text style={s.inputIcon}>🔒</Text>
+                      <UpperInput
+                        style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                        value={empPass}
+                        onChangeText={setEmpPass}
+                        placeholder="Contraseña"
+                        placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                        secureTextEntry={!empShowPass}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoFocus
+                      />
+                      <TouchableOpacity onPress={() => setEmpShowPass(v => !v)}>
+                        <Text style={{ fontSize: 16, opacity: 0.6 }}>{empShowPass ? "🙈" : "👁"}</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity onPress={() => { setEmpStep("email"); setEmpPass(""); }} style={{ marginBottom: 12, alignSelf: "center" }}>
+                      <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>← Cambiar correo</Text>
+                    </TouchableOpacity>
+                    <LinearGradient colors={["#122B60", "#1D4ED8"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                      <TouchableOpacity style={s.btnInner} onPress={handleEmployeeLogin} disabled={loading} activeOpacity={0.85}>
+                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Ingresar</Text>}
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </>
+                )}
+
               </>
             )}
           </>
 
         ) : (
-          /* ── Paso 2b: Portal Cliente ── */
+          /* ── Paso 2b: Portal Cliente — contraseña asignada por admin ── */
           <>
             <TouchableOpacity onPress={goBack} style={{ marginBottom: 16 }}>
               <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 13, fontWeight: "600" }}>← Regresar</Text>
             </TouchableOpacity>
 
-            <Text style={[s.cardTitle, { color: "#065F46", marginTop: 4 }]}>
-              {codeSent ? "Ingresa tu código" : "Acceso Cliente"}
-            </Text>
+            <Text style={[s.cardTitle, { color: "#065F46", marginTop: 4 }]}>Acceso Cliente</Text>
 
+            {/* Email */}
             <View style={[s.inputWrap, {
               backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4",
-              borderColor: codeSent ? "rgba(16,185,129,0.4)" : "#A7F3D0",
+              borderColor: "#A7F3D0",
+              marginBottom: 12,
             }]}>
               <Text style={s.inputIcon}>✉️</Text>
               <UpperInput
                 style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
-                value={email}
-                onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
+                value={inspEmail}
+                onChangeText={setInspEmail}
                 placeholder="Correo electrónico"
                 placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
-                editable={!codeSent}
               />
-              {codeSent && <Text style={{ color: "#10B981", fontSize: 18 }}>✓</Text>}
             </View>
 
-            {codeSent ? (
-              <>
-                <View style={[s.inputWrap, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4", borderColor: "#A7F3D0", marginTop: 12 }]}>
-                  <Text style={s.inputIcon}>🔑</Text>
-                  <UpperInput
-                    style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
-                    value={code} onChangeText={setCode}
-                    placeholder="000000" placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
-                    keyboardType="number-pad" maxLength={6} autoFocus
-                  />
-                </View>
-                <TouchableOpacity onPress={() => { setCodeSent(false); setCode(""); }} style={{ marginTop: 10, alignSelf: "center" }}>
-                  <Text style={{ color: T.isDark ? "#5A7A9A" : "#9BACC8", fontSize: 12 }}>← Cambiar correo o reenviar código</Text>
-                </TouchableOpacity>
-                <View style={{ height: 16 }} />
-                <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <TouchableOpacity style={s.btnInner} onPress={handleVerifyCode} disabled={loading} activeOpacity={0.85}>
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Verificar y entrar</Text>}
-                  </TouchableOpacity>
-                </LinearGradient>
-              </>
-            ) : (
-              <>
-                <View style={{ height: 20 }} />
-                <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <TouchableOpacity style={s.btnInner} onPress={handleSendCode} disabled={loading} activeOpacity={0.85}>
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Enviar código al correo</Text>}
-                  </TouchableOpacity>
-                </LinearGradient>
-              </>
-            )}
+            {/* Password */}
+            <View style={[s.inputWrap, {
+              backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4",
+              borderColor: "#A7F3D0",
+              marginBottom: 24,
+            }]}>
+              <Text style={s.inputIcon}>🔒</Text>
+              <UpperInput
+                style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
+                value={inspPass}
+                onChangeText={setInspPass}
+                placeholder="Contraseña"
+                placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}
+                secureTextEntry={!showPass}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity onPress={() => setShowPass(v => !v)}>
+                <Text style={{ fontSize: 16, opacity: 0.6 }}>{showPass ? "🙈" : "👁"}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <LinearGradient colors={["#065F46", "#059669"]} style={s.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <TouchableOpacity style={s.btnInner} onPress={handleInspectorLogin} disabled={loading} activeOpacity={0.85}>
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Ingresar</Text>}
+              </TouchableOpacity>
+            </LinearGradient>
           </>
         )}
           </Animated.View>
@@ -443,7 +558,7 @@ export default function LoginScreen({ navigation }: Props) {
           <Animated.View style={[s.footer, { opacity: fadeAnim }]}>
             <Text style={s.footerLine}>Multiservicios y Artículos de Seguridad Industrial</Text>
             <Text style={s.footerLine}>RFC MAS900706QH1 · Monterrey, N.L.</Text>
-            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v2.1</Text>
+            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v1.2.8</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
