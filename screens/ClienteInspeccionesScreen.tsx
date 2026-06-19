@@ -35,12 +35,15 @@ export default function ClienteInspeccionesScreen({ navigation, route }: Props) 
   const [filter, setFilter] = useState<"todos" | "PASS" | "FAIL" | "CONDITIONAL">("todos");
 
   useEffect(() => {
+    if (!user.client_id) { setLoading(false); return; }
     (async () => {
       try {
         let url = `${API_URL}/mobile/cliente/inspecciones?client_id=${user.client_id}`;
         if (equipment_id) url += `&equipment_id=${equipment_id}`;
         const res = await axios.get(url);
         setInspecciones(res.data.data ?? []);
+      } catch {
+        setInspecciones([]);
       } finally {
         setLoading(false);
       }

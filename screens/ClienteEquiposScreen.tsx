@@ -47,6 +47,7 @@ export default function ClienteEquiposScreen({ navigation, route }: Props) {
   }, [selectedSucursal]);
 
   async function load(suc: string) {
+    if (!user.client_id) { setLoading(false); return; }
     setLoading(true);
     try {
       const url = `${API_URL}/mobile/cliente/equipos?client_id=${user.client_id}${suc ? `&sucursal_id=${suc}` : ""}`;
