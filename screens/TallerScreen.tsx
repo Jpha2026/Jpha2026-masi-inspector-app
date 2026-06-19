@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList, OrdenTrabajo, OTItem } from "../types";
@@ -107,6 +108,25 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [scanning, setScanning]       = useState(false);
   const [scanTarget, setScanTarget]   = useState<"ph"|"man">("ph");
   const [lookingUp, setLookingUp]     = useState(false);
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    // Root screen (role=taller logged in directly) — logout
+    Alert.alert("Cerrar sesión", "¿Salir del módulo Taller?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Salir", style: "destructive", onPress: async () => {
+        try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
+        axios.defaults.headers.common["Authorization"] = undefined;
+        await SecureStore.deleteItemAsync("masi_token");
+        await SecureStore.deleteItemAsync("masi_user");
+        await SecureStore.deleteItemAsync("masi_active_jornada");
+        navigation.replace("Login");
+      }},
+    ]);
+  };
 
   const load = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -368,7 +388,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: "#F0F4FA" }}>
       <LinearGradient colors={["#0D1B3E","#122B60"]} style={[s.nav, { paddingTop: insets.top + 14 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+        <TouchableOpacity onPress={handleBack} style={s.backBtn}>
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
         <View style={{ alignItems: "center" }}>
