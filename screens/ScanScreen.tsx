@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
   Alert, TextInput, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, Camera } from "expo-camera";
@@ -159,7 +160,7 @@ export default function ScanScreen({ navigation, route }: Props) {
         >
           <ScrollView contentContainerStyle={styles.manualContainer} keyboardShouldPersistTaps="handled">
             <Text style={styles.manualLabel}>QR, código de barras o ID del equipo</Text>
-            <TextInput
+            <UpperInput
               style={styles.manualInput}
               value={manualCode}
               onChangeText={setManualCode}

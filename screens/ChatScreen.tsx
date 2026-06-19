@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -160,7 +161,7 @@ export default function ChatScreen({ navigation, route }: Props) {
           borderTopColor: T.isDark ? "#1D3050" : "#E2E8F0",
           paddingBottom: Math.max(insets.bottom, 12),
         }]}>
-          <TextInput
+          <UpperInput
             style={[s.input, {
               backgroundColor: T.isDark ? "rgba(255,255,255,0.06)" : "#F0F4FB",
               borderColor: T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0",

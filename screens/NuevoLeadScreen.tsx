@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -91,19 +92,19 @@ export default function NuevoLeadScreen({ navigation, route }: Props) {
         ) : (
           <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
             <Text style={styles.lbl}>Nombre del contacto *</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nombre completo" placeholderTextColor="#4A6A90" />
+            <UpperInput style={styles.input} value={name} onChangeText={setName} placeholder="Nombre completo" placeholderTextColor="#4A6A90" />
 
             <Text style={styles.lbl}>Empresa / Negocio</Text>
-            <TextInput style={styles.input} value={company} onChangeText={setCompany} placeholder="Razón social o nombre comercial" placeholderTextColor="#4A6A90" />
+            <UpperInput style={styles.input} value={company} onChangeText={setCompany} placeholder="Razón social o nombre comercial" placeholderTextColor="#4A6A90" />
 
             <Text style={styles.lbl}>Teléfono</Text>
-            <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="81 XXXX XXXX" placeholderTextColor="#4A6A90" keyboardType="phone-pad" />
+            <UpperInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="81 XXXX XXXX" placeholderTextColor="#4A6A90" keyboardType="phone-pad" />
 
             <Text style={styles.lbl}>Email</Text>
-            <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="contacto@empresa.com" placeholderTextColor="#4A6A90" keyboardType="email-address" autoCapitalize="none" />
+            <UpperInput style={styles.input} value={email} onChangeText={setEmail} placeholder="contacto@empresa.com" placeholderTextColor="#4A6A90" keyboardType="email-address" autoCapitalize="none" />
 
             <Text style={styles.lbl}>Servicio de interés</Text>
-            <TextInput style={styles.input} value={service} onChangeText={setService} placeholder="Ej. Mantenimiento extintores, inspección NOM" placeholderTextColor="#4A6A90" />
+            <UpperInput style={styles.input} value={service} onChangeText={setService} placeholder="Ej. Mantenimiento extintores, inspección NOM" placeholderTextColor="#4A6A90" />
 
             <Text style={styles.lbl}>Origen</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
@@ -119,7 +120,7 @@ export default function NuevoLeadScreen({ navigation, route }: Props) {
             </ScrollView>
 
             <Text style={styles.lbl}>Notas / Contexto</Text>
-            <TextInput
+            <UpperInput
               style={[styles.input, styles.textarea]}
               value={notes}
               onChangeText={setNotes}

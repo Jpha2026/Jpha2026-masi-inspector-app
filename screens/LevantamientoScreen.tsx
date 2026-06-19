@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   ActivityIndicator, Alert, Image,
   KeyboardAvoidingView, Platform, FlatList,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -94,7 +95,7 @@ function Inp({ value, onChange, placeholder, multiline }: {
 }) {
   const T = useTheme();
   return (
-    <TextInput
+    <UpperInput
       value={value} onChangeText={v => onChange(v.toUpperCase())} placeholder={placeholder ? placeholder.toUpperCase() : ""}
       placeholderTextColor={T.textSub} multiline={multiline} autoCapitalize="characters"
       style={{ backgroundColor: T.bg, borderWidth: 1, borderColor: T.border,

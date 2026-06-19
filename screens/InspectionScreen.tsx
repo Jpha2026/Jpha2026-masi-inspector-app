@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   TextInput, ActivityIndicator, Alert, Image, Modal,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import NetInfo from "@react-native-community/netinfo";
@@ -968,7 +969,7 @@ export default function InspectionScreen({ navigation, route }: Props) {
         {/* Notes */}
         <View style={styles.notesSection}>
           <Text style={styles.catLabel}>Observaciones</Text>
-          <TextInput
+          <UpperInput
             style={styles.notesInput}
             value={notes}
             onChangeText={v => setNotes(v.toUpperCase())}

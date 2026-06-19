@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert, Image,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
@@ -188,7 +189,7 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
         {showDias && (
           <>
             <Text style={[s.fieldLabel, { color: lblColor }]}>Número de días</Text>
-            <TextInput
+            <UpperInput
               style={[s.input, { backgroundColor: inputBg, borderColor: inputBdr, color: textColor }]}
               value={dias}
               onChangeText={setDias}
@@ -202,7 +203,7 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
         {showMonto && (
           <>
             <Text style={[s.fieldLabel, { color: lblColor }]}>Monto solicitado ($)</Text>
-            <TextInput
+            <UpperInput
               style={[s.input, { backgroundColor: inputBg, borderColor: inputBdr, color: textColor }]}
               value={monto}
               onChangeText={setMonto}
@@ -214,7 +215,7 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
         )}
 
         <Text style={[s.fieldLabel, { color: lblColor }]}>Motivo / Descripción *</Text>
-        <TextInput
+        <UpperInput
           style={[s.input, s.textArea, { backgroundColor: inputBg, borderColor: inputBdr, color: textColor }]}
           value={motivo}
           onChangeText={v => setMotivo(v.toUpperCase())}

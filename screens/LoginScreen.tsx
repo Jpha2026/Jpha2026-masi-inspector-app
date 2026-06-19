@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView,
   Platform, Animated, Dimensions, Image,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
@@ -249,7 +250,7 @@ export default function LoginScreen({ navigation }: Props) {
                   marginBottom: 12,
                 }]}>
                   <Text style={s.inputIcon}>✉️</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
                     value={inspEmail}
                     onChangeText={setInspEmail}
@@ -268,7 +269,7 @@ export default function LoginScreen({ navigation }: Props) {
                   marginBottom: 24,
                 }]}>
                   <Text style={s.inputIcon}>🔒</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
                     value={inspPass}
                     onChangeText={setInspPass}
@@ -309,7 +310,7 @@ export default function LoginScreen({ navigation }: Props) {
                   borderColor: codeSent ? "rgba(16,185,129,0.4)" : (T.isDark ? "rgba(255,255,255,0.09)" : "#D5DCF0"),
                 }]}>
                   <Text style={s.inputIcon}>✉️</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
                     value={email}
                     onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
@@ -331,7 +332,7 @@ export default function LoginScreen({ navigation }: Props) {
                       marginTop: 12,
                     }]}>
                       <Text style={s.inputIcon}>🔑</Text>
-                      <TextInput
+                      <UpperInput
                         style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
                         value={code}
                         onChangeText={setCode}
@@ -390,7 +391,7 @@ export default function LoginScreen({ navigation }: Props) {
               borderColor: codeSent ? "rgba(16,185,129,0.4)" : "#A7F3D0",
             }]}>
               <Text style={s.inputIcon}>✉️</Text>
-              <TextInput
+              <UpperInput
                 style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740" }]}
                 value={email}
                 onChangeText={(t) => { setEmail(t); setCodeSent(false); setCode(""); }}
@@ -408,7 +409,7 @@ export default function LoginScreen({ navigation }: Props) {
               <>
                 <View style={[s.inputWrap, { backgroundColor: T.isDark ? "rgba(255,255,255,0.05)" : "#F0FFF4", borderColor: "#A7F3D0", marginTop: 12 }]}>
                   <Text style={s.inputIcon}>🔑</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.searchInput, { color: T.isDark ? "#E6EDF3" : "#1A2740", letterSpacing: 8, fontSize: 22, fontWeight: "800" }]}
                     value={code} onChangeText={setCode}
                     placeholder="000000" placeholderTextColor={T.isDark ? "#3D4E68" : "#9BACC8"}

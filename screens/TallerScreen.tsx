@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   ActivityIndicator, RefreshControl, Alert, Modal,
   TextInput, KeyboardAvoidingView, Platform, Image,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -490,7 +491,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </ScrollView>
               </>}
               <FieldLabel style={{ marginTop: 14 }}>Descripción *</FieldLabel>
-              <TextInput style={s.textArea} value={otDesc} onChangeText={v => setOtDesc(v.toUpperCase())} autoCapitalize="characters" placeholder="DESCRIBE EL TRABAJO A REALIZAR..." placeholderTextColor="#9BACC8" multiline numberOfLines={4} textAlignVertical="top" />
+              <UpperInput style={s.textArea} value={otDesc} onChangeText={v => setOtDesc(v.toUpperCase())} autoCapitalize="characters" placeholder="DESCRIBE EL TRABAJO A REALIZAR..." placeholderTextColor="#9BACC8" multiline numberOfLines={4} textAlignVertical="top" />
               <View style={{ height: 16 }} />
               <SubmitBtn label="Crear y enviar al taller" onPress={handleCreateOT} loading={submitting} />
               <View style={{ height: 20 }} />
@@ -550,7 +551,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                     ))}
                   </ScrollView>
                   <View style={{ flexDirection: "row", gap: 10 }}>
-                    <TextInput
+                    <UpperInput
                       style={[s.textInput, { flex: 2 }]}
                       value={item.serial}
                       onChangeText={v => updateBitItem(item.uid, "serial", v)}
@@ -601,7 +602,7 @@ export default function TallerScreen({ navigation, route }: Props) {
 
               {/* Notes */}
               <FieldLabel>Observaciones</FieldLabel>
-              <TextInput
+              <UpperInput
                 style={s.textArea}
                 value={bitNotes}
                 onChangeText={setBitNotes}
@@ -627,7 +628,7 @@ export default function TallerScreen({ navigation, route }: Props) {
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <FieldLabel>Código del equipo</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <TextInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={phCode} onChangeText={setPhCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(phCode, "ph")} />
+                <UpperInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={phCode} onChangeText={setPhCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(phCode, "ph")} />
                 <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("ph")}><Text style={{ fontSize: 22 }}>📷</Text></TouchableOpacity>
                 <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(phCode, "ph")} disabled={lookingUp}>
                   {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
@@ -641,15 +642,15 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </View>
               )}
               <FieldLabel style={{ marginTop: 12 }}>Tipo de cilindro *</FieldLabel>
-              <TextInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="PQS, CO₂, SCBA, Agua, AFFF..." placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="PQS, CO₂, SCBA, Agua, AFFF..." placeholderTextColor="#9BACC8" />
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Presión trabajo (PSI) *</FieldLabel>
-                  <TextInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder="150" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder="150" placeholderTextColor="#9BACC8" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Presión prueba (PSI) *</FieldLabel>
-                  <TextInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder="225" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder="225" placeholderTextColor="#9BACC8" />
                 </View>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
@@ -662,9 +663,9 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
-              <TextInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
+              <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
-              <TextInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
               <View style={{ height: 16 }} />
               <SubmitBtn label="Guardar prueba hidrostática" onPress={submitPH} loading={phSaving} color="#7C3AED" />
               <View style={{ height: 20 }} />
@@ -682,7 +683,7 @@ export default function TallerScreen({ navigation, route }: Props) {
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <FieldLabel>Código del equipo</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <TextInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={manCode} onChangeText={setManCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(manCode, "man")} />
+                <UpperInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={manCode} onChangeText={setManCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(manCode, "man")} />
                 <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("man")}><Text style={{ fontSize: 22 }}>📷</Text></TouchableOpacity>
                 <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(manCode, "man")} disabled={lookingUp}>
                   {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
@@ -706,11 +707,11 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Longitud (m) *</FieldLabel>
-                  <TextInput style={s.textInput} value={manLength} onChangeText={setManLength} keyboardType="numeric" placeholder="15" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={manLength} onChangeText={setManLength} keyboardType="numeric" placeholder="15" placeholderTextColor="#9BACC8" />
                 </View>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Presión de prueba (lbs) *</FieldLabel>
-              <TextInput style={s.textInput} value={manPressure} onChangeText={setManPressure} keyboardType="numeric" placeholder="120" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={manPressure} onChangeText={setManPressure} keyboardType="numeric" placeholder="120" placeholderTextColor="#9BACC8" />
               <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
               <View style={{ flexDirection: "row", gap: 10 }}>
                 <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: manResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setManResult("PASS")}>
@@ -721,9 +722,9 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
-              <TextInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
+              <UpperInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
-              <TextInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
               <View style={{ height: 16 }} />
               <SubmitBtn label="Guardar prueba de manguera" onPress={submitMAN} loading={manSaving} color="#0891B2" />
               <View style={{ height: 20 }} />

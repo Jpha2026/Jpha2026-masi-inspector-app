@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   FlatList, Alert, ActivityIndicator, ScrollView,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -128,7 +129,7 @@ export default function POSScreen({ navigation, route }: Props) {
       <View style={styles.layout}>
         {/* LEFT — products */}
         <View style={styles.leftPane}>
-          <TextInput
+          <UpperInput
             style={styles.searchBar}
             value={search}
             onChangeText={handleSearch}
@@ -160,7 +161,7 @@ export default function POSScreen({ navigation, route }: Props) {
         <View style={styles.rightPane}>
           <Text style={styles.ticketTitle}>🧾 Ticket</Text>
 
-          <TextInput
+          <UpperInput
             style={styles.clientInput}
             value={clientName}
             onChangeText={setClientName}

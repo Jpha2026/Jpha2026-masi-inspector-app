@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, TextInput,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, AppUser } from "../types";
@@ -85,7 +86,7 @@ export default function ClienteEquiposScreen({ navigation, route }: Props) {
       </View>
 
       <View style={styles.filters}>
-        <TextInput
+        <UpperInput
           value={search}
           onChangeText={setSearch}
           placeholder="Buscar por nombre, ubicación..."

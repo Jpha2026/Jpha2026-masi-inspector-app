@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   TextInput, ActivityIndicator, Alert, Modal,
   KeyboardAvoidingView, Platform, Image,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
@@ -292,7 +293,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
           <View style={[s.modalBox, { backgroundColor: T.isDark ? "#0D1B3E" : "#fff" }]}>
             <Text style={[s.modalTitle, { color: T.isDark ? "#E2E8F0" : "#1A2740" }]}>💬 Comentario</Text>
             <Text style={[s.modalSub, { color: T.isDark ? "#4A6A90" : "#8A9BBE" }]}>{commentModal.assetName}</Text>
-            <TextInput
+            <UpperInput
               style={[s.textInput, { backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF", color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0" }]}
               placeholder="Describe el estado, observación o problema..."
               placeholderTextColor={T.isDark ? "#4A6A90" : "#9BACC8"}
@@ -358,7 +359,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
 
               {/* Name */}
               <Text style={s.fieldLbl}>Nombre del activo *</Text>
-              <TextInput
+              <UpperInput
                 style={[s.inp, { color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0", backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF" }]}
                 value={regName} onChangeText={setRegName}
                 placeholder="Ej. Laptop Dell Latitude, Camioneta Ram 1500..."
@@ -382,7 +383,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={s.fieldLbl}>Marca</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.inp, { color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0", backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF" }]}
                     value={regBrand} onChangeText={setRegBrand} placeholder="Dell, Toyota, Bosch..."
                     placeholderTextColor={T.isDark ? "#4A6A90" : "#9BACC8"}
@@ -390,7 +391,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.fieldLbl}>Modelo</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.inp, { color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0", backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF" }]}
                     value={regModel} onChangeText={setRegModel} placeholder="Latitude E7450..."
                     placeholderTextColor={T.isDark ? "#4A6A90" : "#9BACC8"}
@@ -402,7 +403,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={s.fieldLbl}>Número de serie</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.inp, { color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0", backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF" }]}
                     value={regSerial} onChangeText={setRegSerial} placeholder="SN-2024-001"
                     placeholderTextColor={T.isDark ? "#4A6A90" : "#9BACC8"} autoCapitalize="characters"
@@ -410,7 +411,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.fieldLbl}>Ubicación</Text>
-                  <TextInput
+                  <UpperInput
                     style={[s.inp, { color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0", backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF" }]}
                     value={regLocation} onChangeText={setRegLocation} placeholder="Taller, Oficina, Bodega..."
                     placeholderTextColor={T.isDark ? "#4A6A90" : "#9BACC8"}
@@ -420,7 +421,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
 
               {/* Notes */}
               <Text style={[s.fieldLbl, { marginTop: 12 }]}>Observaciones</Text>
-              <TextInput
+              <UpperInput
                 style={[s.inp, { color: T.isDark ? "#E2E8F0" : "#1A2740", borderColor: T.isDark ? "#243556" : "#D5DCF0", backgroundColor: T.isDark ? "#1A2740" : "#F4F8FF", minHeight: 70, textAlignVertical: "top" }]}
                 value={regNotes} onChangeText={setRegNotes} multiline numberOfLines={3}
                 placeholder="Estado actual, accesorios incluidos, observaciones..."

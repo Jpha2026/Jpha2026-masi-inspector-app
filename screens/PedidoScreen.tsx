@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert, FlatList,
 } from "react-native";
+import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -188,7 +189,7 @@ export default function PedidoScreen({ navigation, route }: Props) {
           {/* Custom item */}
           <Text style={[s.sectionLabel, { color: T.isDark ? "#60A5FA" : "#122B60" }]}>Otro artículo (escribe)</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <TextInput
+            <UpperInput
               style={[s.input, { flex: 1, backgroundColor: inputBg, borderColor: inputBdr, color: textColor }]}
               value={customItem}
               onChangeText={setCustomItem}
@@ -255,7 +256,7 @@ export default function PedidoScreen({ navigation, route }: Props) {
           ))}
 
           <Text style={[s.fieldLabel, { color: lblColor, marginTop: 20 }]}>Área / Departamento</Text>
-          <TextInput
+          <UpperInput
             style={[s.input, { backgroundColor: inputBg, borderColor: inputBdr, color: textColor }]}
             value={department}
             onChangeText={setDepartment}
@@ -264,7 +265,7 @@ export default function PedidoScreen({ navigation, route }: Props) {
           />
 
           <Text style={[s.fieldLabel, { color: lblColor }]}>Notas adicionales (opcional)</Text>
-          <TextInput
+          <UpperInput
             style={[s.input, s.textArea, { backgroundColor: inputBg, borderColor: inputBdr, color: textColor }]}
             value={notes}
             onChangeText={setNotes}
