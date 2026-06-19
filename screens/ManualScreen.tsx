@@ -217,12 +217,16 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
     color: "#7C3AED",
     sections: [
       {
-        title: "Inicio de sesión",
+        title: "Primer acceso — crea tu contraseña",
         icon: "🔐",
         items: [
-          "En la pantalla inicial toca el botón azul oscuro 'MASI'.",
-          "Selecciona la pestaña 'Empleado' — recibirás un código de 6 dígitos por correo.",
-          "Ingresa el código para acceder al portal de empleado.",
+          "En la pantalla inicial toca 'MASI' y selecciona la pestaña 'Empleado'.",
+          "Escribe tu correo (el que te asignó RH) y toca 'Continuar'.",
+          "Revisa tu correo: recibirás un código de 6 dígitos (revisa también spam).",
+          "Ingresa el código, escribe tu nueva contraseña (mín. 6 caracteres) y confírmala.",
+          "Toca 'Crear contraseña y entrar'. Tu contraseña es personal — nadie más la conoce.",
+          "En accesos posteriores solo escribe tu correo → toca Continuar → ingresa tu contraseña.",
+          "Si olvidaste tu contraseña, pide a RH que la restablezca; luego repite el primer acceso.",
         ],
       },
       {
@@ -265,12 +269,12 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
     color: "#059669",
     sections: [
       {
-        title: "Portal de cliente",
-        icon: "🏢",
+        title: "Inicio de sesión",
+        icon: "🔐",
         items: [
           "En la pantalla inicial toca el botón verde oscuro 'Portal Cliente'.",
-          "Ingresa tu correo registrado con MASI.",
-          "Se enviará un código de 6 dígitos a tu correo — ingrésalo para entrar.",
+          "Ingresa el correo y la contraseña que MASI te proporcionó.",
+          "Toca 'Ingresar'. Si necesitas cambiar tu contraseña, contáctanos.",
           "El portal es solo de lectura: podrás ver reportes, equipos e inspecciones.",
         ],
       },
