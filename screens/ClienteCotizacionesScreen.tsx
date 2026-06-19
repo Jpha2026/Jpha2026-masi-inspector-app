@@ -48,7 +48,7 @@ export default function ClienteCotizacionesScreen({ navigation, route }: Props) 
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user.client_id) return;
+    if (!user.client_id) { setLoading(false); return; }
     (async () => {
       try {
         const res = await axios.get(`${API_URL}/mobile/cliente/cotizaciones?client_id=${user.client_id}`);

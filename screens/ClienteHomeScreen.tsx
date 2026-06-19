@@ -42,7 +42,7 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user.client_id) return;
+    if (!user.client_id) { setLoading(false); return; }
     (async () => {
       try {
         const [equipRes, inspRes, cotRes] = await Promise.all([
@@ -109,6 +109,22 @@ export default function ClienteHomeScreen({ navigation, route }: Props) {
 
         {loading ? (
           <ActivityIndicator color="#fff" size="large" style={{ marginTop: 40 }} />
+        ) : !user.client_id ? (
+          <View style={{ marginTop: 60, alignItems: "center", paddingHorizontal: 20 }}>
+            <Text style={{ fontSize: 48, marginBottom: 16 }}>🔗</Text>
+            <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800", textAlign: "center", marginBottom: 8 }}>
+              Cuenta no vinculada
+            </Text>
+            <Text style={{ color: "#4A6A90", fontSize: 14, textAlign: "center", lineHeight: 22 }}>
+              Tu cuenta aún no está asociada a ningún cliente MASI. Contacta a tu ejecutivo para que la activen.
+            </Text>
+            <TouchableOpacity
+              style={{ marginTop: 24, backgroundColor: "#25D366", paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 }}
+              onPress={() => Linking.openURL("https://wa.me/528189973328?text=Hola%20MASI%2C%20necesito%20activar%20mi%20cuenta%20de%20cliente")}
+            >
+              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>💬 Contactar a MASI</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <>
             {/* KPIs */}
