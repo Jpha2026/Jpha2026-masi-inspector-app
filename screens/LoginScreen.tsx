@@ -262,7 +262,7 @@ export default function LoginScreen({ navigation }: Props) {
                   ] as { key: Tab; icon: string; label: string; bg: string }[]).map((t) => (
                     <TouchableOpacity key={t.key}
                       style={[s.tabBtn, { flex: 1 }, tab === t.key && { backgroundColor: t.bg }]}
-                      onPress={() => { setTab(t.key); setCodeSent(false); setCode(""); setInspEmail(""); setInspPass(""); setEmail(""); setEmpStep("email"); setEmpEmail(""); setEmpPass(""); setEmpOtp(""); setEmpNewPass(""); setEmpConfPass(""); }}
+                      onPress={() => { setTab(t.key); setInspEmail(""); setInspPass(""); setEmpStep("email"); setEmpEmail(""); setEmpPass(""); setEmpOtp(""); setEmpNewPass(""); setEmpConfPass(""); }}
                     >
                       <Text style={[s.tabText, { color: tab === t.key ? "#fff" : (T.isDark ? "#5A7A9A" : "#6B84A8") }]}>
                         {t.icon}{"\n"}{t.label}
@@ -558,7 +558,7 @@ export default function LoginScreen({ navigation }: Props) {
           <Animated.View style={[s.footer, { opacity: fadeAnim }]}>
             <Text style={s.footerLine}>Multiservicios y Artículos de Seguridad Industrial</Text>
             <Text style={s.footerLine}>RFC MAS900706QH1 · Monterrey, N.L.</Text>
-            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v1.2.8</Text>
+            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v1.2.9</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
