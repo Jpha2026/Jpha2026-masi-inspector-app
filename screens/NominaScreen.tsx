@@ -37,6 +37,7 @@ export default function NominaScreen({ navigation, route }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user.employee_id) { setLoading(false); return; }
     (async () => {
       try {
         const res = await axios.get(

@@ -151,7 +151,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     if (!code.trim()) return;
     setLookingUp(true);
     try {
-      const r = await axios.get<EqLookup>(`${API_URL.replace("/mobile", "")}/equipment/lookup?code=${encodeURIComponent(code)}`);
+      const r = await axios.get<EqLookup>(`${API_URL}/equipment/lookup?code=${encodeURIComponent(code)}`);
       const data = r.data;
       if (target === "ph") {
         setPhEq(data);
