@@ -79,7 +79,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Problemas técnicos: escribe al chat de la app o llama a soporte.",
           "Para resetear contraseña o permisos: contacta al administrador.",
-          "Versión mínima recomendada: APK versionCode 21+.",
+          "Versión mínima recomendada: APK versionCode 24+.",
           "Al cerrar sesión, las inspecciones y jornadas pendientes se limpian del dispositivo. Asegúrate de sincronizar antes de salir.",
         ],
       },
