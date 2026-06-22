@@ -84,7 +84,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Problemas técnicos: escribe al chat de la app o llama a soporte.",
           "Para resetear contraseña o permisos: contacta al administrador.",
-          "Versión actual: 1.2.17 (versionCode 25). Asegúrate de tener la APK más reciente instalada.",
+          "Versión actual: 1.2.18 (versionCode 26). Asegúrate de tener la APK más reciente instalada.",
           "Al cerrar sesión, las inspecciones y jornadas pendientes se limpian del dispositivo. Asegúrate de sincronizar antes de salir.",
         ],
       },
