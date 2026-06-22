@@ -47,6 +47,100 @@ const TIPOS_EQUIPO = [
 let _uidSeq = 0;
 const uid = () => `${Date.now().toString(36)}_${(++_uidSeq).toString(36)}`;
 
+function ClientSelector({
+  clients, value, onChange, onCreated,
+}: {
+  clients: Cliente[];
+  value: string;
+  onChange: (id: string) => void;
+  onCreated: (c: Cliente) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const selected = clients.find(c => c.id === value);
+  const filtered = q.trim()
+    ? clients.filter(c => c.name.toLowerCase().includes(q.trim().toLowerCase()))
+    : clients;
+  const canCreate = q.trim().length > 1 &&
+    !clients.some(c => c.name.toLowerCase() === q.trim().toLowerCase());
+
+  if (selected) {
+    return (
+      <TouchableOpacity
+        onPress={() => { onChange(""); setQ(""); setOpen(false); }}
+        style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EFF6FF", borderRadius: 10, borderWidth: 1.5, borderColor: "#3B82F6", paddingHorizontal: 14, paddingVertical: 10, marginTop: 6 }}
+      >
+        <Text style={{ flex: 1, fontWeight: "700", color: "#1D4ED8", fontSize: 13 }}>{selected.name}</Text>
+        <Text style={{ color: "#6B7280", fontSize: 18, lineHeight: 20 }}>✕</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={{ marginTop: 6 }}>
+      <TextInput
+        value={q}
+        onChangeText={t => { setQ(t); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Buscar o escribir cliente..."
+        placeholderTextColor="#9BACC8"
+        style={{ backgroundColor: "#F0F4FB", borderRadius: 10, borderWidth: 1.5, borderColor: open ? "#3B82F6" : "#D5DCF0", paddingHorizontal: 14, paddingVertical: 11, fontSize: 13, color: "#1A2740" }}
+        autoCapitalize="characters"
+      />
+      {open && (
+        <View style={{ backgroundColor: "#fff", borderRadius: 10, borderWidth: 1, borderColor: "#D5DCF0", marginTop: 4, maxHeight: 210, elevation: 4, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 6 }}>
+          <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled showsVerticalScrollIndicator={false}>
+            <TouchableOpacity
+              onPress={() => { onChange(""); setQ(""); setOpen(false); }}
+              style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F0F4FB" }}
+            >
+              <Text style={{ color: "#6B7280", fontSize: 12, fontStyle: "italic" }}>Sin cliente</Text>
+            </TouchableOpacity>
+            {filtered.slice(0, 8).map(c => (
+              <TouchableOpacity
+                key={c.id}
+                onPress={() => { onChange(c.id); setQ(""); setOpen(false); }}
+                style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F0F4FB" }}
+              >
+                <Text style={{ color: "#1A2740", fontSize: 13, fontWeight: "600" }}>{c.name}</Text>
+              </TouchableOpacity>
+            ))}
+            {canCreate && (
+              <TouchableOpacity
+                disabled={busy}
+                onPress={async () => {
+                  setBusy(true);
+                  try {
+                    const { data } = await axios.post<{ id: string; name: string }>(
+                      `${API_URL}/mobile/clients`,
+                      { name: q.trim() }
+                    );
+                    onCreated(data);
+                    onChange(data.id);
+                    setQ("");
+                    setOpen(false);
+                  } catch {
+                    Alert.alert("Error", "No se pudo registrar el cliente.");
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                style={{ paddingHorizontal: 14, paddingVertical: 11, backgroundColor: "#EFF6FF", borderTopWidth: 1, borderTopColor: "#DBEAFE" }}
+              >
+                <Text style={{ color: "#1D4ED8", fontSize: 12, fontWeight: "700" }}>
+                  {busy ? "Registrando..." : `+ Registrar "${q.trim()}" como nuevo cliente`}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function TallerScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { inspectorId, userName } = route.params;
@@ -125,6 +219,9 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [bitNotes, setBitNotes]       = useState("");
   const [bitPhotos, setBitPhotos]     = useState<string[]>([]);
   const [bitSaving, setBitSaving]     = useState(false);
+
+  const addClient = (c: Cliente) =>
+    setClientes(prev => [...prev, c].sort((a, b) => a.name.localeCompare(b.name)));
 
   // Camera scanner
   const [scanning, setScanning]       = useState(false);
@@ -686,13 +783,8 @@ export default function TallerScreen({ navigation, route }: Props) {
               <View style={{ flexDirection: "row", gap: 8 }}>
                 {PRIORIDADES.map(p => <Chip key={p.key} label={p.label} selected={otPrioridad === p.key} onPress={() => setOtPrioridad(p.key)} color={p.color} flex />)}
               </View>
-              {clientes.length > 0 && <>
-                <FieldLabel style={{ marginTop: 14 }}>Cliente (opcional)</FieldLabel>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-                  <Chip label="Sin cliente" selected={!otClientId} onPress={() => setOtClientId("")} />
-                  {clientes.slice(0, 15).map(c => <Chip key={c.id} label={c.name} selected={otClientId === c.id} onPress={() => setOtClientId(c.id)} />)}
-                </ScrollView>
-              </>}
+              <FieldLabel style={{ marginTop: 14 }}>Cliente (opcional)</FieldLabel>
+              <ClientSelector clients={clientes} value={otClientId} onChange={setOtClientId} onCreated={addClient} />
               <FieldLabel style={{ marginTop: 14 }}>Descripción *</FieldLabel>
               <UpperInput style={s.textArea} value={otDesc} onChangeText={v => setOtDesc(v.toUpperCase())} autoCapitalize="characters" placeholder="DESCRIBE EL TRABAJO A REALIZAR..." placeholderTextColor="#9BACC8" multiline numberOfLines={4} textAlignVertical="top" />
               <View style={{ height: 16 }} />
@@ -718,13 +810,8 @@ export default function TallerScreen({ navigation, route }: Props) {
               </View>
 
               {/* Client */}
-              {clientes.length > 0 && <>
-                <FieldLabel>Cliente (opcional)</FieldLabel>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
-                  <Chip label="Sin cliente" selected={!bitClientId} onPress={() => setBitClientId("")} />
-                  {clientes.slice(0, 15).map(c => <Chip key={c.id} label={c.name} selected={bitClientId === c.id} onPress={() => setBitClientId(c.id)} />)}
-                </ScrollView>
-              </>}
+              <FieldLabel>Cliente (opcional)</FieldLabel>
+              <ClientSelector clients={clientes} value={bitClientId} onChange={setBitClientId} onCreated={addClient} />
 
               {/* Items */}
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8, marginBottom: 8 }}>
@@ -845,13 +932,8 @@ export default function TallerScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
               )}
-              {clientes.length > 0 && <>
-                <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-                  <Chip label="Sin cliente" selected={!phClientId} onPress={() => setPhClientId("")} />
-                  {clientes.slice(0, 20).map(c => <Chip key={c.id} label={c.name} selected={phClientId === c.id} onPress={() => setPhClientId(c.id)} />)}
-                </ScrollView>
-              </>}
+              <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
+              <ClientSelector clients={clientes} value={phClientId} onChange={setPhClientId} onCreated={addClient} />
               {/* Clasificación de presión */}
               <FieldLabel style={{ marginTop: 12 }}>Clasificación *</FieldLabel>
               <View style={{ flexDirection: "row", gap: 10 }}>
@@ -1108,13 +1190,8 @@ export default function TallerScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
               )}
-              {clientes.length > 0 && <>
-                <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-                  <Chip label="Sin cliente" selected={!manClientId} onPress={() => setManClientId("")} />
-                  {clientes.slice(0, 20).map(c => <Chip key={c.id} label={c.name} selected={manClientId === c.id} onPress={() => setManClientId(c.id)} />)}
-                </ScrollView>
-              </>}
+              <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
+              <ClientSelector clients={clientes} value={manClientId} onChange={setManClientId} onCreated={addClient} />
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Diámetro</FieldLabel>
