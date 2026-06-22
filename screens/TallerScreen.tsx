@@ -23,7 +23,7 @@ type Props = {
 
 type Cliente = { id: string; name: string };
 type EqLookup = { found: boolean; id?: string; name?: string; qr_code?: string; type?: string; serial_number?: string; capacity?: string; agent_type?: string; client_name?: string };
-type BitItem = { uid: string; type: string; serial: string; qty: number };
+type BitItem = { uid: string; type: string; serial: string; qty: number; capacidad: string };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
   abierta:    { label: "Abierta",     color: "#D97706", icon: "⏳" },
@@ -43,6 +43,7 @@ const TIPOS_EQUIPO = [
   "Extintor CO2","Extintor PQS","Extintor AFFF","Extintor HCFC","Extintor Agua",
   "Manguera SCI","Cilindro N2","Cilindro Aire","Otro",
 ];
+const CAPACIDADES = ["1 kg","2 kg","4 kg","6 kg","9 kg","12 kg","20 kg","30 kg","2.5 lb","5 lb","10 lb","20 lb"];
 
 let _uidSeq = 0;
 const uid = () => `${Date.now().toString(36)}_${(++_uidSeq).toString(36)}`;
@@ -445,7 +446,7 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   // ─── Bitácora de Recarga ────────────────────────────────────────────────────
   const addBitItem = () => {
-    setBitItems(prev => [...prev, { uid: uid(), type: TIPOS_EQUIPO[0], serial: "", qty: 1 }]);
+    setBitItems(prev => [...prev, { uid: uid(), type: TIPOS_EQUIPO[0], serial: "", qty: 1, capacidad: "" }]);
   };
 
   const updateBitItem = (id: string, field: keyof Omit<BitItem, "uid">, val: string | number) => {
@@ -525,7 +526,7 @@ export default function TallerScreen({ navigation, route }: Props) {
       }
 
       const items = bitItems.map(i => ({
-        description: `${i.type}${i.serial.trim() ? ` | SN: ${i.serial.trim()}` : ""}`,
+        description: `${i.type}${i.capacidad ? ` ${i.capacidad}` : ""}${i.serial.trim() ? ` | SN: ${i.serial.trim()}` : ""}`,
         qty: i.qty,
       }));
 
@@ -846,6 +847,12 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
                     {TIPOS_EQUIPO.map(t => (
                       <Chip key={t} label={t} selected={item.type === t} onPress={() => updateBitItem(item.uid, "type", t)} />
+                    ))}
+                  </ScrollView>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#5A6E8C", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Capacidad</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                    {CAPACIDADES.map(c => (
+                      <Chip key={c} label={c} selected={item.capacidad === c} onPress={() => updateBitItem(item.uid, "capacidad", item.capacidad === c ? "" : c)} />
                     ))}
                   </ScrollView>
                   <View style={{ flexDirection: "row", gap: 10 }}>
