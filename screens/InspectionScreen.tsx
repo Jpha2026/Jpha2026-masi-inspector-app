@@ -677,7 +677,7 @@ function getChecklist(equipmentType: string): ChecklistDef {
   if (t.includes("extintor")) return CHECKLIST_EXTINTOR;
   if (t.includes("hidrante") || t.includes("manguera") || t.includes("caseta")) return CHECKLIST_HIDRANTE;
   if (t.includes("camilla")) return CHECKLIST_CAMILLA;
-  if (t.includes("sci") || t.includes("rociador") || t.includes("supresion") || t.includes("co2") || t.includes("agente limpio")) return CHECKLIST_SCI;
+  if (t.includes("nfpa") || t.includes("sci") || t.includes("rociador") || t.includes("supresion") || t.includes("co2") || t.includes("agente limpio")) return CHECKLIST_SCI;
   if (t.includes("regadera") && (t.includes("lavaojo") || t.includes("lavaojos"))) {
     if (t.includes("presion") || t.includes("presión")) return CHECKLIST_COMBINADA_PORTATIL_PRESION;
     if (t.includes("gravedad") || t.includes("portatil") || t.includes("portátil")) return CHECKLIST_COMBINADA_PORTATIL_GRAVEDAD;

@@ -30,21 +30,35 @@ const OK_OPTS = ["OK", "MAL", "N/A"];
 const SI_NO = ["SI", "NO", "N/A"];
 
 const EQ_TYPES = [
-  { value: "extintor", label: "Extintor" },
-  { value: "linea_vida", label: "Línea de Vida" },
-  { value: "hidrante", label: "Hidrante / Manguera" },
-  { value: "sistema_incendio", label: "Sist. Incendio" },
-  { value: "era", label: "ERA" },
-  { value: "otro", label: "Otro" },
+  { value: "extintor",                  label: "Extintor" },
+  { value: "linea_vida",               label: "Línea de Vida" },
+  { value: "hidrante",                 label: "Hidrante / Manguera" },
+  { value: "sistema_incendio",         label: "Sist. Incendio" },
+  { value: "co2_nfpa12",              label: "CO₂ (NFPA 12)" },
+  { value: "rociadores_nfpa13",        label: "Rociadores (NFPA 13)" },
+  { value: "espuma_nfpa16",            label: "Espuma AFFF (NFPA 16)" },
+  { value: "bomba_ci_nfpa20",          label: "Bomba CI (NFPA 20)" },
+  { value: "alarma_nfpa72",            label: "Alarma (NFPA 72)" },
+  { value: "supresion_cocinas_nfpa96", label: "Supresión Cocinas (NFPA 96)" },
+  { value: "agente_limpio_nfpa2001",   label: "Agente Limpio (NFPA 2001)" },
+  { value: "era",                      label: "ERA" },
+  { value: "otro",                     label: "Otro" },
 ];
 
 const EQ_LABELS: Record<string, string> = {
-  extintor: "Extintor",
-  linea_vida: "Equipo",
-  hidrante: "Punto",
-  sistema_incendio: "Punto",
-  era: "ERA",
-  otro: "Equipo",
+  extintor:                  "Extintor",
+  linea_vida:               "Equipo",
+  hidrante:                 "Punto",
+  sistema_incendio:         "Punto",
+  co2_nfpa12:              "Punto",
+  rociadores_nfpa13:        "Punto",
+  espuma_nfpa16:            "Punto",
+  bomba_ci_nfpa20:          "Punto",
+  alarma_nfpa72:            "Punto",
+  supresion_cocinas_nfpa96: "Punto",
+  agente_limpio_nfpa2001:   "Punto",
+  era:                      "ERA",
+  otro:                     "Equipo",
 };
 
 function OKPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -443,8 +457,11 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
               <FieldRow label="Absorbedor de Choque"><OKPicker value={currentPunto.shock_absorber} onChange={v => setCurrentPunto(p => ({ ...p, shock_absorber: v }))} /></FieldRow>
             </>}
 
-            {/* Hidrante / ERA / sistema_incendio / otro fields */}
-            {(eqType === "hidrante" || eqType === "sistema_incendio" || eqType === "era" || eqType === "otro") && <>
+            {/* Hidrante / ERA / sistema_incendio / NFPA / otro fields */}
+            {(eqType === "hidrante" || eqType === "sistema_incendio" || eqType === "era" || eqType === "otro"
+              || eqType === "co2_nfpa12" || eqType === "rociadores_nfpa13" || eqType === "espuma_nfpa16"
+              || eqType === "bomba_ci_nfpa20" || eqType === "alarma_nfpa72"
+              || eqType === "supresion_cocinas_nfpa96" || eqType === "agente_limpio_nfpa2001") && <>
               <FieldRow label="Estado General"><OKPicker value={currentPunto.estado_general} onChange={v => setCurrentPunto(p => ({ ...p, estado_general: v }))} /></FieldRow>
             </>}
 
