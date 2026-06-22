@@ -57,6 +57,8 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter]         = useState<string>("all");
+  const [tipoFilter, setTipoFilter] = useState<string>("all");
+  const [sortNewest, setSortNewest] = useState(true);
 
   // OT modal
   const [showOT, setShowOT]           = useState(false);
@@ -84,11 +86,29 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [phBy, setPhBy]                   = useState(userName);
   const [phSaving, setPhSaving]           = useState(false);
   const [phPhotos, setPhPhotos]           = useState<string[]>([]);
+  // PH extra fields (matching report)
+  const [phClientId, setPhClientId]             = useState("");
+  const [phClassification, setPhClassification] = useState("DOT-3AL");
+  const [phBrand, setPhBrand]                   = useState("");
+  const [phLastTestDate, setPhLastTestDate]     = useState("");
+  const [phSevereDent, setPhSevereDent]         = useState(false);
+  const [phExcessCorrosion, setPhExcessCorrosion] = useState(false);
+  const [phBaseCorrosion, setPhBaseCorrosion]   = useState(false);
+  const [phVolInitial, setPhVolInitial]         = useState("");
+  const [phVolTransient, setPhVolTransient]     = useState("");
+  const [phVolPermanent, setPhVolPermanent]     = useState("");
+  const [phExpansionPct, setPhExpansionPct]     = useState("");
+  const [phHasDeformation, setPhHasDeformation]   = useState(false);
+  const [phHasPressureLoss, setPhHasPressureLoss] = useState(false);
+  const [phModel, setPhModel]                   = useState("");
+  const [phReviewedBy, setPhReviewedBy]         = useState("");
+  const [phNextTestDate, setPhNextTestDate]     = useState("");
 
   // Manguera Test modal
   const [showMAN, setShowMAN]         = useState(false);
   const [manEq, setManEq]             = useState<EqLookup | null>(null);
   const [manCode, setManCode]         = useState("");
+  const [manClientId, setManClientId] = useState("");
   const [manLength, setManLength]     = useState("");
   const [manPressure, setManPressure] = useState("120");
   const [manResult, setManResult]     = useState<"PASS"|"FAIL">("PASS");
@@ -146,6 +166,15 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   useEffect(() => { load(); }, []);
 
+  // Auto-calc expansión % when permanent or transient volumes change
+  useEffect(() => {
+    const perm  = Number(phVolPermanent);
+    const trans = Number(phVolTransient);
+    if (phVolPermanent && phVolTransient && trans > 0) {
+      setPhExpansionPct(((perm / trans) * 100).toFixed(3));
+    }
+  }, [phVolPermanent, phVolTransient]);
+
   // ─── Equipment lookup ───────────────────────────────────────────────────────
   const lookupEquipment = async (code: string, target: "ph" | "man") => {
     if (!code.trim()) return;
@@ -199,18 +228,34 @@ export default function TallerScreen({ navigation, route }: Props) {
       const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/ph`, {
         equipment_id: phEq?.id,
         equipment_code: phCode || undefined,
+        client_id: phClientId || undefined,
         test_type: phPressureClass === "alta" ? "alta_presion" : "baja_presion",
         cylinder_type: phCylType,
+        cylinder_classification: phClassification || undefined,
+        brand: phBrand || undefined,
+        model: phModel || undefined,
         serial_number: phSerial || undefined,
         capacity: phCapacity || undefined,
         manufacture_year: phYearMfg ? Number(phYearMfg) : undefined,
+        last_test_date: phLastTestDate || undefined,
+        has_severe_dent: phSevereDent,
+        has_excess_corrosion: phExcessCorrosion,
+        has_base_corrosion: phBaseCorrosion,
         working_pressure_psi: Number(phWorkPsi),
         test_pressure_psi: Number(phTestPsi),
         duration_seconds: Number(phDuration) || 60,
+        volume_initial_ml: phVolInitial ? Number(phVolInitial) : undefined,
+        volume_transient_ml: phVolTransient ? Number(phVolTransient) : undefined,
+        volume_permanent_ml: phVolPermanent ? Number(phVolPermanent) : undefined,
+        expansion_pct: phExpansionPct ? Number(phExpansionPct) : undefined,
+        has_deformation: phHasDeformation,
+        has_pressure_loss: phHasPressureLoss,
         result: phResult,
         rejection_reason: phResult === "FAIL" ? phCauseReject : undefined,
         observations: phObs,
         tested_by: phBy,
+        reviewed_by: phReviewedBy || undefined,
+        next_test_date: phNextTestDate || undefined,
       });
       if (r.data.id && phPhotos.length > 0) {
         for (const uri of phPhotos) {
@@ -240,6 +285,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     try {
       const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/mangueras`, {
         equipment_id: manEq?.id, equipment_code: manCode || undefined,
+        client_id: manClientId || undefined,
         hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
         test_pressure_lbs: Number(manPressure), result: manResult,
         observations: manObs, tested_by: manBy, duration_min: 3,
@@ -415,12 +461,42 @@ export default function TallerScreen({ navigation, route }: Props) {
 
   // ─── Resets ─────────────────────────────────────────────────────────────────
   const resetOT  = () => { setOtTipo(TIPOS_OT[0]); setOtDesc(""); setOtPrioridad("media"); setOtClientId(""); };
-  const resetPH  = () => { setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja"); setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi(""); setPhTestPsi(""); setPhDuration("60"); setPhResult("PASS"); setPhCauseReject(""); setPhObs(""); setPhPhotos([]); };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManPhotos([]); };
+  const resetPH  = () => {
+    setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja");
+    setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi("");
+    setPhTestPsi(""); setPhDuration("60"); setPhResult("PASS"); setPhCauseReject("");
+    setPhObs(""); setPhPhotos([]);
+    setPhClientId(""); setPhClassification("DOT-3AL"); setPhBrand(""); setPhModel(""); setPhLastTestDate("");
+    setPhSevereDent(false); setPhExcessCorrosion(false); setPhBaseCorrosion(false);
+    setPhVolInitial(""); setPhVolTransient(""); setPhVolPermanent(""); setPhExpansionPct("");
+    setPhHasDeformation(false); setPhHasPressureLoss(false);
+    setPhReviewedBy(""); setPhNextTestDate("");
+  };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManPhotos([]); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
-  const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+  const TIPO_FILTERS: { key: string; label: string }[] = [
+    { key: "all",      label: "Todos los tipos" },
+    { key: "ph",       label: "🔬 PH" },
+    { key: "recarga",  label: "🔥 Recarga" },
+    { key: "manguera", label: "🌊 Manguera" },
+    { key: "manto",    label: "🔧 Mantenimiento" },
+  ];
+  const byStatus = filter === "all" ? orders : orders.filter(o => o.status === filter);
+  const byTipo = tipoFilter === "all" ? byStatus : byStatus.filter(o => {
+    const t = (o.tipo ?? "").toLowerCase();
+    if (tipoFilter === "ph") return t.includes("hidrostática") || t.includes("hidro");
+    if (tipoFilter === "recarga") return t.includes("recarga");
+    if (tipoFilter === "manguera") return t.includes("manguera");
+    if (tipoFilter === "manto") return t.includes("mantenimiento") || t.includes("reparación") || t.includes("inspección");
+    return true;
+  });
+  const filtered = [...byTipo].sort((a, b) =>
+    sortNewest
+      ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
   // ─── Camera Overlay ─────────────────────────────────────────────────────────
   if (scanning) {
@@ -472,21 +548,44 @@ export default function TallerScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Filter tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterBar}>
-        <View style={s.filterRow}>
-          {FILTERS.map(f => {
-            const count = f === "all" ? orders.length : orders.filter(o => o.status === f).length;
-            const cfg   = f !== "all" ? STATUS_CONFIG[f] : null;
-            const label = f === "all" ? "Todas" : cfg?.label ?? f;
-            const active = filter === f;
+      {/* Filter tabs — row 1: status + sort */}
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[s.filterBar, { flex: 1 }]}>
+          <View style={s.filterRow}>
+            {FILTERS.map(f => {
+              const count = f === "all" ? orders.length : orders.filter(o => o.status === f).length;
+              const cfg   = f !== "all" ? STATUS_CONFIG[f] : null;
+              const label = f === "all" ? "Todas" : cfg?.label ?? f;
+              const active = filter === f;
+              return (
+                <TouchableOpacity key={f}
+                  style={[s.filterChip, { backgroundColor: active ? "#122B60" : "#fff", borderColor: active ? "#3B82F6" : "#E2E8F5" }]}
+                  onPress={() => setFilter(f)}>
+                  <Text style={[s.filterText, { color: active ? "#fff" : "#6B84A8" }]}>
+                    {cfg ? `${cfg.icon} ` : "📋 "}{label} ({count})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </ScrollView>
+        <TouchableOpacity
+          onPress={() => setSortNewest(p => !p)}
+          style={{ paddingHorizontal: 12, paddingVertical: 8, backgroundColor: "#fff", borderLeftWidth: 1, borderLeftColor: "#E2E8F5" }}>
+          <Text style={{ fontSize: 16 }}>{sortNewest ? "⬇" : "⬆"}</Text>
+          <Text style={{ fontSize: 9, color: "#6B84A8", textAlign: "center" }}>{sortNewest ? "Nuevo" : "Viejo"}</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Filter row 2: tipo */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, backgroundColor: "#F8FAFD" }}>
+        <View style={[s.filterRow, { paddingVertical: 5 }]}>
+          {TIPO_FILTERS.map(tf => {
+            const active = tipoFilter === tf.key;
             return (
-              <TouchableOpacity key={f}
-                style={[s.filterChip, { backgroundColor: active ? "#122B60" : "#fff", borderColor: active ? "#3B82F6" : "#E2E8F5" }]}
-                onPress={() => setFilter(f)}>
-                <Text style={[s.filterText, { color: active ? "#fff" : "#6B84A8" }]}>
-                  {cfg ? `${cfg.icon} ` : "📋 "}{label} ({count})
-                </Text>
+              <TouchableOpacity key={tf.key}
+                style={[s.filterChip, { backgroundColor: active ? "#7C3AED" : "#fff", borderColor: active ? "#7C3AED" : "#E2E8F5", paddingVertical: 5 }]}
+                onPress={() => setTipoFilter(tf.key)}>
+                <Text style={[s.filterText, { fontSize: 11, color: active ? "#fff" : "#6B84A8" }]}>{tf.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -746,6 +845,13 @@ export default function TallerScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
               )}
+              {clientes.length > 0 && <>
+                <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+                  <Chip label="Sin cliente" selected={!phClientId} onPress={() => setPhClientId("")} />
+                  {clientes.slice(0, 20).map(c => <Chip key={c.id} label={c.name} selected={phClientId === c.id} onPress={() => setPhClientId(c.id)} />)}
+                </ScrollView>
+              </>}
               {/* Clasificación de presión */}
               <FieldLabel style={{ marginTop: 12 }}>Clasificación *</FieldLabel>
               <View style={{ flexDirection: "row", gap: 10 }}>
@@ -773,6 +879,25 @@ export default function TallerScreen({ navigation, route }: Props) {
               </ScrollView>
               <UpperInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="O escribe el tipo..." placeholderTextColor="#9BACC8" />
 
+              <FieldLabel style={{ marginTop: 12 }}>Clasificación DOT</FieldLabel>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 6 }}>
+                {["DOT-3AL","DOT-3A","DOT-3AA","DOT-4B","DOT-4BW","DOT-4BA","DOT-4L","DOT-3"].map(d => (
+                  <Chip key={d} label={d} selected={phClassification === d} onPress={() => setPhClassification(d)} />
+                ))}
+              </ScrollView>
+              <UpperInput style={s.textInput} value={phClassification} onChangeText={setPhClassification} placeholder="DOT-3AL" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Marca</FieldLabel>
+                  <UpperInput style={s.textInput} value={phBrand} onChangeText={setPhBrand} placeholder="LUXFER, WORTHINGTON..." placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Modelo</FieldLabel>
+                  <UpperInput style={s.textInput} value={phModel} onChangeText={setPhModel} placeholder="Modelo / No. parte" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                </View>
+              </View>
+
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>No. de serie</FieldLabel>
@@ -794,6 +919,30 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <UpperInput style={s.textInput} value={phDuration} onChangeText={setPhDuration} keyboardType="numeric" placeholder="60" placeholderTextColor="#9BACC8" />
                 </View>
               </View>
+              <FieldLabel style={{ marginTop: 12 }}>Último ensayo realizado</FieldLabel>
+              <UpperInput style={s.textInput} value={phLastTestDate} onChangeText={setPhLastTestDate} placeholder="2020-06-15 o 'Primera prueba'" placeholderTextColor="#9BACC8" />
+
+              {/* Pre-inspección visual */}
+              <View style={[s.sectionBox, { marginTop: 14 }]}>
+                <Text style={s.sectionBoxTitle}>PRE-INSPECCIÓN VISUAL</Text>
+                {([
+                  { label: "¿Golpe severo en cilindro?", val: phSevereDent,       set: setPhSevereDent },
+                  { label: "¿Corrosión excesiva?",       val: phExcessCorrosion,  set: setPhExcessCorrosion },
+                  { label: "¿Corrosión en la base?",     val: phBaseCorrosion,    set: setPhBaseCorrosion },
+                ] as { label: string; val: boolean; set: (v: boolean) => void }[]).map(({ label, val, set }) => (
+                  <View key={label} style={s.yesNoRow}>
+                    <Text style={s.yesNoLabel}>{label}</Text>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <TouchableOpacity style={[s.yesNoBtn, { backgroundColor: val ? "#DC2626" : "#F0F4FB", borderColor: val ? "#DC2626" : "#D5DCF0" }]} onPress={() => set(true)}>
+                        <Text style={{ fontWeight: "800", fontSize: 11, color: val ? "#fff" : "#6B84A8" }}>SÍ</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[s.yesNoBtn, { backgroundColor: !val ? "#059669" : "#F0F4FB", borderColor: !val ? "#059669" : "#D5DCF0" }]} onPress={() => set(false)}>
+                        <Text style={{ fontWeight: "800", fontSize: 11, color: !val ? "#fff" : "#6B84A8" }}>NO</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
@@ -814,6 +963,58 @@ export default function TallerScreen({ navigation, route }: Props) {
                 <Text style={{ fontSize: 11, color: "#0891B2", marginTop: 4, fontStyle: "italic" }}>
                   Baja presión: presión de prueba = 1.5 × presión de trabajo (NOM-002)
                 </Text>
+              )}
+
+              {/* Datos de expansión volumétrica — solo alta presión */}
+              {phPressureClass === "alta" && (
+                <View style={[s.sectionBox, { marginTop: 14, borderColor: "#7C3AED33" }]}>
+                  <Text style={[s.sectionBoxTitle, { color: "#7C3AED" }]}>EXPANSIÓN VOLUMÉTRICA</Text>
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <FieldLabel>Vol. inicial (ml)</FieldLabel>
+                      <UpperInput style={s.textInput} value={phVolInitial} onChangeText={setPhVolInitial} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#9BACC8" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <FieldLabel>Exp. transitoria (ml)</FieldLabel>
+                      <UpperInput style={s.textInput} value={phVolTransient} onChangeText={setPhVolTransient} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#9BACC8" />
+                    </View>
+                  </View>
+                  <View style={{ marginTop: 8 }}>
+                    <FieldLabel>Exp. permanente (ml)</FieldLabel>
+                    <UpperInput style={s.textInput} value={phVolPermanent} onChangeText={setPhVolPermanent} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#9BACC8" />
+                  </View>
+                  <View style={s.calcBox}>
+                    <Text style={s.calcLabel}>% Expansión = Perm. ÷ Trans. × 100</Text>
+                    <Text style={[s.calcValue, { color: Number(phExpansionPct) > 0.1 ? "#DC2626" : "#059669" }]}>
+                      {phExpansionPct || "0.000"} %
+                    </Text>
+                    <Text style={{ fontSize: 9, color: "#94A3B8", marginTop: 2 }}>NOM permisible: ≤ 0.1% · Editable si hay diferencia</Text>
+                    <UpperInput style={[s.textInput, { marginTop: 6 }]} value={phExpansionPct} onChangeText={setPhExpansionPct} keyboardType="numeric" placeholder="0.000" placeholderTextColor="#9BACC8" />
+                  </View>
+                </View>
+              )}
+
+              {/* Baja presión: deformación y pérdida de presión */}
+              {phPressureClass === "baja" && (
+                <View style={[s.sectionBox, { marginTop: 14, borderColor: "#0891B233" }]}>
+                  <Text style={[s.sectionBoxTitle, { color: "#0891B2" }]}>DURANTE EL ENSAYO</Text>
+                  {([
+                    { label: "¿Deformación durante la prueba?", val: phHasDeformation,  set: setPhHasDeformation },
+                    { label: "¿Pérdida de presión?",            val: phHasPressureLoss, set: setPhHasPressureLoss },
+                  ] as { label: string; val: boolean; set: (v: boolean) => void }[]).map(({ label, val, set }) => (
+                    <View key={label} style={s.yesNoRow}>
+                      <Text style={s.yesNoLabel}>{label}</Text>
+                      <View style={{ flexDirection: "row", gap: 6 }}>
+                        <TouchableOpacity style={[s.yesNoBtn, { backgroundColor: val ? "#DC2626" : "#F0F4FB", borderColor: val ? "#DC2626" : "#D5DCF0" }]} onPress={() => set(true)}>
+                          <Text style={{ fontWeight: "800", fontSize: 11, color: val ? "#fff" : "#6B84A8" }}>SÍ</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[s.yesNoBtn, { backgroundColor: !val ? "#059669" : "#F0F4FB", borderColor: !val ? "#059669" : "#D5DCF0" }]} onPress={() => set(false)}>
+                          <Text style={{ fontWeight: "800", fontSize: 11, color: !val ? "#fff" : "#6B84A8" }}>NO</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
               )}
 
               <FieldLabel style={{ marginTop: 14 }}>Resultado *</FieldLabel>
@@ -838,8 +1039,18 @@ export default function TallerScreen({ navigation, route }: Props) {
               )}
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
               <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
-              <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
-              <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Técnico que realizó</FieldLabel>
+                  <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Revisado por</FieldLabel>
+                  <UpperInput style={s.textInput} value={phReviewedBy} onChangeText={setPhReviewedBy} placeholder="Supervisor / Ing." placeholderTextColor="#9BACC8" />
+                </View>
+              </View>
+              <FieldLabel style={{ marginTop: 12 }}>Próxima prueba (fecha)</FieldLabel>
+              <UpperInput style={s.textInput} value={phNextTestDate} onChangeText={setPhNextTestDate} placeholder="2030-06-15" placeholderTextColor="#9BACC8" />
               <FieldLabel style={{ marginTop: 12 }}>Fotos de evidencia ({phPhotos.length}/15)</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
                 <TouchableOpacity onPress={takePhPhoto} style={{ flex: 1, backgroundColor: "#7C3AED11", borderRadius: 8, borderWidth: 1, borderColor: "#7C3AED44", paddingVertical: 10, alignItems: "center" }}>
@@ -897,6 +1108,13 @@ export default function TallerScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
               )}
+              {clientes.length > 0 && <>
+                <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+                  <Chip label="Sin cliente" selected={!manClientId} onPress={() => setManClientId("")} />
+                  {clientes.slice(0, 20).map(c => <Chip key={c.id} label={c.name} selected={manClientId === c.id} onPress={() => setManClientId(c.id)} />)}
+                </ScrollView>
+              </>}
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Diámetro</FieldLabel>
@@ -1048,6 +1266,15 @@ const s = StyleSheet.create({
   photoThumb:  { width: 72, height: 72, borderRadius: 10 },
   photoRemove: { position: "absolute", top: 2, right: 2, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 10, width: 18, height: 18, alignItems: "center", justifyContent: "center" },
   photoAdd:    { width: 72, height: 72, borderRadius: 10, backgroundColor: "#F0F4FB", borderWidth: 1.5, borderColor: "#D5DCF0", alignItems: "center", justifyContent: "center", borderStyle: "dashed" },
+  // Section boxes for PH modal
+  sectionBox:     { backgroundColor: "#F8FAFD", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#D5DCF0" },
+  sectionBoxTitle:{ fontSize: 10, fontWeight: "900", color: "#5A6E8C", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
+  yesNoRow:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  yesNoLabel:     { flex: 1, fontSize: 12, color: "#1A2740", fontWeight: "600", paddingRight: 8 },
+  yesNoBtn:       { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, borderWidth: 1.5, minWidth: 40, alignItems: "center" },
+  calcBox:        { backgroundColor: "#EDE9FE", borderRadius: 10, padding: 10, marginTop: 10, borderWidth: 1, borderColor: "#C4B5FD" },
+  calcLabel:      { fontSize: 10, fontWeight: "700", color: "#6D28D9", textTransform: "uppercase", letterSpacing: 0.5 },
+  calcValue:      { fontSize: 22, fontWeight: "900", marginTop: 4 },
   // Modal
   modalCard:   { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 0, maxHeight: "93%" },
   modalFooter: { paddingTop: 10, paddingBottom: 20, borderTopWidth: 1, borderTopColor: "#EEF2FB" },
