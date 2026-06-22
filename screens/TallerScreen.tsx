@@ -199,18 +199,21 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [phNextTestDate, setPhNextTestDate]     = useState("");
 
   // Manguera Test modal
-  const [showMAN, setShowMAN]         = useState(false);
-  const [manEq, setManEq]             = useState<EqLookup | null>(null);
-  const [manCode, setManCode]         = useState("");
-  const [manClientId, setManClientId] = useState("");
-  const [manLength, setManLength]     = useState("");
-  const [manPressure, setManPressure] = useState("120");
-  const [manResult, setManResult]     = useState<"PASS"|"FAIL">("PASS");
-  const [manObs, setManObs]           = useState("");
-  const [manBy, setManBy]             = useState(userName);
-  const [manSaving, setManSaving]     = useState(false);
-  const [manPhotos, setManPhotos]     = useState<string[]>([]);
-  const [manDiameter, setManDiameter] = useState('1.5"');
+  const [showMAN, setShowMAN]             = useState(false);
+  const [manEq, setManEq]                 = useState<EqLookup | null>(null);
+  const [manCode, setManCode]             = useState("");
+  const [manClientId, setManClientId]     = useState("");
+  const [manHoseType, setManHoseType]     = useState("Manguera SCI");
+  const [manSerial, setManSerial]         = useState("");
+  const [manMfgDate, setManMfgDate]       = useState("");
+  const [manLength, setManLength]         = useState("");
+  const [manPressure, setManPressure]     = useState("120");
+  const [manResult, setManResult]         = useState<"PASS"|"FAIL">("PASS");
+  const [manObs, setManObs]               = useState("");
+  const [manBy, setManBy]                 = useState(userName);
+  const [manSaving, setManSaving]         = useState(false);
+  const [manPhotos, setManPhotos]         = useState<string[]>([]);
+  const [manDiameter, setManDiameter]     = useState('1.5"');
 
   // Bitácora de Recarga modal
   const [showBit, setShowBit]         = useState(false);
@@ -384,7 +387,10 @@ export default function TallerScreen({ navigation, route }: Props) {
       const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/mangueras`, {
         equipment_id: manEq?.id, equipment_code: manCode || undefined,
         client_id: manClientId || undefined,
+        hose_type: manHoseType || "Manguera SCI",
         hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
+        serial_number: manSerial || undefined,
+        manufacture_date: manMfgDate || undefined,
         test_pressure_lbs: Number(manPressure), result: manResult,
         observations: manObs, tested_by: manBy, duration_min: 3,
       });
@@ -571,7 +577,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhHasDeformation(false); setPhHasPressureLoss(false);
     setPhReviewedBy(""); setPhNextTestDate("");
   };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManHoseType("Manguera SCI"); setManSerial(""); setManMfgDate(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
@@ -1205,6 +1211,26 @@ export default function TallerScreen({ navigation, route }: Props) {
               )}
               <FieldLabel style={{ marginTop: 12 }}>Cliente</FieldLabel>
               <ClientSelector clients={clientes} value={manClientId} onChange={setManClientId} onCreated={addClient} />
+
+              <FieldLabel style={{ marginTop: 12 }}>Tipo de manguera</FieldLabel>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 6 }}>
+                {["Manguera SCI", "Manguera de Descarga", "Manguera Plana", "Manguera Agrícola", "Otro"].map(t => (
+                  <Chip key={t} label={t} selected={manHoseType === t} onPress={() => setManHoseType(t)} />
+                ))}
+              </ScrollView>
+              <UpperInput style={s.textInput} value={manHoseType} onChangeText={setManHoseType} placeholder="O escribe el tipo..." placeholderTextColor="#9BACC8" />
+
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>No. de serie / ID</FieldLabel>
+                  <UpperInput style={s.textInput} value={manSerial} onChangeText={setManSerial} placeholder="Ej. MAN-001" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FieldLabel>Fecha de fabricación</FieldLabel>
+                  <UpperInput style={s.textInput} value={manMfgDate} onChangeText={setManMfgDate} placeholder="AAAA-MM-DD" placeholderTextColor="#9BACC8" keyboardType="numeric" />
+                </View>
+              </View>
+
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Diámetro</FieldLabel>
