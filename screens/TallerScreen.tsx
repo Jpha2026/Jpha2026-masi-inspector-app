@@ -562,14 +562,14 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja");
     setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi("");
     setPhTestPsi(""); setPhDuration("60"); setPhResult("PASS"); setPhCauseReject("");
-    setPhObs(""); setPhPhotos([]);
+    setPhObs(""); setPhBy(userName); setPhPhotos([]);
     setPhClientId(""); setPhClassification("DOT-3AL"); setPhBrand(""); setPhModel(""); setPhLastTestDate("");
     setPhSevereDent(false); setPhExcessCorrosion(false); setPhBaseCorrosion(false);
     setPhVolInitial(""); setPhVolTransient(""); setPhVolPermanent(""); setPhExpansionPct("");
     setPhHasDeformation(false); setPhHasPressureLoss(false);
     setPhReviewedBy(""); setPhNextTestDate("");
   };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManPhotos([]); };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
