@@ -142,10 +142,11 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         title: "Bitácora de Recarga",
         icon: "🔧",
         items: [
-          "Usa 'Bitácora' para registrar recargas de múltiples equipos.",
-          "Agrega cada equipo con tipo, serie y cantidad.",
-          "Puedes tomar hasta 4 fotos como evidencia.",
-          "Al guardar se crea una OT por cada grupo de equipos.",
+          "Toca el botón '📋 Bitácora' en la fila de accesos rápidos (parte superior).",
+          "Selecciona el cliente (opcional) y agrega cada equipo con tipo, serie y cantidad.",
+          "Escribe el nombre del técnico que realiza la recarga.",
+          "Puedes agregar hasta 4 fotos como evidencia.",
+          "Al enviar se crea una Orden de Trabajo que solo el taller puede cerrar.",
         ],
       },
       {

@@ -217,6 +217,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [bitClientId, setBitClientId] = useState("");
   const [bitItems, setBitItems]       = useState<BitItem[]>([]);
   const [bitNotes, setBitNotes]       = useState("");
+  const [bitTecnico, setBitTecnico]   = useState(userName);
   const [bitPhotos, setBitPhotos]     = useState<string[]>([]);
   const [bitSaving, setBitSaving]     = useState(false);
 
@@ -523,6 +524,7 @@ export default function TallerScreen({ navigation, route }: Props) {
       }));
 
       const summaryLine = `Bitácora de recarga — ${items.length} equipo(s): ${bitItems.map(i => i.type).join(", ")}`;
+      const tecnicoLine = bitTecnico.trim() ? `\nTécnico: ${bitTecnico.trim()}` : "";
       const noteLine = bitNotes.trim() ? `\n${bitNotes.trim()}` : "";
       const photoLine = photoUrls.length > 0 ? `\nFotos: ${photoUrls.join(" | ")}` : "";
 
@@ -530,7 +532,7 @@ export default function TallerScreen({ navigation, route }: Props) {
         inspector_id: inspectorId,
         client_id: bitClientId || undefined,
         tipo: "Recarga de extintor",
-        description: summaryLine + noteLine + photoLine,
+        description: summaryLine + tecnicoLine + noteLine + photoLine,
         priority: "normal",
         items,
       });
@@ -570,7 +572,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhReviewedBy(""); setPhNextTestDate("");
   };
   const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
-  const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitPhotos([]); };
+  const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
   const TIPO_FILTERS: { key: string; label: string }[] = [
@@ -890,8 +892,19 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </View>
               </ScrollView>
 
+              {/* Técnico */}
+              <FieldLabel style={{ marginTop: 12 }}>Técnico que realiza la recarga</FieldLabel>
+              <UpperInput
+                style={s.textInput}
+                value={bitTecnico}
+                onChangeText={setBitTecnico}
+                placeholder="Nombre del técnico..."
+                placeholderTextColor="#9BACC8"
+                autoCapitalize="words"
+              />
+
               {/* Notes */}
-              <FieldLabel>Observaciones</FieldLabel>
+              <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
               <UpperInput
                 style={s.textArea}
                 value={bitNotes}
