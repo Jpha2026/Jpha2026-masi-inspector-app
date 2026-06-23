@@ -89,7 +89,7 @@ export default function LoginScreen({ navigation }: Props) {
         navigation.replace("ClienteHome", { user: data });
       } else if (data.role === "vendedor") {
         navigation.replace("VendedorHome", { user: data });
-      } else if (data.role === "taller") {
+      } else if (data.role === "taller" || data.role === "ventas") {
         navigation.replace("Taller", { inspectorId: data.inspector_id ?? data.id, userName: data.name });
       } else {
         if (data.inspector_id != null) {

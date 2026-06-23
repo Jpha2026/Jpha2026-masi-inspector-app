@@ -161,7 +161,7 @@ export default function App() {
             registerPushToken(user.id);
             return;
           }
-          if (user.role === "taller") {
+          if (user.role === "taller" || user.role === "ventas") {
             setSavedUser(user);
             setInitialRoute("Taller");
             registerPushToken(user.inspector_id ?? user.id);
