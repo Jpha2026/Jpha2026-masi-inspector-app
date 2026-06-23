@@ -85,7 +85,9 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
           <Text style={s.backArrow}>←</Text>
         </TouchableOpacity>
         <Text style={s.navTitle}>Mi Asistencia</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity onPress={() => { setLoading(true); load(); }} style={s.backBtn} disabled={loading}>
+          <Text style={{ color: "#fff", fontSize: 20 }}>↻</Text>
+        </TouchableOpacity>
       </LinearGradient>
 
       <View style={{ padding: 20, flex: 1 }}>
