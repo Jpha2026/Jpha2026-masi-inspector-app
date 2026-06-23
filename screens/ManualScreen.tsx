@@ -84,7 +84,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Problemas técnicos: escribe al chat de la app o llama a soporte.",
           "Para resetear contraseña o permisos: contacta al administrador.",
-          "Versión actual: 1.2.18 (versionCode 26). Asegúrate de tener la APK más reciente instalada.",
+          "Versión actual: 1.2.19 (versionCode 27). Asegúrate de tener la APK más reciente instalada.",
           "Al cerrar sesión, las inspecciones y jornadas pendientes se limpian del dispositivo. Asegúrate de sincronizar antes de salir.",
         ],
       },
@@ -143,7 +143,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         icon: "🔧",
         items: [
           "Toca el botón '📋 Bitácora' en la fila de accesos rápidos (parte superior).",
-          "Selecciona el cliente (opcional) y agrega cada equipo con tipo, serie y cantidad.",
+          "Selecciona el cliente (opcional) y agrega cada equipo: tipo, capacidad (ej. 6 kg), número de serie y cantidad.",
           "Escribe el nombre del técnico que realiza la recarga.",
           "Puedes agregar hasta 4 fotos como evidencia.",
           "Al enviar se crea una Orden de Trabajo que solo el taller puede cerrar.",
@@ -255,6 +255,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Registra tu entrada y salida desde 'Asistencia'.",
           "La ubicación GPS se captura automáticamente al registrar.",
+          "Usa el botón ↻ (esquina superior derecha) para actualizar y ver el registro del día en tiempo real.",
           "Si el botón no responde o aparece un aviso rojo: cierra sesión y vuelve a entrar — esto actualiza tu cuenta.",
         ],
       },
@@ -326,7 +327,8 @@ export default function ManualScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { role, userName } = route.params;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const manual = MANUALS[role] ?? MANUALS.inspector;
+  const manualRole = role === "ventas" ? "taller" : role;
+  const manual = MANUALS[manualRole] ?? MANUALS.inspector;
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();

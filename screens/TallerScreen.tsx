@@ -578,7 +578,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhHasDeformation(false); setPhHasPressureLoss(false);
     setPhReviewedBy(""); setPhNextTestDate("");
   };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManHoseType("Manguera SCI"); setManSerial(""); setManMfgDate(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManHoseType("Manguera SCI"); setManDiameter('1.5"'); setManSerial(""); setManMfgDate(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
