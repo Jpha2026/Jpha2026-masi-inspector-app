@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
+import * as ExpoCrypto from "expo-crypto";
 import NetInfo from "@react-native-community/netinfo";
 import axios from "axios";
 import { API_URL } from "../constants/api";
@@ -51,10 +52,9 @@ async function getEncKey(): Promise<string> {
   try {
     let key = await SecureStore.getItemAsync(ENC_KEY_STORE);
     if (!key) {
-      // Generate 32-byte random key as hex string
-      key = Array.from({ length: 32 }, () =>
-        Math.floor(Math.random() * 256).toString(16).padStart(2, "0")
-      ).join("");
+      // Generate 32-byte cryptographically random key as hex string
+      const bytes = ExpoCrypto.getRandomBytes(32);
+      key = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       await SecureStore.setItemAsync(ENC_KEY_STORE, key);
     }
     return key;
