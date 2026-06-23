@@ -107,11 +107,20 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
         [{ text: "Aceptar", onPress: () => navigation.goBack() }]
       );
     } catch (err: unknown) {
-      const msg = axios.isAxiosError(err) && err.response?.data?.error
-        ? err.response.data.error
-        : "No se pudo enviar la solicitud.";
-      Alert.alert("Error", msg);
-    } finally { setLoading(false); }
+      if (axios.isAxiosError(err) && err.response) {
+        // Server responded with an error (validation, etc.) — safe to retry
+        const msg = err.response.data?.error ?? "No se pudo enviar la solicitud.";
+        Alert.alert("Error", msg);
+        setLoading(false);
+      } else {
+        // No response — possible timeout where server already saved
+        Alert.alert(
+          "⚠️ Posible error de red",
+          "La solicitud pudo haberse enviado. Verifica en Mis Solicitudes antes de reintentarlo.",
+          [{ text: "Entendido", onPress: () => { setLoading(false); navigation.goBack(); } }]
+        );
+      }
+    }
   };
 
   const cardBg    = T.isDark ? "#1A2740" : "#fff";

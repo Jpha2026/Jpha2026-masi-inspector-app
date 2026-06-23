@@ -206,7 +206,8 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [manClientId, setManClientId]     = useState("");
   const [manHoseType, setManHoseType]     = useState("Manguera SCI");
   const [manSerial, setManSerial]         = useState("");
-  const [manMfgDate, setManMfgDate]       = useState("");
+  const [manMfgMonth, setManMfgMonth]     = useState("");
+  const [manMfgYear, setManMfgYear]       = useState("");
   const [manLength, setManLength]         = useState("");
   const [manPressure, setManPressure]     = useState("120");
   const [manResult, setManResult]         = useState<"PASS"|"FAIL">("PASS");
@@ -373,8 +374,13 @@ export default function TallerScreen({ navigation, route }: Props) {
       Alert.alert("✅ Prueba PH guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowPH(false); resetPH(); } },
       ]);
-    } catch { Alert.alert("Error", "No se pudo guardar la prueba hidrostática."); }
-    finally { setPhSaving(false); }
+    } catch {
+      Alert.alert(
+        "⚠️ Posible error de red",
+        "El reporte pudo haberse enviado. Verifica el historial antes de reintentarlo.",
+        [{ text: "Cerrar formulario", onPress: () => { setShowPH(false); resetPH(); } }]
+      );
+    }
   };
 
   // ─── Manguera Submit ────────────────────────────────────────────────────────
@@ -391,7 +397,7 @@ export default function TallerScreen({ navigation, route }: Props) {
         hose_type: manHoseType || "Manguera SCI",
         hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
         serial_number: manSerial || undefined,
-        manufacture_date: manMfgDate || undefined,
+        manufacture_date: (manMfgYear && manMfgMonth) ? `${manMfgYear}-${manMfgMonth.padStart(2, "0")}` : undefined,
         test_pressure_lbs: Number(manPressure), result: manResult,
         observations: manObs, tested_by: manBy, duration_min: 3,
       });
@@ -409,8 +415,13 @@ export default function TallerScreen({ navigation, route }: Props) {
       Alert.alert("✅ Prueba de manguera guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowMAN(false); resetMAN(); } },
       ]);
-    } catch { Alert.alert("Error", "No se pudo guardar la prueba."); }
-    finally { setManSaving(false); }
+    } catch {
+      Alert.alert(
+        "⚠️ Posible error de red",
+        "El reporte pudo haberse enviado. Verifica el historial antes de reintentarlo.",
+        [{ text: "Cerrar formulario", onPress: () => { setShowMAN(false); resetMAN(); } }]
+      );
+    }
   };
 
   // ─── OT Submit ──────────────────────────────────────────────────────────────
@@ -425,8 +436,13 @@ export default function TallerScreen({ navigation, route }: Props) {
       Alert.alert("OT Creada ✅", `Orden ${res.data?.folio} enviada al taller.`, [
         { text: "OK", onPress: () => { setShowOT(false); resetOT(); load(true); } },
       ]);
-    } catch { Alert.alert("Error", "No se pudo crear la orden."); }
-    finally { setSubmitting(false); }
+    } catch {
+      Alert.alert(
+        "⚠️ Posible error de red",
+        "La orden pudo haberse creado. Verifica el historial antes de reintentarlo.",
+        [{ text: "Cerrar formulario", onPress: () => { setShowOT(false); resetOT(); load(true); } }]
+      );
+    }
   };
 
   // ─── Status Update ──────────────────────────────────────────────────────────
@@ -546,8 +562,13 @@ export default function TallerScreen({ navigation, route }: Props) {
       Alert.alert("📋 Bitácora enviada al taller", `Folio: ${res.data?.folio}`, [
         { text: "OK", onPress: () => { setShowBit(false); resetBit(); load(true); } },
       ]);
-    } catch { Alert.alert("Error", "No se pudo enviar la bitácora."); }
-    finally { setBitSaving(false); }
+    } catch {
+      Alert.alert(
+        "⚠️ Posible error de red",
+        "La bitácora pudo haberse enviado. Verifica el historial antes de reintentarlo.",
+        [{ text: "Cerrar formulario", onPress: () => { setShowBit(false); resetBit(); load(true); } }]
+      );
+    }
   };
 
   // ─── Item qty edit ──────────────────────────────────────────────────────────
@@ -566,7 +587,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   };
 
   // ─── Resets ─────────────────────────────────────────────────────────────────
-  const resetOT  = () => { setOtTipo(TIPOS_OT[0]); setOtDesc(""); setOtPrioridad("media"); setOtClientId(""); };
+  const resetOT  = () => { setOtTipo(TIPOS_OT[0]); setOtDesc(""); setOtPrioridad("media"); setOtClientId(""); setSubmitting(false); };
   const resetPH  = () => {
     setPhEq(null); setPhCode(""); setPhCylType(""); setPhPressureClass("baja");
     setPhSerial(""); setPhCapacity(""); setPhYearMfg(""); setPhWorkPsi("");
@@ -576,10 +597,10 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhSevereDent(false); setPhExcessCorrosion(false); setPhBaseCorrosion(false);
     setPhVolInitial(""); setPhVolTransient(""); setPhVolPermanent(""); setPhExpansionPct("");
     setPhHasDeformation(false); setPhHasPressureLoss(false);
-    setPhReviewedBy(""); setPhNextTestDate("");
+    setPhReviewedBy(""); setPhNextTestDate(""); setPhSaving(false);
   };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManHoseType("Manguera SCI"); setManDiameter('1.5"'); setManSerial(""); setManMfgDate(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); };
-  const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManHoseType("Manguera SCI"); setManDiameter('1.5"'); setManSerial(""); setManMfgMonth(""); setManMfgYear(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); setManSaving(false); };
+  const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); setBitSaving(false); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
   const TIPO_FILTERS: { key: string; label: string }[] = [
@@ -1231,8 +1252,11 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <UpperInput style={s.textInput} value={manSerial} onChangeText={setManSerial} placeholder="Ej. MAN-001" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <FieldLabel>Fecha de fabricación</FieldLabel>
-                  <UpperInput style={s.textInput} value={manMfgDate} onChangeText={setManMfgDate} placeholder="AAAA-MM-DD" placeholderTextColor="#9BACC8" keyboardType="numeric" />
+                  <FieldLabel>Fab. Mes / Año</FieldLabel>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <UpperInput style={[s.textInput, { flex: 1 }]} value={manMfgMonth} onChangeText={v => setManMfgMonth(v.replace(/\D/g, "").slice(0, 2))} placeholder="MM" placeholderTextColor="#9BACC8" keyboardType="numeric" maxLength={2} />
+                    <UpperInput style={[s.textInput, { flex: 2 }]} value={manMfgYear} onChangeText={v => setManMfgYear(v.replace(/\D/g, "").slice(0, 4))} placeholder="AAAA" placeholderTextColor="#9BACC8" keyboardType="numeric" maxLength={4} />
+                  </View>
                 </View>
               </View>
 
