@@ -211,6 +211,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [manLength, setManLength]         = useState("");
   const [manPressure, setManPressure]     = useState("120");
   const [manResult, setManResult]         = useState<"PASS"|"FAIL">("PASS");
+  const [manOrderNumber, setManOrderNumber] = useState("");
   const [manObs, setManObs]               = useState("");
   const [manBy, setManBy]                 = useState(userName);
   const [manSaving, setManSaving]         = useState(false);
@@ -393,6 +394,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     try {
       const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/mangueras`, {
         equipment_id: manEq?.id, equipment_code: manCode || undefined,
+        order_number: manOrderNumber || undefined,
         client_id: manClientId || undefined,
         hose_type: manHoseType || "Manguera SCI",
         hose_diameter_in: manDiameter, hose_length_m: Number(manLength),
@@ -599,7 +601,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhHasDeformation(false); setPhHasPressureLoss(false);
     setPhReviewedBy(""); setPhNextTestDate(""); setPhSaving(false);
   };
-  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManHoseType("Manguera SCI"); setManDiameter('1.5"'); setManSerial(""); setManMfgMonth(""); setManMfgYear(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); setManSaving(false); };
+  const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManOrderNumber(""); setManHoseType("Manguera SCI"); setManDiameter('1.5"'); setManSerial(""); setManMfgMonth(""); setManMfgYear(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); setManSaving(false); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); setBitSaving(false); };
 
   const FILTERS = ["all","abierta","en_proceso","cerrada"];
@@ -670,6 +672,10 @@ export default function TallerScreen({ navigation, route }: Props) {
         <TouchableOpacity style={[s.quickBtn, { borderColor: "#0891B244", backgroundColor: "#0891B20A" }]} onPress={() => { resetMAN(); setShowMAN(true); }}>
           <Text style={{ fontSize: 18 }}>🌊</Text>
           <Text style={[s.quickTxt, { color: "#0891B2" }]}>Manguera</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.quickBtn, { borderColor: "#CE0D0D44", backgroundColor: "#CE0D0D0A" }]} onPress={() => navigation.navigate("SciService", { inspectorId, userName })}>
+          <Text style={{ fontSize: 18 }}>🔥</Text>
+          <Text style={[s.quickTxt, { color: "#CE0D0D" }]}>Sist. SCI</Text>
         </TouchableOpacity>
       </View>
 
@@ -1285,6 +1291,8 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <Text style={{ fontWeight: "800", color: manResult === "FAIL" ? "#fff" : "#DC2626" }}>✗ RECHAZADA</Text>
                 </TouchableOpacity>
               </View>
+              <FieldLabel style={{ marginTop: 12 }}>No. Bitácora / Orden</FieldLabel>
+              <UpperInput style={s.textInput} value={manOrderNumber} onChangeText={setManOrderNumber} placeholder="Ej. OT-2026-0045" placeholderTextColor="#9BACC8" />
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
               <UpperInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
