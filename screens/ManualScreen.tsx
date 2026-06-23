@@ -133,9 +133,11 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Toca el botón 'Manguera' en la fila de accesos rápidos (parte superior).",
           "Escanea el código QR de la manguera o ingrésalo manualmente.",
-          "Selecciona diámetro, ingresa longitud y presión de prueba.",
+          "Selecciona tipo, diámetro, ingresa longitud y presión de prueba.",
+          "Fecha de fabricación: ingresa Mes (MM) y Año (AAAA) en los dos campos separados.",
           "Fotos de evidencia: toca 📷 Cámara o 🖼 Galería para agregar hasta 15 fotos.",
           "Al guardar se genera un folio MAN-YYYY-NNNN y las fotos quedan en el certificado de la plataforma.",
+          "Si aparece '⚠️ Posible error de red', verifica el historial antes de volver a guardar — el reporte pudo haberse enviado.",
         ],
       },
       {
