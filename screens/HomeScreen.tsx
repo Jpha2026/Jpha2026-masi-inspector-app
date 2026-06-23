@@ -291,7 +291,7 @@ export default function HomeScreen({ navigation, route }: Props) {
         </LinearGradient>
       </View>
 
-      {/* Action buttons — 2 columns so caben todos en pantalla */}
+      {/* Action buttons — 2 columns */}
       <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, marginTop: 6, gap: 8 }}>
         {[
           {
@@ -326,6 +326,22 @@ export default function HomeScreen({ navigation, route }: Props) {
             sub: "Órdenes asignadas",
             onPress: () => navigation.navigate("Taller", { inspectorId, userName: inspector?.name ?? "" }),
           },
+          {
+            colors: ["#CE0D0D", "#991B1B"] as const,
+            shadow: "#CE0D0D",
+            icon: "🔥",
+            title: "Sistemas SCI",
+            sub: "Servicio / mantenimiento",
+            onPress: () => navigation.navigate("SciService", { inspectorId, userName: inspector?.name ?? "" }),
+          },
+          {
+            colors: ["#5B21B6", "#7C3AED"] as const,
+            shadow: "#7C3AED",
+            icon: "🔗",
+            title: "Línea de Vida",
+            sub: "Inspección de arnés y anclaje",
+            onPress: () => navigation.navigate("FieldChecklist", { inspectorId, userName: inspector?.name ?? "", type: "linea_vida", typeLabel: "Línea de Vida", typeIcon: "🔗" }),
+          },
         ].map((btn) => (
           <TouchableOpacity
             key={btn.title}
@@ -345,37 +361,83 @@ export default function HomeScreen({ navigation, route }: Props) {
         ))}
       </View>
 
-      {/* Inspecciones de campo */}
-      <Text style={{ fontSize: 12, fontWeight: "700", color: T.textSub, letterSpacing: 0.5, textTransform: "uppercase", marginHorizontal: 16, marginTop: 16, marginBottom: 6 }}>
-        Inspecciones de campo
+      {/* Equipos de seguridad — pills */}
+      <Text style={{ fontSize: 11, fontWeight: "700", color: T.textSub, letterSpacing: 0.5, textTransform: "uppercase", marginHorizontal: 16, marginTop: 14, marginBottom: 5 }}>
+        Equipos de seguridad
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 6 }}>
+          {([
+            { type: "era",               label: "ERA",         icon: "🫁",  color: "#059669" },
+            { type: "equipo_bombero",     label: "Bombero",     icon: "👨‍🚒", color: "#DC2626" },
+            { type: "hidrante",           label: "Hidrante",    icon: "💧",  color: "#0284C7" },
+            { type: "lampara_emergencia", label: "Lámpara",     icon: "💡",  color: "#D97706" },
+            { type: "puerta_emergencia",  label: "Puerta Em.",  icon: "🚪",  color: "#6B7280" },
+            { type: "kit_derrame",        label: "Kit Derrame", icon: "🧰",  color: "#B45309" },
+            { type: "silla_ruedas",       label: "Silla R.",    icon: "♿",  color: "#2563EB" },
+            { type: "camilla",            label: "Camilla",     icon: "🚑",  color: "#BE185D" },
+            { type: "otro",               label: "Otro",        icon: "🔧",  color: "#475569" },
+          ] as const).map(({ type, label, icon, color }) => (
+            <TouchableOpacity key={type}
+              onPress={() => navigation.navigate("FieldChecklist", { inspectorId, userName: inspector?.name ?? "", type, typeLabel: label, typeIcon: icon })}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: T.card, borderWidth: 1.5, borderColor: `${color}44`, elevation: 1 }}
+            >
+              <Text style={{ fontSize: 14 }}>{icon}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "700", color }}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Sistemas SCI / NFPA — pills */}
+      <Text style={{ fontSize: 11, fontWeight: "700", color: T.textSub, letterSpacing: 0.5, textTransform: "uppercase", marginHorizontal: 16, marginTop: 10, marginBottom: 5 }}>
+        Inspección SCI (NFPA)
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 6 }}>
+          {([
+            { type: "co2_nfpa12",              label: "CO₂ NFPA 12",     icon: "🔵", color: "#1E40AF" },
+            { type: "rociadores_nfpa13",        label: "Rociadores",       icon: "💦", color: "#0891B2" },
+            { type: "espuma_nfpa16",            label: "Espuma AFFF",      icon: "🧪", color: "#065F46" },
+            { type: "bomba_ci_nfpa20",          label: "Bomba CI",         icon: "⚙️", color: "#374151" },
+            { type: "alarma_nfpa72",            label: "Alarma",           icon: "🔔", color: "#B45309" },
+            { type: "supresion_cocinas_nfpa96", label: "Sup. Cocinas",     icon: "🍳", color: "#92400E" },
+            { type: "agente_limpio_nfpa2001",   label: "Agente Limpio",    icon: "🌬️", color: "#4B5563" },
+            { type: "sistema_incendio",         label: "SCI General",      icon: "🔴", color: "#CE0D0D" },
+          ] as const).map(({ type, label, icon, color }) => (
+            <TouchableOpacity key={type}
+              onPress={() => navigation.navigate("FieldChecklist", { inspectorId, userName: inspector?.name ?? "", type, typeLabel: label, typeIcon: icon })}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: T.card, borderWidth: 1.5, borderColor: `${color}44`, elevation: 1 }}
+            >
+              <Text style={{ fontSize: 14 }}>{icon}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "700", color }}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Regaderas y Lavaojos — pills */}
+      <Text style={{ fontSize: 11, fontWeight: "700", color: T.textSub, letterSpacing: 0.5, textTransform: "uppercase", marginHorizontal: 16, marginTop: 10, marginBottom: 5 }}>
+        Regaderas y Lavaojos
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 8 }}>
           {([
-            { type: "era",               label: "ERA",         icon: "🫁",  color: "#059669", nav: "FieldChecklist" as const },
-            { type: "equipo_bombero",     label: "Bombero",     icon: "👨‍🚒", color: "#DC2626", nav: "FieldChecklist" as const },
-            { type: "linea_vida",         label: "Línea Vida",  icon: "🔗",  color: "#7C3AED", nav: "FieldChecklist" as const },
-            { type: "regadera fija",      label: "Regadera",    icon: "🚿",  color: "#0891B2", nav: "FieldChecklist" as const },
-            { type: "lampara_emergencia", label: "Lámpara",     icon: "💡",  color: "#D97706", nav: "FieldChecklist" as const },
-            { type: "puerta_emergencia",  label: "Puerta Em.",  icon: "🚪",  color: "#6B7280", nav: "FieldChecklist" as const },
-            { type: "kit_derrame",        label: "Kit Derrame", icon: "🧰",  color: "#B45309", nav: "FieldChecklist" as const },
-            { type: "silla_ruedas",       label: "Silla R.",    icon: "♿",  color: "#2563EB", nav: "FieldChecklist" as const },
-            { type: "camilla",            label: "Camilla",     icon: "🚑",  color: "#BE185D", nav: "FieldChecklist" as const },
-            { type: "hidrante",           label: "Hidrante",    icon: "🌊",  color: "#0284C7", nav: "FieldChecklist" as const },
-            { type: "sci",                label: "Sist. SCI",   icon: "🔥",  color: "#CE0D0D", nav: "SciService" as const },
-          ]).map(({ type, label, icon, color, nav }) => (
-            <TouchableOpacity
-              key={type}
-              onPress={() => {
-                if (nav === "SciService") {
-                  navigation.navigate("SciService", { inspectorId, userName: inspector?.name ?? "" });
-                } else {
-                  navigation.navigate("FieldChecklist", { inspectorId, userName: inspector?.name ?? "", type, typeLabel: label, typeIcon: icon });
-                }
-              }}
+            { type: "regadera fija",                      label: "Reg. Fija",           icon: "🚿", color: "#0891B2" },
+            { type: "regadera portatil gravedad",         label: "Reg. Portátil Grav.", icon: "🚿", color: "#0369A1" },
+            { type: "regadera portatil presion",          label: "Reg. Portátil Pres.", icon: "🚿", color: "#075985" },
+            { type: "lavaojos fijo",                      label: "Lavaojos Fijo",       icon: "👁️", color: "#0284C7" },
+            { type: "lavaojos portatil gravedad",         label: "Lavaojos Grav.",      icon: "👁️", color: "#0369A1" },
+            { type: "lavaojos portatil presion",          label: "Lavaojos Pres.",      icon: "👁️", color: "#075985" },
+            { type: "regadera lavaojos fija",             label: "Reg+Lavaojos Fija",  icon: "🚿", color: "#065F46" },
+            { type: "regadera lavaojos portatil gravedad",label: "Reg+Lavaojos Grav.", icon: "🚿", color: "#047857" },
+            { type: "regadera lavaojos portatil presion", label: "Reg+Lavaojos Pres.", icon: "🚿", color: "#065F46" },
+          ] as const).map(({ type, label, icon, color }) => (
+            <TouchableOpacity key={type}
+              onPress={() => navigation.navigate("FieldChecklist", { inspectorId, userName: inspector?.name ?? "", type, typeLabel: label, typeIcon: icon })}
               style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: T.card, borderWidth: 1.5, borderColor: `${color}44`, elevation: 1 }}
             >
-              <Text style={{ fontSize: 15 }}>{icon}</Text>
+              <Text style={{ fontSize: 14 }}>{icon}</Text>
               <Text style={{ fontSize: 12, fontWeight: "700", color }}>{label}</Text>
             </TouchableOpacity>
           ))}
