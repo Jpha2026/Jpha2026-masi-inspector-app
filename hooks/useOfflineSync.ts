@@ -5,6 +5,8 @@ import NetInfo from "@react-native-community/netinfo";
 import axios from "axios";
 import { API_URL } from "../constants/api";
 
+const TOKEN_KEY = "masi_token";
+
 // Legacy type kept for backward compat
 export type PendingInspection = {
   id: string;
@@ -118,6 +120,10 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
   let synced = 0;
   const remaining: QueuedRequest[] = [];
 
+  // Read auth token explicitly to avoid race with global axios header
+  const authToken = await SecureStore.getItemAsync(TOKEN_KEY).catch(() => null);
+  const authHeader = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
   // Process legacy inspection queue
   const legRaw = await AsyncStorage.getItem(LEGACY_KEY);
   let legFailed = 0;
@@ -129,7 +135,7 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
     for (const item of legQueue) {
       if (legAuthFailed) { legRemaining.push(item); continue; }
       try {
-        await axios.post(`${API_URL}/inspections`, item.payload, { timeout: 12000 });
+        await axios.post(`${API_URL}/inspections`, item.payload, { timeout: 12000, headers: authHeader });
         synced++;
       } catch (e) {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
@@ -143,7 +149,11 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
       }
     }
     legFailed = legRemaining.length;
-    await AsyncStorage.setItem(LEGACY_KEY, JSON.stringify(legRemaining));
+    if (legRemaining.length === 0) {
+      await AsyncStorage.removeItem(LEGACY_KEY);
+    } else {
+      await AsyncStorage.setItem(LEGACY_KEY, JSON.stringify(legRemaining));
+    }
   }
 
   // Process generic queue
@@ -153,9 +163,9 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
     if (authFailed) { remaining.push(req); continue; }
     try {
       if (req.method === "POST") {
-        await axios.post(req.url, req.data, { timeout: 12000 });
+        await axios.post(req.url, req.data, { timeout: 12000, headers: authHeader });
       } else {
-        await axios.patch(req.url, req.data, { timeout: 12000 });
+        await axios.patch(req.url, req.data, { timeout: 12000, headers: authHeader });
       }
       synced++;
     } catch (e) {

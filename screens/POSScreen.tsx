@@ -88,9 +88,9 @@ export default function POSScreen({ navigation, route }: Props) {
             setFolio(res.data.folio || "");
             setItems([]);
             setClientName("");
+            setSaving(false);
           } catch {
             Alert.alert("Error", "No se pudo procesar la venta.");
-          } finally {
             setSaving(false);
           }
         }

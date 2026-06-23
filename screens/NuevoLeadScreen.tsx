@@ -53,9 +53,9 @@ export default function NuevoLeadScreen({ navigation, route }: Props) {
       });
       setSavedFolio(res.data.folio || "");
       setSaved(true);
+      setSaving(false);
     } catch {
       Alert.alert("Error", "No se pudo guardar el lead. Intenta de nuevo.");
-    } finally {
       setSaving(false);
     }
   };
