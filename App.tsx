@@ -20,6 +20,7 @@ import MisSolicitudesScreen from "./screens/MisSolicitudesScreen";
 import NuevaSolicitudScreen from "./screens/NuevaSolicitudScreen";
 import TallerScreen from "./screens/TallerScreen";
 import SciServiceScreen from "./screens/SciServiceScreen";
+import FieldChecklistScreen from "./screens/FieldChecklistScreen";
 import RouteScreen from "./screens/RouteScreen";
 import ChatScreen from "./screens/ChatScreen";
 import PedidoScreen from "./screens/PedidoScreen";
@@ -260,6 +261,7 @@ export default function App() {
             }
           />
           <Stack.Screen name="SciService" component={SciServiceScreen} />
+          <Stack.Screen name="FieldChecklist" component={FieldChecklistScreen} />
           <Stack.Screen name="Route" component={RouteScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="NuevoLead" component={NuevoLeadScreen} />

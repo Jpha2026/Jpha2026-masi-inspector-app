@@ -209,6 +209,7 @@ export type RootStackParamList = {
   Asistencia: { user: AppUser };
   Taller: { inspectorId: string; userName: string };
   SciService: { inspectorId: string; userName: string };
+  FieldChecklist: { inspectorId: string; userName: string; type: string; typeLabel: string; typeIcon: string };
   Route: { inspectorId: string; ruta: Ruta };
   Chat: { userEmail: string; userName: string };
   ClienteHome: { user: AppUser };

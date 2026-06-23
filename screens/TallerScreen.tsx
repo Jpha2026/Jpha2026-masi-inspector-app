@@ -679,6 +679,31 @@ export default function TallerScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </View>
 
+      {/* Inspecciones de campo */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: "#F8F9FC", borderBottomWidth: 1, borderBottomColor: "#E2E8F0" }}>
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}>
+          {([
+            { type: "era",               label: "ERA",         icon: "🫁", color: "#059669" },
+            { type: "equipo_bombero",     label: "Bombero",     icon: "👨‍🚒", color: "#DC2626" },
+            { type: "linea_vida",         label: "Línea Vida",  icon: "🔗", color: "#7C3AED" },
+            { type: "regadera fija",      label: "Regadera",    icon: "🚿", color: "#0891B2" },
+            { type: "lampara_emergencia", label: "Lámpara",     icon: "💡", color: "#D97706" },
+            { type: "puerta_emergencia",  label: "Puerta Em.",  icon: "🚪", color: "#6B7280" },
+            { type: "kit_derrame",        label: "Kit Derrame", icon: "🧰", color: "#B45309" },
+            { type: "silla_ruedas",       label: "Silla R.",    icon: "♿", color: "#2563EB" },
+            { type: "camilla",            label: "Camilla",     icon: "🚑", color: "#BE185D" },
+            { type: "hidrante",           label: "Hidrante",    icon: "🌊", color: "#0284C7" },
+          ] as const).map(({ type, label, icon, color }) => (
+            <TouchableOpacity key={type}
+              onPress={() => navigation.navigate("FieldChecklist", { inspectorId, userName, type, typeLabel: label, typeIcon: icon })}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: "#fff", borderWidth: 1.5, borderColor: `${color}44` }}>
+              <Text style={{ fontSize: 15 }}>{icon}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "700", color }}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
       {/* Filter tabs — row 1: status + sort */}
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[s.filterBar, { flex: 1 }]}>
