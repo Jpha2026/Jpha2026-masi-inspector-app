@@ -138,7 +138,7 @@ export default function PrestamosScreen({ navigation, route }: Props) {
                     )}
                     <Row label="Frecuencia de pago" value={FREQ_LABEL[p.frecuencia] ?? p.frecuencia} />
                     <Row label="Número de cuotas" value={String(p.cuotas)} />
-                    <Row label="Fecha de solicitud" value={p.created_at.slice(0, 10)} />
+                    <Row label="Fecha de solicitud" value={p.created_at?.slice(0, 10) ?? "—"} />
                     {p.notas ? <Row label="Notas" value={p.notas} /> : null}
                   </View>
                 )}

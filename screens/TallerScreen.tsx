@@ -243,7 +243,7 @@ export default function TallerScreen({ navigation, route }: Props) {
       { text: "Cancelar", style: "cancel" },
       { text: "Salir", style: "destructive", onPress: async () => {
         try { await axios.post(`${API_URL}/mobile/logout`); } catch {}
-        axios.defaults.headers.common["Authorization"] = undefined;
+        delete (axios.defaults.headers.common as Record<string, unknown>)["Authorization"];
         await SecureStore.deleteItemAsync("masi_token");
         await SecureStore.deleteItemAsync("masi_user");
         await SecureStore.deleteItemAsync("masi_active_jornada");
@@ -540,7 +540,7 @@ export default function TallerScreen({ navigation, route }: Props) {
         client_id: bitClientId || undefined,
         tipo: "Recarga de extintor",
         description: summaryLine + tecnicoLine + noteLine + photoLine,
-        priority: "normal",
+        priority: "media",
         items,
       });
       Alert.alert("📋 Bitácora enviada al taller", `Folio: ${res.data?.folio}`, [
