@@ -181,9 +181,10 @@ export default function SciServiceScreen({ navigation, route }: Props) {
   const computeResult = (): "ok" | "requires_attention" | "critical" => {
     const fails = checkItems.filter(i => i.result === "falla");
     if (fails.length === 0) return "ok";
-    // Critical if any critical category item fails
-    const criticalCat = categories.find(c => c.hasCritical)?.label;
-    const hasCriticalFail = fails.some(i => i.category === criticalCat);
+    const hasCriticalFail = fails.some(i => {
+      const cat = categories.find(c => c.label === i.category);
+      return cat?.hasCritical ?? false;
+    });
     return hasCriticalFail ? "critical" : "requires_attention";
   };
 
