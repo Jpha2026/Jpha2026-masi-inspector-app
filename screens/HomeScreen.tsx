@@ -345,6 +345,43 @@ export default function HomeScreen({ navigation, route }: Props) {
         ))}
       </View>
 
+      {/* Inspecciones de campo */}
+      <Text style={{ fontSize: 12, fontWeight: "700", color: T.textSub, letterSpacing: 0.5, textTransform: "uppercase", marginHorizontal: 16, marginTop: 16, marginBottom: 6 }}>
+        Inspecciones de campo
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 8 }}>
+          {([
+            { type: "era",               label: "ERA",         icon: "🫁",  color: "#059669", nav: "FieldChecklist" as const },
+            { type: "equipo_bombero",     label: "Bombero",     icon: "👨‍🚒", color: "#DC2626", nav: "FieldChecklist" as const },
+            { type: "linea_vida",         label: "Línea Vida",  icon: "🔗",  color: "#7C3AED", nav: "FieldChecklist" as const },
+            { type: "regadera fija",      label: "Regadera",    icon: "🚿",  color: "#0891B2", nav: "FieldChecklist" as const },
+            { type: "lampara_emergencia", label: "Lámpara",     icon: "💡",  color: "#D97706", nav: "FieldChecklist" as const },
+            { type: "puerta_emergencia",  label: "Puerta Em.",  icon: "🚪",  color: "#6B7280", nav: "FieldChecklist" as const },
+            { type: "kit_derrame",        label: "Kit Derrame", icon: "🧰",  color: "#B45309", nav: "FieldChecklist" as const },
+            { type: "silla_ruedas",       label: "Silla R.",    icon: "♿",  color: "#2563EB", nav: "FieldChecklist" as const },
+            { type: "camilla",            label: "Camilla",     icon: "🚑",  color: "#BE185D", nav: "FieldChecklist" as const },
+            { type: "hidrante",           label: "Hidrante",    icon: "🌊",  color: "#0284C7", nav: "FieldChecklist" as const },
+            { type: "sci",                label: "Sist. SCI",   icon: "🔥",  color: "#CE0D0D", nav: "SciService" as const },
+          ]).map(({ type, label, icon, color, nav }) => (
+            <TouchableOpacity
+              key={type}
+              onPress={() => {
+                if (nav === "SciService") {
+                  navigation.navigate("SciService", { inspectorId, userName: inspector?.name ?? "" });
+                } else {
+                  navigation.navigate("FieldChecklist", { inspectorId, userName: inspector?.name ?? "", type, typeLabel: label, typeIcon: icon });
+                }
+              }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: T.card, borderWidth: 1.5, borderColor: `${color}44`, elevation: 1 }}
+            >
+              <Text style={{ fontSize: 15 }}>{icon}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "700", color }}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
       {/* Rutas asignadas */}
       {rutas.length > 0 && (
         <>
