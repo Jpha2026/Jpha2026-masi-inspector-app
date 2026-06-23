@@ -633,9 +633,7 @@ export default function TallerScreen({ navigation, route }: Props) {
           <Text style={s.navTitle}>🔧 Taller</Text>
           {!!userName && <Text style={s.navSub}>{userName}</Text>}
         </View>
-        <TouchableOpacity style={s.newOtBtn} onPress={() => { resetOT(); setShowOT(true); }}>
-          <Text style={s.newOtText}>+ OT</Text>
-        </TouchableOpacity>
+        <View style={{ width: 60 }} />
       </LinearGradient>
 
       {/* Quick action row */}
