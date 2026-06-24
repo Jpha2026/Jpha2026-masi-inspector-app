@@ -71,9 +71,11 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [active]);
 
-  // Periodic GPS update while jornada is active (every 5 min)
+  // Periodic GPS update while jornada is active (every 2 min)
   useEffect(() => {
     if (!active) return;
+    // Skip location sync for offline-created jornadas (ID starts with j_) — server doesn't know them yet
+    if (active.id.startsWith("j_")) return;
     const sendLocation = async () => {
       const loc = locationRef.current;
       if (!loc) return;
@@ -83,7 +85,7 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
         lat: loc.lat,
         lng: loc.lng,
       }, "jornada_location");
-      // If server says jornada was closed externally (e.g. from web platform), clear local state
+      // Only clear local state if server explicitly says jornada was closed from web platform
       if (res && typeof res === "object" && (res as { closed?: boolean }).closed === true) {
         await SecureStore.deleteItemAsync(JORNADA_KEY);
         setActive(null);
