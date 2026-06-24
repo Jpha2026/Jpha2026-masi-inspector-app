@@ -89,9 +89,9 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
         setActive(null);
       }
     };
-    // Send immediately when jornada starts, then every 5 min
+    // Send immediately when jornada starts, then every 2 min
     sendLocation();
-    const id = setInterval(sendLocation, 5 * 60 * 1000);
+    const id = setInterval(sendLocation, 2 * 60 * 1000);
     return () => clearInterval(id);
   }, [active?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -111,13 +111,16 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
       gpsLng = locationRef.current.lng;
     } else {
       try {
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-          timeInterval: 0,
-          distanceInterval: 0,
-        });
-        gpsLat = pos.coords.latitude;
-        gpsLng = pos.coords.longitude;
+        // Try cached position first (instant), then fast network-based fix
+        const last = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60 * 1000 });
+        if (last) {
+          gpsLat = last.coords.latitude;
+          gpsLng = last.coords.longitude;
+        } else {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+          gpsLat = pos.coords.latitude;
+          gpsLng = pos.coords.longitude;
+        }
       } catch {
         throw new JornadaError("GPS_NOT_AVAILABLE");
       }

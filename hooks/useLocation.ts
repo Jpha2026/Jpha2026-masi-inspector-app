@@ -15,13 +15,13 @@ export function useLocation() {
       if (status !== "granted") return;
       setGranted(true);
 
-      // Get initial position quickly
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy ?? undefined });
+      // Use last known position immediately (instant, no GPS wait)
+      const last = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60 * 1000 });
+      if (last) setLocation({ lat: last.coords.latitude, lng: last.coords.longitude, accuracy: last.coords.accuracy ?? undefined });
 
-      // Watch for updates
+      // Watch for updates using network/WiFi first (Accuracy.Low = fast, ~1-2s)
       sub = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.Balanced, timeInterval: 30000, distanceInterval: 50 },
+        { accuracy: Location.Accuracy.Low, timeInterval: 30000, distanceInterval: 50 },
         (pos) => {
           setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy ?? undefined });
         }
