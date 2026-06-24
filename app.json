@@ -2,7 +2,7 @@
   "expo": {
     "name": "MASI",
     "slug": "masi-inspector-app",
-    "version": "1.2.26",
+    "version": "1.2.27",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -28,7 +28,7 @@
         "backgroundColor": "#122B60"
       },
       "package": "com.masi.inspector",
-      "versionCode": 34,
+      "versionCode": 35,
       "usesCleartextTraffic": false,
       "permissions": [
         "CAMERA",
@@ -57,7 +57,8 @@
           "cameraPermission": "Se necesita la cámara para tomar fotos de evidencia."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "./app.plugin.js"
     ],
     "extra": {
       "eas": {
