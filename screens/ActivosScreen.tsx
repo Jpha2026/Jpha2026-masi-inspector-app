@@ -7,6 +7,7 @@ import {
 import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -135,6 +136,7 @@ export default function ActivosScreen({ navigation, route }: Props) {
           headers: { "Content-Type": "multipart/form-data" },
         });
         if (r.data?.url) urls.push(r.data.url);
+        FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
       } catch { /* skip failed photo */ }
     }
     return urls;

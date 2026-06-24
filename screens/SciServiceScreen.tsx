@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { RootStackParamList, Cliente } from "../types";
@@ -176,6 +177,7 @@ export default function SciServiceScreen({ navigation, route }: Props) {
       headers: { "Content-Type": "multipart/form-data", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       timeout: 30000,
     });
+    FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
   };
 
   const computeResult = (): "ok" | "requires_attention" | "critical" => {
