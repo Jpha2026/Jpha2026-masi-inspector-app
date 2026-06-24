@@ -95,7 +95,7 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
           : "No se pudo registrar. Intenta de nuevo."
       );
     } catch {
-      Alert.alert("Error", "No se pudo registrar. Intenta de nuevo.");
+      Alert.alert("Error", "No se pudo verificar el registro. Revisa tu conexión.");
     } finally {
       setPosting(false);
     }
