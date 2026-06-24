@@ -19,6 +19,11 @@ function withNetworkSecurityXml(config) {
         "app/src/main/res/xml"
       );
       fs.mkdirSync(xmlDir, { recursive: true });
+      // TODO(security): Re-enable cert pinning once SPKI hashes are computed from a
+      // clean environment WITHOUT ESET SSL interception. The pins in v1.2.27/1.2.28
+      // encoded ESET's CA cert (not Let's Encrypt/ISRG Root X1), blocking all logins.
+      // Steps: use a Linux/Mac without SSL proxy, or run openssl from an Android device.
+      // Never compute hashes from the Windows dev machine (ESET intercepts TLS at OS level).
       fs.writeFileSync(
         path.join(xmlDir, "network_security_config.xml"),
         `<?xml version="1.0" encoding="utf-8"?>

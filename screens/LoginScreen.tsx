@@ -11,6 +11,7 @@ import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
+import Constants from "expo-constants";
 import { useTheme } from "../hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -558,7 +559,7 @@ export default function LoginScreen({ navigation }: Props) {
           <Animated.View style={[s.footer, { opacity: fadeAnim }]}>
             <Text style={s.footerLine}>Multiservicios y Artículos de Seguridad Industrial</Text>
             <Text style={s.footerLine}>RFC MAS900706QH1 · Monterrey, N.L.</Text>
-            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v1.2.28</Text>
+            <Text style={[s.footerLine, { marginTop: 6, color: "rgba(255,255,255,0.15)" }]}>v{Constants.expoConfig?.version ?? "?"}</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>

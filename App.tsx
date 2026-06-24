@@ -47,6 +47,7 @@ axios.defaults.timeout = 15000;
 const ALLOWED_HOST = new URL(API_URL).hostname;
 axios.interceptors.request.use((config) => {
   const url = config.url ?? "";
+  if (url.startsWith("//")) return Promise.reject(new Error("Protocol-relative URLs not allowed"));
   const isAbsolute = url.startsWith("http://") || url.startsWith("https://");
   if (isAbsolute) {
     const host = new URL(url).hostname;

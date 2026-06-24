@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
+import Constants from "expo-constants";
 import { useTheme } from "../hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -127,7 +128,7 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Problemas técnicos: escribe al chat de la app o llama a soporte.",
           "Para resetear contraseña o permisos: contacta al administrador.",
-          "Versión actual: 1.2.28 (versionCode 36). Asegúrate de tener la APK más reciente instalada.",
+          `Versión actual: ${Constants.expoConfig?.version ?? "?"}. Asegúrate de tener la APK más reciente instalada.`,
           "Al cerrar sesión, las inspecciones y jornadas pendientes se limpian del dispositivo. Asegúrate de sincronizar antes de salir.",
         ],
       },

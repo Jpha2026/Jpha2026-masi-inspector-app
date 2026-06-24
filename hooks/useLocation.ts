@@ -15,9 +15,11 @@ export function useLocation() {
       if (status !== "granted") return;
       setGranted(true);
 
-      // Use last known position immediately (instant, no GPS wait)
+      // Use last known position immediately only if reasonably accurate
       const last = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60 * 1000 });
-      if (last) setLocation({ lat: last.coords.latitude, lng: last.coords.longitude, accuracy: last.coords.accuracy ?? undefined });
+      if (last && (last.coords.accuracy === null || last.coords.accuracy < 300)) {
+        setLocation({ lat: last.coords.latitude, lng: last.coords.longitude, accuracy: last.coords.accuracy ?? undefined });
+      }
 
       // Watch for updates using network/WiFi first (Accuracy.Low = fast, ~1-2s)
       sub = await Location.watchPositionAsync(

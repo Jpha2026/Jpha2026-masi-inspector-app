@@ -111,9 +111,9 @@ export function useJornada(inspectorId: string, location: GeoPoint | null) {
       gpsLng = locationRef.current.lng;
     } else {
       try {
-        // Try cached position first (instant), then fast network-based fix
+        // Try cached position first (instant) — skip if too inaccurate (e.g. WiFi with 500m error)
         const last = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60 * 1000 });
-        if (last) {
+        if (last && (last.coords.accuracy === null || last.coords.accuracy < 300)) {
           gpsLat = last.coords.latitude;
           gpsLng = last.coords.longitude;
         } else {
