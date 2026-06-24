@@ -43,6 +43,19 @@ import { API_URL } from "./constants/api";
 
 axios.defaults.timeout = 15000;
 
+// Block requests to unexpected hosts — defense against MITM/redirect attacks
+const ALLOWED_HOST = new URL(API_URL).hostname;
+axios.interceptors.request.use((config) => {
+  const url = config.url ?? "";
+  const isAbsolute = url.startsWith("http://") || url.startsWith("https://");
+  if (isAbsolute) {
+    const host = new URL(url).hostname;
+    if (host !== ALLOWED_HOST) return Promise.reject(new Error(`Blocked request to unexpected host: ${host}`));
+    if (!url.startsWith("https://")) return Promise.reject(new Error("HTTP not allowed"));
+  }
+  return config;
+});
+
 axios.interceptors.response.use(
   (r) => r,
   async (error) => {

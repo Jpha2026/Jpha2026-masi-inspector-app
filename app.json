@@ -29,6 +29,7 @@
       },
       "package": "com.masi.inspector",
       "versionCode": 34,
+      "usesCleartextTraffic": false,
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
