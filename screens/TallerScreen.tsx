@@ -673,10 +673,6 @@ export default function TallerScreen({ navigation, route }: Props) {
           <Text style={{ fontSize: 18 }}>🌊</Text>
           <Text style={[s.quickTxt, { color: "#0891B2" }]}>Manguera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.quickBtn, { borderColor: "#CE0D0D44", backgroundColor: "#CE0D0D0A" }]} onPress={() => navigation.navigate("SciService", { inspectorId, userName })}>
-          <Text style={{ fontSize: 18 }}>🔥</Text>
-          <Text style={[s.quickTxt, { color: "#CE0D0D" }]}>Sist. SCI</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Filter tabs — row 1: status + sort */}
