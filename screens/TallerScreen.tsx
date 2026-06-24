@@ -86,7 +86,7 @@ function ClientSelector({
         onChangeText={t => { setQ(t); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder="Buscar o escribir cliente..."
-        placeholderTextColor="#9BACC8"
+        placeholderTextColor="#6B7CA3"
         style={{ backgroundColor: "#F0F4FB", borderRadius: 10, borderWidth: 1.5, borderColor: open ? "#3B82F6" : "#D5DCF0", paddingHorizontal: 14, paddingVertical: 11, fontSize: 13, color: "#1A2740" }}
         autoCapitalize="characters"
       />
@@ -198,6 +198,7 @@ export default function TallerScreen({ navigation, route }: Props) {
   const [phModel, setPhModel]                   = useState("");
   const [phReviewedBy, setPhReviewedBy]         = useState("");
   const [phNextTestDate, setPhNextTestDate]     = useState("");
+  const [phOrderNumber, setPhOrderNumber]       = useState("");
 
   // Manguera Test modal
   const [showMAN, setShowMAN]             = useState(false);
@@ -249,6 +250,8 @@ export default function TallerScreen({ navigation, route }: Props) {
         await SecureStore.deleteItemAsync("masi_token");
         await SecureStore.deleteItemAsync("masi_user");
         await SecureStore.deleteItemAsync("masi_active_jornada");
+        await SecureStore.deleteItemAsync("inspector_id");
+        await SecureStore.deleteItemAsync("inspector_name");
         navigation.replace("Login");
       }},
     ]);
@@ -360,6 +363,7 @@ export default function TallerScreen({ navigation, route }: Props) {
         tested_by: phBy,
         reviewed_by: phReviewedBy || undefined,
         next_test_date: phNextTestDate || undefined,
+        order_number: phOrderNumber || undefined,
       });
       if (r.data.id && phPhotos.length > 0) {
         for (const uri of phPhotos) {
@@ -599,7 +603,7 @@ export default function TallerScreen({ navigation, route }: Props) {
     setPhSevereDent(false); setPhExcessCorrosion(false); setPhBaseCorrosion(false);
     setPhVolInitial(""); setPhVolTransient(""); setPhVolPermanent(""); setPhExpansionPct("");
     setPhHasDeformation(false); setPhHasPressureLoss(false);
-    setPhReviewedBy(""); setPhNextTestDate(""); setPhSaving(false);
+    setPhReviewedBy(""); setPhNextTestDate(""); setPhOrderNumber(""); setPhSaving(false);
   };
   const resetMAN = () => { setManEq(null); setManCode(""); setManClientId(""); setManOrderNumber(""); setManHoseType("Manguera SCI"); setManDiameter('1.5"'); setManSerial(""); setManMfgMonth(""); setManMfgYear(""); setManLength(""); setManPressure("120"); setManResult("PASS"); setManObs(""); setManBy(userName); setManPhotos([]); setManSaving(false); };
   const resetBit = () => { setBitClientId(""); setBitItems([]); setBitNotes(""); setBitTecnico(userName); setBitPhotos([]); setBitSaving(false); };
@@ -816,7 +820,7 @@ export default function TallerScreen({ navigation, route }: Props) {
               <FieldLabel style={{ marginTop: 14 }}>Cliente (opcional)</FieldLabel>
               <ClientSelector clients={clientes} value={otClientId} onChange={setOtClientId} onCreated={addClient} />
               <FieldLabel style={{ marginTop: 14 }}>Descripción *</FieldLabel>
-              <UpperInput style={s.textArea} value={otDesc} onChangeText={v => setOtDesc(v.toUpperCase())} autoCapitalize="characters" placeholder="DESCRIBE EL TRABAJO A REALIZAR..." placeholderTextColor="#9BACC8" multiline numberOfLines={4} textAlignVertical="top" />
+              <UpperInput style={s.textArea} value={otDesc} onChangeText={v => setOtDesc(v.toUpperCase())} autoCapitalize="characters" placeholder="DESCRIBE EL TRABAJO A REALIZAR..." placeholderTextColor="#6B7CA3" multiline numberOfLines={4} textAlignVertical="top" />
               <View style={{ height: 16 }} />
               <SubmitBtn label="Crear y enviar al taller" onPress={handleCreateOT} loading={submitting} />
               <View style={{ height: 20 }} />
@@ -882,7 +886,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                       value={item.serial}
                       onChangeText={v => updateBitItem(item.uid, "serial", v)}
                       placeholder="No. serie (opcional)"
-                      placeholderTextColor="#9BACC8"
+                      placeholderTextColor="#6B7CA3"
                       autoCapitalize="characters"
                     />
                     <View style={s.qtyRow}>
@@ -933,7 +937,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                 value={bitTecnico}
                 onChangeText={setBitTecnico}
                 placeholder="Nombre del técnico..."
-                placeholderTextColor="#9BACC8"
+                placeholderTextColor="#6B7CA3"
                 autoCapitalize="words"
               />
 
@@ -944,7 +948,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                 value={bitNotes}
                 onChangeText={setBitNotes}
                 placeholder="Observaciones, datos del cliente, notas adicionales..."
-                placeholderTextColor="#9BACC8"
+                placeholderTextColor="#6B7CA3"
                 multiline numberOfLines={3}
                 textAlignVertical="top"
               />
@@ -966,7 +970,7 @@ export default function TallerScreen({ navigation, route }: Props) {
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <FieldLabel>Código del equipo</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <UpperInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={phCode} onChangeText={setPhCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(phCode, "ph")} />
+                <UpperInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={phCode} onChangeText={setPhCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#6B7CA3" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(phCode, "ph")} />
                 <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("ph")}><Text style={{ fontSize: 22 }}>📷</Text></TouchableOpacity>
                 <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(phCode, "ph")} disabled={lookingUp}>
                   {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
@@ -1006,7 +1010,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <Chip key={t} label={t} selected={phCylType === t} onPress={() => setPhCylType(t)} />
                 ))}
               </ScrollView>
-              <UpperInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="O escribe el tipo..." placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={phCylType} onChangeText={setPhCylType} placeholder="O escribe el tipo..." placeholderTextColor="#6B7CA3" />
 
               <FieldLabel style={{ marginTop: 12 }}>Clasificación DOT</FieldLabel>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ gap: 6, marginBottom: 6 }}>
@@ -1014,42 +1018,42 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <Chip key={d} label={d} selected={phClassification === d} onPress={() => setPhClassification(d)} />
                 ))}
               </ScrollView>
-              <UpperInput style={s.textInput} value={phClassification} onChangeText={setPhClassification} placeholder="DOT-3AL" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+              <UpperInput style={s.textInput} value={phClassification} onChangeText={setPhClassification} placeholder="DOT-3AL" placeholderTextColor="#6B7CA3" autoCapitalize="characters" />
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Marca</FieldLabel>
-                  <UpperInput style={s.textInput} value={phBrand} onChangeText={setPhBrand} placeholder="LUXFER, WORTHINGTON..." placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                  <UpperInput style={s.textInput} value={phBrand} onChangeText={setPhBrand} placeholder="LUXFER, WORTHINGTON..." placeholderTextColor="#6B7CA3" autoCapitalize="characters" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Modelo</FieldLabel>
-                  <UpperInput style={s.textInput} value={phModel} onChangeText={setPhModel} placeholder="Modelo / No. parte" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                  <UpperInput style={s.textInput} value={phModel} onChangeText={setPhModel} placeholder="Modelo / No. parte" placeholderTextColor="#6B7CA3" autoCapitalize="characters" />
                 </View>
               </View>
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>No. de serie</FieldLabel>
-                  <UpperInput style={s.textInput} value={phSerial} onChangeText={setPhSerial} placeholder="SN-12345" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                  <UpperInput style={s.textInput} value={phSerial} onChangeText={setPhSerial} placeholder="SN-12345" placeholderTextColor="#6B7CA3" autoCapitalize="characters" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Capacidad</FieldLabel>
-                  <UpperInput style={s.textInput} value={phCapacity} onChangeText={setPhCapacity} placeholder="10 LBS, 6 KG..." placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phCapacity} onChangeText={setPhCapacity} placeholder="10 LBS, 6 KG..." placeholderTextColor="#6B7CA3" />
                 </View>
               </View>
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Año fabricación</FieldLabel>
-                  <UpperInput style={s.textInput} value={phYearMfg} onChangeText={setPhYearMfg} keyboardType="numeric" placeholder="2018" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phYearMfg} onChangeText={setPhYearMfg} keyboardType="numeric" placeholder="2018" placeholderTextColor="#6B7CA3" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Duración ensayo (seg)</FieldLabel>
-                  <UpperInput style={s.textInput} value={phDuration} onChangeText={setPhDuration} keyboardType="numeric" placeholder="60" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phDuration} onChangeText={setPhDuration} keyboardType="numeric" placeholder="60" placeholderTextColor="#6B7CA3" />
                 </View>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Último ensayo realizado</FieldLabel>
-              <UpperInput style={s.textInput} value={phLastTestDate} onChangeText={setPhLastTestDate} placeholder="2020-06-15 o 'Primera prueba'" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={phLastTestDate} onChangeText={setPhLastTestDate} placeholder="2020-06-15 o 'Primera prueba'" placeholderTextColor="#6B7CA3" />
 
               {/* Pre-inspección visual */}
               <View style={[s.sectionBox, { marginTop: 14 }]}>
@@ -1076,11 +1080,11 @@ export default function TallerScreen({ navigation, route }: Props) {
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Presión trabajo (PSI) *</FieldLabel>
-                  <UpperInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder={phPressureClass === "alta" ? "2015" : "150"} placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phWorkPsi} onChangeText={setPhWorkPsi} keyboardType="numeric" placeholder={phPressureClass === "alta" ? "2015" : "150"} placeholderTextColor="#6B7CA3" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Presión prueba (PSI) *</FieldLabel>
-                  <UpperInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder={phPressureClass === "alta" ? "3360" : "225"} placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phTestPsi} onChangeText={setPhTestPsi} keyboardType="numeric" placeholder={phPressureClass === "alta" ? "3360" : "225"} placeholderTextColor="#6B7CA3" />
                 </View>
               </View>
               {phPressureClass === "alta" && (
@@ -1101,16 +1105,16 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <View style={{ flexDirection: "row", gap: 8 }}>
                     <View style={{ flex: 1 }}>
                       <FieldLabel>Vol. inicial (ml)</FieldLabel>
-                      <UpperInput style={s.textInput} value={phVolInitial} onChangeText={setPhVolInitial} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#9BACC8" />
+                      <UpperInput style={s.textInput} value={phVolInitial} onChangeText={setPhVolInitial} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#6B7CA3" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <FieldLabel>Exp. transitoria (ml)</FieldLabel>
-                      <UpperInput style={s.textInput} value={phVolTransient} onChangeText={setPhVolTransient} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#9BACC8" />
+                      <UpperInput style={s.textInput} value={phVolTransient} onChangeText={setPhVolTransient} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#6B7CA3" />
                     </View>
                   </View>
                   <View style={{ marginTop: 8 }}>
                     <FieldLabel>Exp. permanente (ml)</FieldLabel>
-                    <UpperInput style={s.textInput} value={phVolPermanent} onChangeText={setPhVolPermanent} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#9BACC8" />
+                    <UpperInput style={s.textInput} value={phVolPermanent} onChangeText={setPhVolPermanent} keyboardType="numeric" placeholder="0.0" placeholderTextColor="#6B7CA3" />
                   </View>
                   <View style={s.calcBox}>
                     <Text style={s.calcLabel}>% Expansión = Perm. ÷ Trans. × 100</Text>
@@ -1118,7 +1122,7 @@ export default function TallerScreen({ navigation, route }: Props) {
                       {phExpansionPct || "0.000"} %
                     </Text>
                     <Text style={{ fontSize: 9, color: "#94A3B8", marginTop: 2 }}>NOM permisible: ≤ 0.1% · Editable si hay diferencia</Text>
-                    <UpperInput style={[s.textInput, { marginTop: 6 }]} value={phExpansionPct} onChangeText={setPhExpansionPct} keyboardType="numeric" placeholder="0.000" placeholderTextColor="#9BACC8" />
+                    <UpperInput style={[s.textInput, { marginTop: 6 }]} value={phExpansionPct} onChangeText={setPhExpansionPct} keyboardType="numeric" placeholder="0.000" placeholderTextColor="#6B7CA3" />
                   </View>
                 </View>
               )}
@@ -1163,23 +1167,25 @@ export default function TallerScreen({ navigation, route }: Props) {
                       <Chip key={c} label={c} selected={phCauseReject === c} onPress={() => setPhCauseReject(c)} />
                     ))}
                   </ScrollView>
-                  <UpperInput style={s.textInput} value={phCauseReject} onChangeText={setPhCauseReject} placeholder="O escribe la causa..." placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phCauseReject} onChangeText={setPhCauseReject} placeholder="O escribe la causa..." placeholderTextColor="#6B7CA3" />
                 </>
               )}
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
-              <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
+              <UpperInput style={s.textArea} value={phObs} onChangeText={setPhObs} placeholder="Condiciones del ensayo, notas..." placeholderTextColor="#6B7CA3" multiline numberOfLines={3} textAlignVertical="top" />
+              <FieldLabel style={{ marginTop: 12 }}>No. Bitácora / Orden</FieldLabel>
+              <UpperInput style={s.textInput} value={phOrderNumber} onChangeText={setPhOrderNumber} placeholder="Ej. OT-2026-0045" placeholderTextColor="#6B7CA3" />
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Técnico que realizó</FieldLabel>
-                  <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phBy} onChangeText={setPhBy} placeholder="Nombre del técnico" placeholderTextColor="#6B7CA3" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Revisado por</FieldLabel>
-                  <UpperInput style={s.textInput} value={phReviewedBy} onChangeText={setPhReviewedBy} placeholder="Supervisor / Ing." placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={phReviewedBy} onChangeText={setPhReviewedBy} placeholder="Supervisor / Ing." placeholderTextColor="#6B7CA3" />
                 </View>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Próxima prueba (fecha)</FieldLabel>
-              <UpperInput style={s.textInput} value={phNextTestDate} onChangeText={setPhNextTestDate} placeholder="2030-06-15" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={phNextTestDate} onChangeText={setPhNextTestDate} placeholder="2030-06-15" placeholderTextColor="#6B7CA3" />
               <FieldLabel style={{ marginTop: 12 }}>Fotos de evidencia ({phPhotos.length}/15)</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
                 <TouchableOpacity onPress={takePhPhoto} style={{ flex: 1, backgroundColor: "#7C3AED11", borderRadius: 8, borderWidth: 1, borderColor: "#7C3AED44", paddingVertical: 10, alignItems: "center" }}>
@@ -1224,7 +1230,7 @@ export default function TallerScreen({ navigation, route }: Props) {
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <FieldLabel>Código del equipo</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <UpperInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={manCode} onChangeText={setManCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#9BACC8" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(manCode, "man")} />
+                <UpperInput style={[s.textInput, { flex: 1, fontFamily: "monospace" }]} value={manCode} onChangeText={setManCode} placeholder="Ingresa o escanea el código..." placeholderTextColor="#6B7CA3" autoCapitalize="characters" onSubmitEditing={() => lookupEquipment(manCode, "man")} />
                 <TouchableOpacity style={s.scanBtn} onPress={() => openCamera("man")}><Text style={{ fontSize: 22 }}>📷</Text></TouchableOpacity>
                 <TouchableOpacity style={[s.scanBtn, { backgroundColor: "#1D4ED8" }]} onPress={() => lookupEquipment(manCode, "man")} disabled={lookingUp}>
                   {lookingUp ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>OK</Text>}
@@ -1246,18 +1252,18 @@ export default function TallerScreen({ navigation, route }: Props) {
                   <Chip key={t} label={t} selected={manHoseType === t} onPress={() => setManHoseType(t)} />
                 ))}
               </ScrollView>
-              <UpperInput style={s.textInput} value={manHoseType} onChangeText={setManHoseType} placeholder="O escribe el tipo..." placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={manHoseType} onChangeText={setManHoseType} placeholder="O escribe el tipo..." placeholderTextColor="#6B7CA3" />
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>No. de serie / ID</FieldLabel>
-                  <UpperInput style={s.textInput} value={manSerial} onChangeText={setManSerial} placeholder="Ej. MAN-001" placeholderTextColor="#9BACC8" autoCapitalize="characters" />
+                  <UpperInput style={s.textInput} value={manSerial} onChangeText={setManSerial} placeholder="Ej. MAN-001" placeholderTextColor="#6B7CA3" autoCapitalize="characters" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Fab. Mes / Año</FieldLabel>
                   <View style={{ flexDirection: "row", gap: 6 }}>
-                    <UpperInput style={[s.textInput, { flex: 1 }]} value={manMfgMonth} onChangeText={v => setManMfgMonth(v.replace(/\D/g, "").slice(0, 2))} placeholder="MM" placeholderTextColor="#9BACC8" keyboardType="numeric" maxLength={2} />
-                    <UpperInput style={[s.textInput, { flex: 2 }]} value={manMfgYear} onChangeText={v => setManMfgYear(v.replace(/\D/g, "").slice(0, 4))} placeholder="AAAA" placeholderTextColor="#9BACC8" keyboardType="numeric" maxLength={4} />
+                    <UpperInput style={[s.textInput, { flex: 1 }]} value={manMfgMonth} onChangeText={v => setManMfgMonth(v.replace(/\D/g, "").slice(0, 2))} placeholder="MM" placeholderTextColor="#6B7CA3" keyboardType="numeric" maxLength={2} />
+                    <UpperInput style={[s.textInput, { flex: 2 }]} value={manMfgYear} onChangeText={v => setManMfgYear(v.replace(/\D/g, "").slice(0, 4))} placeholder="AAAA" placeholderTextColor="#6B7CA3" keyboardType="numeric" maxLength={4} />
                   </View>
                 </View>
               </View>
@@ -1273,11 +1279,11 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <FieldLabel>Longitud (m) *</FieldLabel>
-                  <UpperInput style={s.textInput} value={manLength} onChangeText={setManLength} keyboardType="numeric" placeholder="15" placeholderTextColor="#9BACC8" />
+                  <UpperInput style={s.textInput} value={manLength} onChangeText={setManLength} keyboardType="numeric" placeholder="15" placeholderTextColor="#6B7CA3" />
                 </View>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>Presión de prueba (lbs) *</FieldLabel>
-              <UpperInput style={s.textInput} value={manPressure} onChangeText={setManPressure} keyboardType="numeric" placeholder="120" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={manPressure} onChangeText={setManPressure} keyboardType="numeric" placeholder="120" placeholderTextColor="#6B7CA3" />
               <FieldLabel style={{ marginTop: 12 }}>Resultado *</FieldLabel>
               <View style={{ flexDirection: "row", gap: 10 }}>
                 <TouchableOpacity style={[s.resultBtn, { borderColor: "#22C55E", backgroundColor: manResult === "PASS" ? "#22C55E" : "#F0FDF4" }]} onPress={() => setManResult("PASS")}>
@@ -1288,11 +1294,11 @@ export default function TallerScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
               </View>
               <FieldLabel style={{ marginTop: 12 }}>No. Bitácora / Orden</FieldLabel>
-              <UpperInput style={s.textInput} value={manOrderNumber} onChangeText={setManOrderNumber} placeholder="Ej. OT-2026-0045" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={manOrderNumber} onChangeText={setManOrderNumber} placeholder="Ej. OT-2026-0045" placeholderTextColor="#6B7CA3" />
               <FieldLabel style={{ marginTop: 12 }}>Observaciones</FieldLabel>
-              <UpperInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#9BACC8" multiline numberOfLines={3} textAlignVertical="top" />
+              <UpperInput style={s.textArea} value={manObs} onChangeText={setManObs} placeholder="Fugas, deformaciones, notas..." placeholderTextColor="#6B7CA3" multiline numberOfLines={3} textAlignVertical="top" />
               <FieldLabel style={{ marginTop: 12 }}>Técnico que realizó</FieldLabel>
-              <UpperInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" />
+              <UpperInput style={s.textInput} value={manBy} onChangeText={setManBy} placeholder="Nombre del técnico" placeholderTextColor="#6B7CA3" />
               <FieldLabel style={{ marginTop: 12 }}>Fotos de evidencia ({manPhotos.length}/15)</FieldLabel>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
                 <TouchableOpacity onPress={takeManPhoto} style={{ flex: 1, backgroundColor: "#0891B211", borderRadius: 8, borderWidth: 1, borderColor: "#0891B244", paddingVertical: 10, alignItems: "center" }}>
@@ -1374,7 +1380,7 @@ function SubmitBtn({ label, onPress, loading, color = "#122B60" }: { label: stri
 const s = StyleSheet.create({
   nav:         { paddingBottom: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   backBtn:     { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  backArrow:   { color: "#fff", fontSize: 22, fontWeight: "700" },
+  backArrow:   { color: "#93C5FD", fontSize: 22, fontWeight: "700" },
   navTitle:    { color: "#fff", fontSize: 17, fontWeight: "800" },
   navSub:      { color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 1 },
   newOtBtn:    { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" },

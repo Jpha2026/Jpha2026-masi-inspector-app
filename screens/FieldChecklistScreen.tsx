@@ -43,7 +43,7 @@ function ClientSelector({ clients, value, onChange, onCreated }: {
   return (
     <View style={{ marginTop:6 }}>
       <TextInput value={q} onChangeText={t => { setQ(t); setOpen(true); }} onFocus={() => setOpen(true)}
-        placeholder="Buscar o escribir cliente..." placeholderTextColor="#9BACC8" autoCapitalize="characters"
+        placeholder="Buscar o escribir cliente..." placeholderTextColor="#6B7CA3" autoCapitalize="characters"
         style={{ backgroundColor:"#F0F4FB", borderRadius:10, borderWidth:1.5, borderColor:open?"#3B82F6":"#D5DCF0", paddingHorizontal:14, paddingVertical:11, fontSize:13, color:"#1A2740" }} />
       {open && (
         <View style={{ backgroundColor:"#fff", borderRadius:10, borderWidth:1, borderColor:"#D5DCF0", marginTop:4, maxHeight:180, elevation:4 }}>
@@ -131,11 +131,13 @@ export default function FieldChecklistScreen({ navigation, route }: Props) {
   const pickPhoto = async () => {
     Alert.alert("Agregar foto", "¿De dónde?", [
       { text: "Cámara", onPress: async () => {
-        const r = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.75 });
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) { Alert.alert("Permiso requerido", "Activa el acceso a la cámara en Ajustes."); return; }
+        const r = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.75 });
         if (!r.canceled && r.assets[0]) setPhotos(prev => [...prev, r.assets[0].uri]);
       }},
       { text: "Galería", onPress: async () => {
-        const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.75 });
+        const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.75 });
         if (!r.canceled && r.assets[0]) setPhotos(prev => [...prev, r.assets[0].uri]);
       }},
       { text: "Cancelar", style: "cancel" },
@@ -208,14 +210,14 @@ export default function FieldChecklistScreen({ navigation, route }: Props) {
             <ClientSelector clients={clients} value={clientId} onChange={setClientId} onCreated={addClient} />
             <Text style={[s.label, { marginTop:14 }]}>Ubicación / Área</Text>
             <TextInput value={location} onChangeText={setLocation}
-              placeholder="Ej: Planta baja, almacén norte..." placeholderTextColor="#9BACC8" style={s.input} />
+              placeholder="Ej: Planta baja, almacén norte..." placeholderTextColor="#6B7CA3" style={s.input} />
             <Text style={[s.label, { marginTop:14 }]}>Fecha</Text>
             <TextInput value={serviceDate} onChangeText={setServiceDate}
-              placeholder="AAAA-MM-DD" placeholderTextColor="#9BACC8"
+              placeholder="AAAA-MM-DD" placeholderTextColor="#6B7CA3"
               style={s.input} keyboardType="numbers-and-punctuation" />
             <Text style={[s.label, { marginTop:14 }]}>Técnico inspector</Text>
             <TextInput value={technician} onChangeText={setTechnician}
-              placeholder="Nombre del técnico" placeholderTextColor="#9BACC8" style={s.input} />
+              placeholder="Nombre del técnico" placeholderTextColor="#6B7CA3" style={s.input} />
             <TouchableOpacity onPress={loadChecklist} disabled={loadingChecklist} style={[s.btnPrimary, { marginTop:20 }]}>
               {loadingChecklist ? <ActivityIndicator color="#fff" /> : <Text style={s.btnPrimaryTxt}>Continuar → Lista de verificación</Text>}
             </TouchableOpacity>
@@ -259,7 +261,11 @@ export default function FieldChecklistScreen({ navigation, route }: Props) {
               <View key={cat.label} style={{ backgroundColor:"#fff", borderRadius:12, marginBottom:12, overflow:"hidden", elevation:1 }}>
                 <View style={{ backgroundColor:"#122B60", paddingHorizontal:14, paddingVertical:8, flexDirection:"row", alignItems:"center", gap:6 }}>
                   <Text style={{ color:"#fff", fontWeight:"700", fontSize:13, flex:1 }}>{cat.label}</Text>
-                  {cat.hasCritical && <Text style={{ fontSize:9, color:"#FCA5A5", fontWeight:"700" }}>CRÍTICO</Text>}
+                  {cat.hasCritical && (
+                    <View style={{ backgroundColor:"rgba(239,68,68,0.2)", borderRadius:6, paddingHorizontal:6, paddingVertical:2 }}>
+                      <Text style={{ fontSize:11, color:"#FCA5A5", fontWeight:"900", letterSpacing:0.5 }}>⚠ CRÍTICO</Text>
+                    </View>
+                  )}
                 </View>
                 {catItems.map(it => {
                   const actualIdx = checkItems.indexOf(it);
@@ -269,10 +275,10 @@ export default function FieldChecklistScreen({ navigation, route }: Props) {
                       <View style={{ flexDirection:"row", gap:8 }}>
                         {(["ok","falla","na"] as CheckResult[]).map(res => (
                           <TouchableOpacity key={res} onPress={() => setItemResult(actualIdx, res)}
-                            style={{ flex:1, paddingVertical:7, borderRadius:8, alignItems:"center",
+                            style={{ flex:1, paddingVertical:13, borderRadius:10, alignItems:"center",
                               backgroundColor: it.result===res ? (res==="ok"?"#D1FAE5":res==="falla"?"#FEE2E2":"#F3F4F6") : "#F9FAFB",
                               borderWidth:1.5, borderColor: it.result===res ? (res==="ok"?"#10B981":res==="falla"?"#EF4444":"#9CA3AF") : "#E5E7EB" }}>
-                            <Text style={{ fontSize:11, fontWeight:"700",
+                            <Text style={{ fontSize:13, fontWeight:"800",
                               color: it.result===res ? (res==="ok"?"#065F46":res==="falla"?"#991B1B":"#374151") : "#9CA3AF" }}>
                               {res==="ok"?"✓ OK":res==="falla"?"✗ Falla":"— N/A"}
                             </Text>
@@ -320,7 +326,7 @@ export default function FieldChecklistScreen({ navigation, route }: Props) {
           <Text style={s.cardTitle}>Observaciones</Text>
           <TextInput value={observations} onChangeText={setObservations}
             placeholder="Notas del inspector, acciones correctivas recomendadas..."
-            placeholderTextColor="#9BACC8" multiline numberOfLines={4}
+            placeholderTextColor="#6B7CA3" multiline numberOfLines={4}
             style={[s.input, { height:100, textAlignVertical:"top" }]} />
         </View>
         <View style={s.card}>

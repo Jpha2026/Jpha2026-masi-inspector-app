@@ -45,7 +45,7 @@ function ClientSelector({
   return (
     <View style={{ marginTop: 6 }}>
       <TextInput value={q} onChangeText={t => { setQ(t); setOpen(true); }} onFocus={() => setOpen(true)}
-        placeholder="Buscar o escribir cliente..." placeholderTextColor="#9BACC8"
+        placeholder="Buscar o escribir cliente..." placeholderTextColor="#6B7CA3"
         autoCapitalize="characters"
         style={{ backgroundColor: "#F0F4FB", borderRadius: 10, borderWidth: 1.5, borderColor: open ? "#3B82F6" : "#D5DCF0", paddingHorizontal: 14, paddingVertical: 11, fontSize: 13, color: "#1A2740" }} />
       {open && (
@@ -209,6 +209,7 @@ export default function SciServiceScreen({ navigation, route }: Props) {
           await uploadPhoto(uri, data.id).catch(() => {});
         }
       }
+      setSaving(false);
       Alert.alert(
         "✅ Servicio guardado",
         `Folio: ${data.folio}\nResultado: ${result === "ok" ? "Sin observaciones críticas" : result === "requires_attention" ? "Requiere atención" : "Fuera de servicio"}`,
@@ -254,15 +255,15 @@ export default function SciServiceScreen({ navigation, route }: Props) {
             </ScrollView>
 
             <Text style={[s.label, { marginTop: 14 }]}>Ubicación / Área protegida</Text>
-            <TextInput value={location} onChangeText={setLocation} placeholder="Ej: Sala de servidores, cuarto eléctrico..." placeholderTextColor="#9BACC8"
+            <TextInput value={location} onChangeText={setLocation} placeholder="Ej: Sala de servidores, cuarto eléctrico..." placeholderTextColor="#6B7CA3"
               style={s.input} />
 
             <Text style={[s.label, { marginTop: 14 }]}>Fecha de servicio</Text>
-            <TextInput value={serviceDate} onChangeText={setServiceDate} placeholder="AAAA-MM-DD" placeholderTextColor="#9BACC8"
+            <TextInput value={serviceDate} onChangeText={setServiceDate} placeholder="AAAA-MM-DD" placeholderTextColor="#6B7CA3"
               style={s.input} keyboardType="numbers-and-punctuation" />
 
             <Text style={[s.label, { marginTop: 14 }]}>Técnico</Text>
-            <TextInput value={technician} onChangeText={setTechnician} placeholder="Nombre del técnico" placeholderTextColor="#9BACC8"
+            <TextInput value={technician} onChangeText={setTechnician} placeholder="Nombre del técnico" placeholderTextColor="#6B7CA3"
               style={s.input} />
 
             <TouchableOpacity
@@ -316,7 +317,11 @@ export default function SciServiceScreen({ navigation, route }: Props) {
               <View key={cat.label} style={{ backgroundColor: "#fff", borderRadius: 12, marginBottom: 12, overflow: "hidden", elevation: 1 }}>
                 <View style={{ backgroundColor: "#122B60", paddingHorizontal: 14, paddingVertical: 8, flexDirection: "row", alignItems: "center", gap: 6 }}>
                   <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13, flex: 1 }}>{cat.label}</Text>
-                  {cat.hasCritical && <Text style={{ fontSize: 9, color: "#FCA5A5", fontWeight: "700" }}>CRÍTICO</Text>}
+                  {cat.hasCritical && (
+                    <View style={{ backgroundColor: "rgba(239,68,68,0.2)", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                      <Text style={{ fontSize: 11, color: "#FCA5A5", fontWeight: "900", letterSpacing: 0.5 }}>⚠ CRÍTICO</Text>
+                    </View>
+                  )}
                 </View>
                 {catItems.map((it, localIdx) => {
                   const globalIdx = checkItems.findIndex(x => x.category === it.category && x.item === it.item && checkItems.indexOf(x) >= 0);
@@ -393,7 +398,7 @@ export default function SciServiceScreen({ navigation, route }: Props) {
           <Text style={s.cardTitle}>Observaciones generales</Text>
           <TextInput value={observations} onChangeText={setObservations}
             placeholder="Anota aquí cualquier observación relevante del servicio..."
-            placeholderTextColor="#9BACC8" multiline numberOfLines={4}
+            placeholderTextColor="#6B7CA3" multiline numberOfLines={4}
             style={[s.input, { height: 100, textAlignVertical: "top" }]} />
         </View>
 

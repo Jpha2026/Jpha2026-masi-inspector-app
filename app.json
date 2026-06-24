@@ -2,7 +2,7 @@
   "expo": {
     "name": "MASI",
     "slug": "masi-inspector-app",
-    "version": "1.2.24",
+    "version": "1.2.25",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -28,16 +28,11 @@
         "backgroundColor": "#122B60"
       },
       "package": "com.masi.inspector",
-      "versionCode": 32,
+      "versionCode": 33,
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "android.permission.CAMERA",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "ACCESS_COARSE_LOCATION"
       ]
     },
     "plugins": [
@@ -50,7 +45,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Se usa la ubicación para registrar el lugar de la inspección."
+          "locationWhenInUsePermission": "Se usa la ubicación para registrar el lugar de la inspección."
         }
       ],
       "expo-notifications",

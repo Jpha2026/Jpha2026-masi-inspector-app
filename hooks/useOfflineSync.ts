@@ -49,18 +49,13 @@ function xorDecipher(hex: string, key: string): string {
 }
 
 async function getEncKey(): Promise<string> {
-  try {
-    let key = await SecureStore.getItemAsync(ENC_KEY_STORE);
-    if (!key) {
-      // Generate 32-byte cryptographically random key as hex string
-      const bytes = ExpoCrypto.getRandomBytes(32);
-      key = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-      await SecureStore.setItemAsync(ENC_KEY_STORE, key);
-    }
-    return key;
-  } catch {
-    return "masi_fallback_enc_key_v1";
+  let key = await SecureStore.getItemAsync(ENC_KEY_STORE);
+  if (!key) {
+    const bytes = ExpoCrypto.getRandomBytes(32);
+    key = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    await SecureStore.setItemAsync(ENC_KEY_STORE, key);
   }
+  return key;
 }
 
 async function readQueue(): Promise<QueuedRequest[]> {
@@ -82,8 +77,12 @@ async function readQueue(): Promise<QueuedRequest[]> {
 }
 
 async function writeQueue(queue: QueuedRequest[]): Promise<void> {
-  const key = await getEncKey();
-  await AsyncStorage.setItem(QUEUE_KEY, xorCipher(JSON.stringify(queue), key));
+  try {
+    const key = await getEncKey();
+    await AsyncStorage.setItem(QUEUE_KEY, xorCipher(JSON.stringify(queue), key));
+  } catch {
+    // Si SecureStore no está disponible, no guardar — evitar clave hardcodeada
+  }
 }
 
 export async function queueRequest(

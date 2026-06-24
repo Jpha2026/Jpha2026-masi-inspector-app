@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: BLUE, paddingHorizontal: 16, paddingVertical: 14,
   },
   backBtn: { paddingVertical: 4, paddingHorizontal: 8 },
-  backText: { color: "#8AAEE0", fontSize: 14 },
+  backText: { color: "#93C5FD", fontSize: 14 },
   headerTitle: { color: "#fff", fontSize: 17, fontWeight: "700" },
   permText: { color: "#5A6E8C", fontSize: 15, marginTop: 12, textAlign: "center", paddingHorizontal: 24 },
   scannerWrapper: { flex: 1, position: "relative" },
