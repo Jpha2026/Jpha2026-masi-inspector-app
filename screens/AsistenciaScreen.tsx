@@ -59,15 +59,41 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status === "granted") {
-          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-          lat = loc.coords.latitude;
-          lng = loc.coords.longitude;
+          // Use cached position first (fast); fall back to fresh with Low accuracy
+          const cached = await Location.getLastKnownPositionAsync();
+          if (cached) {
+            lat = cached.coords.latitude;
+            lng = cached.coords.longitude;
+          } else {
+            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+            lat = loc.coords.latitude;
+            lng = loc.coords.longitude;
+          }
         }
       } catch {}
 
-      await axios.post(`${API_URL}/mobile/asistencia`, { employee_id: user.employee_id, tipo, lat, lng });
-      await load();
-      Alert.alert("✅ Registrado", tipo === "entrada" ? "Entrada registrada correctamente." : "Salida registrada correctamente.");
+      // Attempt POST — swallow errors: the request may reach the server even on timeout
+      try {
+        await axios.post(
+          `${API_URL}/mobile/asistencia`,
+          { employee_id: user.employee_id, tipo, lat, lng },
+          { timeout: 15000 }
+        );
+      } catch {}
+
+      // Always verify via GET — server state is the source of truth
+      const res = await axios.get<AttRecord | null>(
+        `${API_URL}/mobile/asistencia?employee_id=${user.employee_id}`,
+        { timeout: 10000 }
+      );
+      setRecord(res.data);
+      const ok = tipo === "entrada" ? !!res.data?.hora_entrada : !!res.data?.hora_salida;
+      Alert.alert(
+        ok ? "✅ Registrado" : "Error",
+        ok
+          ? (tipo === "entrada" ? "Entrada registrada correctamente." : "Salida registrada correctamente.")
+          : "No se pudo registrar. Intenta de nuevo."
+      );
     } catch {
       Alert.alert("Error", "No se pudo registrar. Intenta de nuevo.");
     } finally {
