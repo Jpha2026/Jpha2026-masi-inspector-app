@@ -2,7 +2,7 @@
   "expo": {
     "name": "MASI",
     "slug": "masi-inspector-app",
-    "version": "1.2.29",
+    "version": "1.2.32",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.masi.inspector",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "Se necesita la cámara para escanear códigos QR y tomar fotos de evidencia.",
         "NSLocationWhenInUseUsageDescription": "Se usa la ubicación para registrar el lugar de la inspección.",
@@ -28,7 +28,7 @@
         "backgroundColor": "#122B60"
       },
       "package": "com.masi.inspector",
-      "versionCode": 37,
+      "versionCode": 40,
       "usesCleartextTraffic": false,
       "permissions": [
         "CAMERA",
