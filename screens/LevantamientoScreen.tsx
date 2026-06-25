@@ -24,7 +24,7 @@ type Props = {
 type Step = "list" | "header" | "puntos" | "camera";
 
 const TIPOS_EXTINTOR = ["PQS ABC", "CO2", "Agua", "Clase K", "Halón", "Espuma", "Polvo BC"];
-const CAPS_EXTINTOR = ["1 KG", "2.5 KG", "4 KG", "4.5 KG", "6 KG", "9 KG", "12 KG", "20 KG", "2.5 LB", "5 LB", "10 LB", "2.5 GAL", "2.5 KG CO2", "5 KG CO2", "10 KG CO2"];
+const CAPS_EXTINTOR = ["1 KG", "2.5 KG", "4 KG", "4.5 KG", "6 KG", "9 KG", "12 KG", "20 KG", "2.5 LB", "5 LB", "10 LB", "2.5 GAL", "2.5 KG CO2", "5 KG CO2", "10 KG CO2", "1.5 LT", "2 LT", "2.5 LT", "6 LT", "9 LT", "9.5 LT", "10 LT", "20 LT", "1 GAL", "2 GAL"];
 const TIPO_LINEA = ["Vertical", "Horizontal"];
 const OK_OPTS = ["OK", "MAL", "N/A"];
 const SI_NO = ["SI", "NO", "N/A"];
