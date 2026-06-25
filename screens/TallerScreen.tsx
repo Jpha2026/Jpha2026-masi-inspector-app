@@ -331,6 +331,17 @@ export default function TallerScreen({ navigation, route }: Props) {
       return;
     }
     setPhSaving(true);
+    const uploadPhPhotos = async (testId: string) => {
+      for (const uri of phPhotos) {
+        try {
+          const fd = new FormData();
+          fd.append("file", { uri, name: `ph_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
+          fd.append("entity_type", "ph_test");
+          fd.append("entity_id", testId);
+          await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+        } catch { /* non-fatal */ }
+      }
+    };
     try {
       const r = await axios.post<{ ok: boolean; id: string; folio: string; result: string }>(`${API_URL}/mobile/taller/ph`, {
         equipment_id: phEq?.id,
@@ -364,22 +375,28 @@ export default function TallerScreen({ navigation, route }: Props) {
         reviewed_by: phReviewedBy || undefined,
         next_test_date: phNextTestDate || undefined,
         order_number: phOrderNumber || undefined,
-      });
-      if (r.data.id && phPhotos.length > 0) {
-        for (const uri of phPhotos) {
-          try {
-            const fd = new FormData();
-            fd.append("file", { uri, name: `ph_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
-            fd.append("entity_type", "ph_test");
-            fd.append("entity_id", r.data.id);
-            await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
-          } catch { /* non-fatal */ }
-        }
-      }
+      }, { timeout: 30000 });
+      if (r.data.id && phPhotos.length > 0) await uploadPhPhotos(r.data.id);
       Alert.alert("✅ Prueba PH guardada", `Folio: ${r.data.folio}\nResultado: ${r.data.result}`, [
         { text: "OK", onPress: () => { setShowPH(false); resetPH(); } },
       ]);
     } catch {
+      // Verify via GET — server may have saved the record despite the timeout
+      if (phOrderNumber) {
+        try {
+          const check = await axios.get<{ found: boolean; id?: string; folio?: string; result?: string }>(
+            `${API_URL}/mobile/taller/ph?order_number=${encodeURIComponent(phOrderNumber)}`,
+            { timeout: 10000 }
+          );
+          if (check.data.found && check.data.id) {
+            if (phPhotos.length > 0) await uploadPhPhotos(check.data.id);
+            Alert.alert("✅ Prueba PH guardada", `Folio: ${check.data.folio}\nResultado: ${check.data.result}`, [
+              { text: "OK", onPress: () => { setShowPH(false); resetPH(); } },
+            ]);
+            return;
+          }
+        } catch { /* verification also failed */ }
+      }
       Alert.alert(
         "⚠️ Posible error de red",
         "El reporte pudo haberse enviado. Verifica el historial antes de reintentarlo.",
