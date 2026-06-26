@@ -58,7 +58,6 @@
         }
       ],
       "expo-secure-store",
-      "@sentry/react-native/expo",
       "./app.plugin.js"
     ],
     "extra": {
