@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, Levantamiento, Cliente, Sucursal } from "../types";
 import { API_URL } from "../constants/api";
@@ -272,6 +273,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     }
     setSavingPunto(true);
     try {
+      const authToken = await SecureStore.getItemAsync("masi_token").catch(() => null);
       const formData = new FormData();
       const { photoUri, ...data } = currentPunto;
       formData.append("data", JSON.stringify(data));
@@ -282,7 +284,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
       await axios.post(
         `${API_URL}/levantamientos/${activeLev.id}/puntos`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) } }
       );
       setPuntos(prev => [...prev, currentPunto]);
       const eqLabel = EQ_LABELS[activeLev.equipment_type || "extintor"] || "Equipo";
