@@ -2,7 +2,7 @@
   "expo": {
     "name": "MASI",
     "slug": "masi-inspector-app",
-    "version": "1.2.35",
+    "version": "1.2.36",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -28,7 +28,7 @@
         "backgroundColor": "#122B60"
       },
       "package": "com.masi.inspector",
-      "versionCode": 43,
+      "versionCode": 44,
       "usesCleartextTraffic": false,
       "allowBackup": false,
       "permissions": [
