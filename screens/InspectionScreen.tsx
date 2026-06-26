@@ -748,6 +748,7 @@ export default function InspectionScreen({ navigation, route }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [showCamera, setShowCamera] = useState(false);
+  const [flashOn, setFlashOn] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const idempotencyKey = useRef(`insp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
@@ -1030,7 +1031,7 @@ export default function InspectionScreen({ navigation, route }: Props) {
       {/* Camera modal */}
       <Modal visible={showCamera} animationType="slide" statusBarTranslucent>
         <View style={{ flex: 1, backgroundColor: "#000" }}>
-          <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />
+          <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" enableTorch={flashOn} />
           <View style={styles.camControls}>
             <TouchableOpacity style={styles.camCancel} onPress={() => setShowCamera(false)}>
               <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Cancelar</Text>
@@ -1038,7 +1039,15 @@ export default function InspectionScreen({ navigation, route }: Props) {
             <TouchableOpacity style={styles.camShutter} onPress={takePhoto} activeOpacity={0.8}>
               <View style={styles.camShutterInner} />
             </TouchableOpacity>
-            <View style={{ width: 90 }} />
+            <TouchableOpacity
+              onPress={() => setFlashOn(f => !f)}
+              style={{ width: 90, alignItems: "center", paddingVertical: 10 }}
+            >
+              <Text style={{ fontSize: 28 }}>{flashOn ? "🔦" : "💡"}</Text>
+              <Text style={{ color: flashOn ? "#FFD700" : "#888", fontSize: 11, marginTop: 2 }}>
+                {flashOn ? "Flash ON" : "Flash OFF"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
