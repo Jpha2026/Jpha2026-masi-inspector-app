@@ -7,13 +7,15 @@
       "android": {
         "buildType": "apk",
         "env": {
-          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api",
+          "EXPO_PUBLIC_SENTRY_DSN": "https://0d5dd2f32d91c7a3b34a634155648fa5@o4511632050159616.ingest.us.sentry.io/4511632111239168"
         }
       },
       "ios": {
         "simulator": true,
         "env": {
-          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api",
+          "EXPO_PUBLIC_SENTRY_DSN": "https://0d5dd2f32d91c7a3b34a634155648fa5@o4511632050159616.ingest.us.sentry.io/4511632111239168"
         }
       }
     },
@@ -21,7 +23,8 @@
       "android": {
         "buildType": "apk",
         "env": {
-          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api",
+          "EXPO_PUBLIC_SENTRY_DSN": "https://0d5dd2f32d91c7a3b34a634155648fa5@o4511632050159616.ingest.us.sentry.io/4511632111239168"
         }
       }
     },
@@ -29,12 +32,14 @@
       "android": {
         "buildType": "app-bundle",
         "env": {
-          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api",
+          "EXPO_PUBLIC_SENTRY_DSN": "https://0d5dd2f32d91c7a3b34a634155648fa5@o4511632050159616.ingest.us.sentry.io/4511632111239168"
         }
       },
       "ios": {
         "env": {
-          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api"
+          "EXPO_PUBLIC_API_URL": "https://app.masi.com.mx/api",
+          "EXPO_PUBLIC_SENTRY_DSN": "https://0d5dd2f32d91c7a3b34a634155648fa5@o4511632050159616.ingest.us.sentry.io/4511632111239168"
         }
       }
     }

@@ -1,3 +1,6 @@
+import { initSentry, Sentry } from "./sentry";
+initSentry(); // debe ser lo primero antes del árbol React
+
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { createNavigationContainerRef } from "@react-navigation/native";
@@ -115,7 +118,7 @@ const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 type InitRoute = "Login" | "Home" | "EmpleadoHome" | "ClienteHome" | "VendedorHome" | "Taller";
 
-export default function App() {
+function App() {
   const [initialRoute, setInitialRoute] = useState<InitRoute | null>(null);
   const [savedInspectorId, setSavedInspectorId] = useState<string | null>(null);
   const [savedUser, setSavedUser] = useState<AppUser | null>(null);
@@ -299,3 +302,5 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(App);
