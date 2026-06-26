@@ -10,6 +10,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList, OrdenTrabajo, OTItem } from "../types";
@@ -252,6 +253,10 @@ export default function TallerScreen({ navigation, route }: Props) {
         await SecureStore.deleteItemAsync("masi_active_jornada");
         await SecureStore.deleteItemAsync("inspector_id");
         await SecureStore.deleteItemAsync("inspector_name");
+        await AsyncStorage.multiRemove([
+          "masi_offline_queue_v2", "offline_inspection_queue",
+          "masi_active_jornada", "masi_user", "inspector_id", "inspector_name",
+        ]);
         navigation.replace("Login");
       }},
     ]);

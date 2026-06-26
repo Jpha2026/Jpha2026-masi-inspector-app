@@ -169,7 +169,7 @@ export default function HomeScreen({ navigation, route }: Props) {
             <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: gpsGranted && location ? "#34D399" : "#F87171" }} />
             <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, fontWeight: "700" }}>
               {gpsGranted && location
-                ? `GPS ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
+                ? "GPS activo"
                 : gpsGranted ? "Obteniendo GPS..." : "Sin permiso GPS"}
             </Text>
           </View>
@@ -252,7 +252,7 @@ export default function HomeScreen({ navigation, route }: Props) {
                 </Text>
                 <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 1 }}>
                   Inicio: {new Date(jornada.start_time).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
-                  {jornada.start_lat ? `  📍 ${jornada.start_lat.toFixed(4)}, ${jornada.start_lng?.toFixed(4)}` : ""}
+                  {jornada.start_lat ? "  📍 Ubicación registrada" : ""}
                 </Text>
               </>
             ) : (

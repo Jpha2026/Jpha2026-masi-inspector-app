@@ -61,11 +61,11 @@ export default function AsistenciaScreen({ navigation, route }: Props) {
         if (status === "granted") {
           // Use cached position first (fast); fall back to fresh with Low accuracy
           const cached = await Location.getLastKnownPositionAsync();
-          if (cached) {
+          if (cached && cached.coords.accuracy !== null && cached.coords.accuracy < 200) {
             lat = cached.coords.latitude;
             lng = cached.coords.longitude;
           } else {
-            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
             lat = loc.coords.latitude;
             lng = loc.coords.longitude;
           }
