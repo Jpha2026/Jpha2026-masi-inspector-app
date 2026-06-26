@@ -14,6 +14,7 @@ import { RootStackParamList, InspectionItem, ItemResult } from "../types";
 import { API_URL } from "../constants/api";
 import { queueInspection } from "../hooks/useOfflineSync";
 import * as Location from "expo-location";
+import * as SecureStore from "expo-secure-store";
 import { useLocation } from "../hooks/useLocation";
 
 type Props = {
@@ -813,23 +814,28 @@ export default function InspectionScreen({ navigation, route }: Props) {
       } catch {}
     }
 
+    const authToken = await SecureStore.getItemAsync("masi_token");
     const netState = await NetInfo.fetch();
 
-    // Upload photos to server before submitting — replace local file:// URIs with server URLs
-    let uploadedPhotos: string[] = [];
-    if (netState.isConnected && photos.length > 0) {
-      for (const uri of photos) {
+    // Upload photos: replace local file:// URIs with server URLs where possible.
+    // Failures keep the local URI so the offline sync worker can retry.
+    const resolvedPhotos: string[] = [...photos];
+    if (netState.isConnected && photos.length > 0 && authToken) {
+      for (let i = 0; i < photos.length; i++) {
         try {
           const fd = new FormData();
-          fd.append("file", { uri, name: "photo.jpg", type: "image/jpeg" } as unknown as Blob);
+          fd.append("file", { uri: photos[i], name: `insp_${Date.now()}_${i}.jpg`, type: "image/jpeg" } as unknown as Blob);
           const r = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, fd, {
-            headers: { "Content-Type": "multipart/form-data" },
+            headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${authToken}` },
             timeout: 30000,
           });
-          if (r.data?.url) uploadedPhotos.push(r.data.url);
-        } catch { /* skip failed photo — don't block the inspection */ }
+          if (r.data?.url) resolvedPhotos[i] = r.data.url;
+        } catch { /* keep local URI — sync worker will upload on retry */ }
       }
     }
+
+    // Re-check connectivity AFTER uploads (network may have dropped during upload window)
+    const netStateAfter = await NetInfo.fetch();
 
     const payload = {
       inspector_id: inspectorId,
@@ -837,12 +843,12 @@ export default function InspectionScreen({ navigation, route }: Props) {
       overall_result: overall,
       notes,
       items,
-      photos: uploadedPhotos,
+      photos: resolvedPhotos,
       lat,
       lng,
       idempotency_key: idempotencyKey.current,
     };
-    if (!netState.isConnected) {
+    if (!netStateAfter.isConnected) {
       await queueInspection(payload);
       setSubmitting(false);
       Alert.alert(

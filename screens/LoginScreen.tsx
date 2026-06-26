@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
 import { API_URL } from "../constants/api";
 import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
 import { useTheme } from "../hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -69,6 +70,23 @@ export default function LoginScreen({ navigation }: Props) {
     ]).start();
   }, []);
 
+  const registerPushAfterLogin = (token: string) => {
+    void (async () => {
+      try {
+        const { status: existing } = await Notifications.getPermissionsAsync();
+        const finalStatus = existing !== "granted"
+          ? (await Notifications.requestPermissionsAsync()).status
+          : existing;
+        if (finalStatus !== "granted") return;
+        const td = await Notifications.getExpoPushTokenAsync();
+        await axios.post(`${API_URL}/mobile/push-token`, {
+          token: td.data,
+          platform: Platform.OS,
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      } catch {}
+    })();
+  };
+
   const handleInspectorLogin = async () => {
     if (!inspEmail.trim() || !inspPass.trim()) {
       Alert.alert("Campos requeridos", "Ingresa tu correo y contraseña.");
@@ -84,6 +102,7 @@ export default function LoginScreen({ navigation }: Props) {
       if (data.token) {
         await SecureStore.setItemAsync("masi_token", data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        registerPushAfterLogin(data.token);
       }
       await SecureStore.setItemAsync("masi_user", JSON.stringify(data));
       if (data.role === "cliente") {
@@ -152,6 +171,7 @@ export default function LoginScreen({ navigation }: Props) {
       if (data.token) {
         await SecureStore.setItemAsync("masi_token", data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        registerPushAfterLogin(data.token);
       }
       await SecureStore.setItemAsync("masi_user", JSON.stringify(data));
       navigation.replace("EmpleadoHome", { user: data });
@@ -178,6 +198,7 @@ export default function LoginScreen({ navigation }: Props) {
       if (data.token) {
         await SecureStore.setItemAsync("masi_token", data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        registerPushAfterLogin(data.token);
       }
       await SecureStore.setItemAsync("masi_user", JSON.stringify(data));
       navigation.replace("EmpleadoHome", { user: data });

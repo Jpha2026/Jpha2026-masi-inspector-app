@@ -149,6 +149,29 @@ export async function getPendingCount(): Promise<number> {
   return legacy + current;
 }
 
+async function uploadLocalPhotos(
+  photos: string[],
+  authHeader: Record<string, string>,
+): Promise<string[]> {
+  const result: string[] = [];
+  for (let i = 0; i < photos.length; i++) {
+    const uri = photos[i];
+    if (!uri.startsWith("file://")) { result.push(uri); continue; }
+    try {
+      const fd = new FormData();
+      fd.append("file", { uri, name: `sync_${Date.now()}_${i}.jpg`, type: "image/jpeg" } as unknown as Blob);
+      const r = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, fd, {
+        headers: { ...authHeader, "Content-Type": "multipart/form-data" },
+        timeout: 30000,
+      });
+      result.push(r.data?.url ?? uri);
+    } catch {
+      result.push(uri); // keep local URI for next retry
+    }
+  }
+  return result;
+}
+
 async function syncAll(): Promise<{ synced: number; failed: number }> {
   let synced = 0;
   const remaining: QueuedRequest[] = [];
@@ -199,11 +222,20 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
   let authFailed = false;
   for (const req of queue) {
     if (authFailed) { remaining.push(req); continue; }
+    // Upload any file:// photo URIs before sending (H-02: offline inspection photos)
+    let reqData = req.data;
+    if (req.type === "inspection" && authToken) {
+      const d = req.data as { photos?: unknown };
+      if (Array.isArray(d.photos) && (d.photos as string[]).some(p => typeof p === "string" && p.startsWith("file://"))) {
+        const photos = await uploadLocalPhotos(d.photos as string[], authHeader);
+        reqData = { ...d, photos };
+      }
+    }
     try {
       if (req.method === "POST") {
-        await axios.post(req.url, req.data, { timeout: 12000, headers: authHeader });
+        await axios.post(req.url, reqData, { timeout: 12000, headers: authHeader });
       } else {
-        await axios.patch(req.url, req.data, { timeout: 12000, headers: authHeader });
+        await axios.patch(req.url, reqData, { timeout: 12000, headers: authHeader });
       }
       synced++;
     } catch (e) {
