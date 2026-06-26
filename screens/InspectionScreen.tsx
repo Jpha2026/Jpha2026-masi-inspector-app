@@ -753,12 +753,15 @@ export default function InspectionScreen({ navigation, route }: Props) {
   const idempotencyKey = useRef(`insp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
   const { location } = useLocation();
 
-  // Try loading from DB; replace if successful
+  // Try loading checklist from API; only reset items if inspector hasn't started answering yet
   useEffect(() => {
     fetchChecklistFromApi(equipment.type).then(def => {
       if (def) {
         setChecklist(def);
-        setItems(buildInitialItems(def));
+        setItems(prev => {
+          const hasAnswers = prev.some(it => it.result !== "NA");
+          return hasAnswers ? prev : buildInitialItems(def);
+        });
       }
     });
   }, [equipment.type]);

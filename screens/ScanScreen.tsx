@@ -33,25 +33,17 @@ export default function ScanScreen({ navigation, route }: Props) {
   }, []);
 
   const lookupEquipment = async (qrCode: string) => {
-    // If coming from a route, validate the QR matches the expected equipment
-    if (expectedQr && qrCode !== expectedQr) {
-      Alert.alert(
-        "QR incorrecto",
-        "Este código no corresponde al equipo asignado en la ruta.",
-        [{ text: "Reintentar", onPress: () => setScanned(false) }]
-      );
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await axios.get<Equipment & { found?: boolean }>(`${API_URL}/equipment/scan/${encodeURIComponent(qrCode)}`);
       const { found: _found, ...equipment } = res.data;
+      // If coming from a route but scanned a different equipment, navigate without linking to the route item
+      const isExpected = !expectedQr || qrCode === expectedQr;
       navigation.replace("Inspection", {
         inspectorId,
         equipment: equipment as Equipment,
-        rutaId,
-        rutaItemId,
+        rutaId: isExpected ? rutaId : undefined,
+        rutaItemId: isExpected ? rutaItemId : undefined,
       });
     } catch (e: any) {
       const status = e?.response?.status;
