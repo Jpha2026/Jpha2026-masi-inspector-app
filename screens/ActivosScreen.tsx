@@ -127,12 +127,11 @@ export default function ActivosScreen({ navigation, route }: Props) {
 
   const uploadPhotos = async (): Promise<string[]> => {
     const urls: string[] = [];
-    const uploadBase = API_URL.replace("/mobile", "");
     for (const uri of photos) {
       try {
         const fd = new FormData();
         fd.append("file", { uri, name: `activo_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
-        const r = await axios.post<{ url: string }>(`${uploadBase}/mobile/upload`, fd, {
+        const r = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         if (r.data?.url) urls.push(r.data.url);

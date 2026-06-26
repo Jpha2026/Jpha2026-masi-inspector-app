@@ -91,6 +91,9 @@ Notifications.setNotificationHandler({
 
 async function registerPushToken(_userId: string) {
   try {
+    const authToken = await SecureStore.getItemAsync("masi_token");
+    if (!authToken) return;
+
     const { status: existing } = await Notifications.getPermissionsAsync();
     let finalStatus = existing;
     if (existing !== "granted") {
@@ -103,7 +106,7 @@ async function registerPushToken(_userId: string) {
     await axios.post(`${API_URL}/mobile/push-token`, {
       token: tokenData.data,
       platform: Platform.OS,
-    });
+    }, { headers: { Authorization: `Bearer ${authToken}` } });
   } catch {}
 }
 
