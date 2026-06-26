@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
@@ -126,13 +127,14 @@ export default function ActivosScreen({ navigation, route }: Props) {
   };
 
   const uploadPhotos = async (): Promise<string[]> => {
+    const authToken = await SecureStore.getItemAsync("masi_token").catch(() => null);
     const urls: string[] = [];
     for (const uri of photos) {
       try {
         const fd = new FormData();
         fd.append("file", { uri, name: `activo_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
         const r = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "multipart/form-data", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
         });
         if (r.data?.url) urls.push(r.data.url);
         FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});

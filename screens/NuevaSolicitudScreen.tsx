@@ -7,6 +7,7 @@ import { UpperInput } from "../components/UpperInput";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
@@ -78,13 +79,14 @@ export default function NuevaSolicitudScreen({ navigation, route }: Props) {
 
       // Upload photo if present
       if (fotoUri) {
+        const authToken = await SecureStore.getItemAsync("masi_token").catch(() => null);
         const formData = new FormData();
         const filename = fotoUri.split("/").pop() ?? "foto.jpg";
         formData.append("file", { uri: fotoUri, type: "image/jpeg", name: filename } as unknown as Blob);
         formData.append("employee_id", user.employee_id ?? "");
         try {
           const uploadRes = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
+            headers: { "Content-Type": "multipart/form-data", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
           });
           foto_url = uploadRes.data.url;
         } catch { /* upload failure is non-fatal; send without photo */ }

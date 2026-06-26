@@ -337,13 +337,14 @@ export default function TallerScreen({ navigation, route }: Props) {
     }
     setPhSaving(true);
     const uploadPhPhotos = async (testId: string) => {
+      const authToken = await SecureStore.getItemAsync("masi_token").catch(() => null);
       for (const uri of phPhotos) {
         try {
           const fd = new FormData();
           fd.append("file", { uri, name: `ph_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
           fd.append("entity_type", "ph_test");
           fd.append("entity_id", testId);
-          await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+          await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) } });
         } catch { /* non-fatal */ }
       }
     };
@@ -430,13 +431,14 @@ export default function TallerScreen({ navigation, route }: Props) {
         observations: manObs, tested_by: manBy, duration_min: 3,
       });
       if (r.data.id && manPhotos.length > 0) {
+        const authToken = await SecureStore.getItemAsync("masi_token").catch(() => null);
         for (const uri of manPhotos) {
           try {
             const fd = new FormData();
             fd.append("file", { uri, name: `man_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
             fd.append("entity_type", "hose_test");
             fd.append("entity_id", r.data.id);
-            await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+            await axios.post(`${API_URL}/mobile/upload`, fd, { headers: { "Content-Type": "multipart/form-data", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) } });
           } catch { /* non-fatal */ }
         }
       }
@@ -556,13 +558,14 @@ export default function TallerScreen({ navigation, route }: Props) {
       // Upload photos
       let photoUrls: string[] = [];
       if (bitPhotos.length > 0) {
+        const authToken = await SecureStore.getItemAsync("masi_token").catch(() => null);
         const uploadBase = API_URL.replace("/mobile", "");
         for (const uri of bitPhotos) {
           try {
             const fd = new FormData();
             fd.append("file", { uri, name: `bit_${Date.now()}.jpg`, type: "image/jpeg" } as unknown as Blob);
             const r = await axios.post<{ url: string }>(`${uploadBase}/mobile/upload`, fd, {
-              headers: { "Content-Type": "multipart/form-data" },
+              headers: { "Content-Type": "multipart/form-data", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
             });
             if (r.data?.url) photoUrls.push(r.data.url);
           } catch { /* skip */ }
