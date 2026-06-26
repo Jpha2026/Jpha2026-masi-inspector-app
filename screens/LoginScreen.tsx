@@ -137,8 +137,8 @@ export default function LoginScreen({ navigation }: Props) {
       Alert.alert("Contraseñas no coinciden", "Las contraseñas ingresadas no son iguales.");
       return;
     }
-    if (empNewPass.length < 6) {
-      Alert.alert("Contraseña muy corta", "Debe tener al menos 6 caracteres.");
+    if (empNewPass.length < 8) {
+      Alert.alert("Contraseña muy corta", "Debe tener al menos 8 caracteres.");
       return;
     }
     setLoading(true);
