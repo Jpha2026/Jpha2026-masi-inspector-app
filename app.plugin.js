@@ -19,16 +19,23 @@ function withNetworkSecurityXml(config) {
         "app/src/main/res/xml"
       );
       fs.mkdirSync(xmlDir, { recursive: true });
-      // TODO(security): Re-enable cert pinning once SPKI hashes are computed from a
-      // clean environment WITHOUT ESET SSL interception. The pins in v1.2.27/1.2.28
-      // encoded ESET's CA cert (not Let's Encrypt/ISRG Root X1), blocking all logins.
-      // Steps: use a Linux/Mac without SSL proxy, or run openssl from an Android device.
-      // Never compute hashes from the Windows dev machine (ESET intercepts TLS at OS level).
+      // Hashes computed 2026-06-25 from Let's Encrypt DER/PEM files (not live TLS):
+      //   curl https://letsencrypt.org/certs/isrgrootx1.der | openssl x509 -inform der -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64
+      //   curl https://letsencrypt.org/certs/isrg-root-x2.pem | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64
       fs.writeFileSync(
         path.join(xmlDir, "network_security_config.xml"),
         `<?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
   <base-config cleartextTrafficPermitted="false" />
+  <domain-config cleartextTrafficPermitted="false">
+    <domain includeSubdomains="true">app.masi.com.mx</domain>
+    <pin-set expiration="2028-06-25">
+      <!-- ISRG Root X1 — Let's Encrypt root CA (RSA) -->
+      <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+      <!-- ISRG Root X2 — Let's Encrypt root CA (ECDSA) -->
+      <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
+    </pin-set>
+  </domain-config>
 </network-security-config>`
       );
       return config;
