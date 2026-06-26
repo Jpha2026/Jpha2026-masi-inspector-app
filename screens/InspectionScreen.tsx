@@ -813,19 +813,35 @@ export default function InspectionScreen({ navigation, route }: Props) {
       } catch {}
     }
 
+    const netState = await NetInfo.fetch();
+
+    // Upload photos to server before submitting — replace local file:// URIs with server URLs
+    let uploadedPhotos: string[] = [];
+    if (netState.isConnected && photos.length > 0) {
+      for (const uri of photos) {
+        try {
+          const fd = new FormData();
+          fd.append("file", { uri, name: "photo.jpg", type: "image/jpeg" } as unknown as Blob);
+          const r = await axios.post<{ url: string }>(`${API_URL}/mobile/upload`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+            timeout: 30000,
+          });
+          if (r.data?.url) uploadedPhotos.push(r.data.url);
+        } catch { /* skip failed photo — don't block the inspection */ }
+      }
+    }
+
     const payload = {
       inspector_id: inspectorId,
       equipment_id: equipment.id,
       overall_result: overall,
       notes,
       items,
-      photos,
+      photos: uploadedPhotos,
       lat,
       lng,
       idempotency_key: idempotencyKey.current,
     };
-
-    const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       await queueInspection(payload);
       setSubmitting(false);

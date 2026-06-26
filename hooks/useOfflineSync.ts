@@ -27,18 +27,45 @@ export type QueuedRequest = {
 const LEGACY_KEY = "offline_inspection_queue";
 const QUEUE_KEY  = "masi_offline_queue_v2";
 const ENC_KEY_STORE = "masi_queue_enc_key";
+const AES_PREFIX = "v2:"; // prefix distinguishes AES-GCM from old XOR data
 
-// XOR-cipher: converts text ↔ hex string using the stored SecureStore key.
-// The hex encoding avoids any issues with binary characters in AsyncStorage.
-function xorCipher(text: string, key: string): string {
-  let out = "";
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-    out += code.toString(16).padStart(4, "0");
-  }
-  return out;
+// ── AES-256-GCM helpers (Web Crypto API — available in Hermes/RN 0.73+) ──
+
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  return bytes;
 }
 
+function bytesToHex(buf: Uint8Array | ArrayBuffer): string {
+  return Array.from(buf instanceof Uint8Array ? buf : new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function importKey(keyHex: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey("raw", hexToBytes(keyHex), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+
+async function aesEncrypt(plaintext: string, keyHex: string): Promise<string> {
+  const iv = ExpoCrypto.getRandomBytes(12);
+  const key = await importKey(keyHex);
+  const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plaintext));
+  const out = new Uint8Array(12 + cipher.byteLength);
+  out.set(iv);
+  out.set(new Uint8Array(cipher), 12);
+  return AES_PREFIX + bytesToHex(out);
+}
+
+async function aesDecrypt(hex: string, keyHex: string): Promise<string> {
+  const buf = hexToBytes(hex);
+  const iv = buf.slice(0, 12);
+  const data = buf.slice(12);
+  const key = await importKey(keyHex);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+  return new TextDecoder().decode(plain);
+}
+
+// Legacy XOR — only used during migration read of old data
 function xorDecipher(hex: string, key: string): string {
   let out = "";
   for (let i = 0; i < hex.length; i += 4) {
@@ -62,15 +89,22 @@ async function readQueue(): Promise<QueuedRequest[]> {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
     if (!raw) return [];
-    // Detect legacy unencrypted JSON (starts with '[')
-    if (raw.startsWith("[")) {
-      // Migrate: re-save encrypted
-      const key = await getEncKey();
-      await AsyncStorage.setItem(QUEUE_KEY, xorCipher(raw, key));
-      try { return JSON.parse(raw); } catch { return []; }
-    }
     const key = await getEncKey();
-    return JSON.parse(xorDecipher(raw, key));
+    // Unencrypted JSON (oldest format) → migrate to AES-GCM
+    if (raw.startsWith("[")) {
+      const queue = JSON.parse(raw) as QueuedRequest[];
+      await AsyncStorage.setItem(QUEUE_KEY, await aesEncrypt(raw, key));
+      return queue;
+    }
+    // AES-GCM (current format)
+    if (raw.startsWith(AES_PREFIX)) {
+      return JSON.parse(await aesDecrypt(raw.slice(AES_PREFIX.length), key));
+    }
+    // XOR (legacy format) → migrate to AES-GCM
+    const json = xorDecipher(raw, key);
+    const queue = JSON.parse(json) as QueuedRequest[];
+    await AsyncStorage.setItem(QUEUE_KEY, await aesEncrypt(json, key));
+    return queue;
   } catch {
     return [];
   }
@@ -79,7 +113,7 @@ async function readQueue(): Promise<QueuedRequest[]> {
 async function writeQueue(queue: QueuedRequest[]): Promise<void> {
   try {
     const key = await getEncKey();
-    await AsyncStorage.setItem(QUEUE_KEY, xorCipher(JSON.stringify(queue), key));
+    await AsyncStorage.setItem(QUEUE_KEY, await aesEncrypt(JSON.stringify(queue), key));
   } catch {
     // Si SecureStore no está disponible, no guardar — evitar clave hardcodeada
   }
@@ -151,7 +185,12 @@ async function syncAll(): Promise<{ synced: number; failed: number }> {
     if (legRemaining.length === 0) {
       await AsyncStorage.removeItem(LEGACY_KEY);
     } else {
-      await AsyncStorage.setItem(LEGACY_KEY, JSON.stringify(legRemaining));
+      // Migrate failed items to encrypted queue instead of re-writing legacy plaintext
+      for (const item of legRemaining) {
+        await queueRequest(`${API_URL}/inspections`, "POST", item.payload, "inspection");
+      }
+      await AsyncStorage.removeItem(LEGACY_KEY);
+      legFailed = 0; // items are now in encrypted queue, will retry next sync
     }
   }
 
