@@ -27,15 +27,6 @@ function withNetworkSecurityXml(config) {
         `<?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
   <base-config cleartextTrafficPermitted="false" />
-  <domain-config cleartextTrafficPermitted="false">
-    <domain includeSubdomains="true">app.masi.com.mx</domain>
-    <pin-set expiration="2028-06-25">
-      <!-- ISRG Root X1 — Let's Encrypt root CA (RSA) -->
-      <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
-      <!-- ISRG Root X2 — Let's Encrypt root CA (ECDSA) -->
-      <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
-    </pin-set>
-  </domain-config>
 </network-security-config>`
       );
       return config;
