@@ -162,6 +162,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
 
   const [step, setStep] = useState<Step>("list");
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [levantamientos, setLevantamientos] = useState<Levantamiento[]>([]);
@@ -183,8 +184,8 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     loadInitialData();
   }, []);
 
-  const loadInitialData = async () => {
-    setLoading(true);
+  const loadInitialData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [cRes, levRes] = await Promise.all([
         axios.get(`${API_URL}/mobile/clients`),
@@ -193,10 +194,16 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
       setClientes(cRes.data?.rows ?? []);
       setLevantamientos(Array.isArray(levRes.data) ? levRes.data : []);
     } catch {
-      Alert.alert("Error", "No se pudieron cargar los datos.");
+      if (!silent) Alert.alert("Error", "No se pudieron cargar los datos.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadInitialData(true);
   };
 
   const loadSucursales = async (cid: string) => {
@@ -626,6 +633,8 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
           data={levantamientos}
           keyExtractor={item => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 60 }}>
               <Text style={{ fontSize: 44, marginBottom: 12 }}>📋</Text>
