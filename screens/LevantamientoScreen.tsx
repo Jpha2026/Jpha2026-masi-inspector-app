@@ -210,7 +210,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
     if (!cid) return;
     try {
       const res = await axios.get<Sucursal[]>(`${API_URL}/sucursales?client_id=${cid}`);
-      setSucursales(res.data || []);
+      setSucursales(Array.isArray(res.data) ? res.data : []);
     } catch { /* ignore */ }
   };
 
