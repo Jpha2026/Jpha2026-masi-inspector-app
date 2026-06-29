@@ -555,7 +555,7 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
               <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
                 {clientes.map(c => (
-                  <TouchableOpacity key={c.id} onPress={() => { setClientId(c.id); setSucursalId(""); loadSucursales(c.id); }}
+                  <TouchableOpacity key={c.id} onPress={() => { setClientId(c.id); setSucursalId(""); setSucursales([]); loadSucursales(c.id); }}
                     style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
                       backgroundColor: clientId === c.id ? "#1D4ED8" : T.card,
                       borderWidth: 1, borderColor: clientId === c.id ? "#1D4ED8" : T.border }}>
@@ -565,21 +565,25 @@ export default function LevantamientoScreen({ navigation, route }: Props) {
               </ScrollView>
             </FieldRow>
 
-            {sucursales.length > 0 && (
+            {clientId ? (
               <FieldRow label="Sucursal">
-                <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
-                  {sucursales.map(s => (
-                    <TouchableOpacity key={s.id} onPress={() => setSucursalId(s.id)}
-                      style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                        backgroundColor: sucursalId === s.id ? "#1D4ED8" : T.card,
-                        borderWidth: 1, borderColor: sucursalId === s.id ? "#1D4ED8" : T.border }}>
-                      <Text style={{ color: sucursalId === s.id ? "#fff" : T.textSub, fontSize: 12, fontWeight: "600" }}>{s.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                {sucursales.length > 0 ? (
+                  <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
+                    {sucursales.map(s => (
+                      <TouchableOpacity key={s.id} onPress={() => setSucursalId(s.id)}
+                        style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                          backgroundColor: sucursalId === s.id ? "#1D4ED8" : T.card,
+                          borderWidth: 1, borderColor: sucursalId === s.id ? "#1D4ED8" : T.border }}>
+                        <Text style={{ color: sucursalId === s.id ? "#fff" : T.textSub, fontSize: 12, fontWeight: "600" }}>{s.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <Text style={{ color: T.textSub, fontSize: 13 }}>Sin sucursales / sede única</Text>
+                )}
               </FieldRow>
-            )}
+            ) : null}
 
             <FieldRow label="Departamento">
               <Inp value={dept} onChange={setDept} placeholder="ej. Planta Norte, Área de Producción" />
