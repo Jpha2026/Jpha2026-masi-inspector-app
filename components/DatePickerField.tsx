@@ -5,7 +5,7 @@ const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto"
 const DIAS_SEMANA = ["D","L","M","M","J","V","S"];
 
 const THIS_YEAR = new Date().getFullYear();
-const YEAR_MIN = THIS_YEAR - 20;
+const YEAR_MIN = 1950;
 const YEAR_MAX = THIS_YEAR + 10;
 const YEARS = Array.from({ length: YEAR_MAX - YEAR_MIN + 1 }, (_, i) => YEAR_MIN + i);
 
