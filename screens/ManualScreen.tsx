@@ -59,8 +59,10 @@ const MANUALS: Record<string, { label: string; color: string; sections: Section[
         items: [
           "Un levantamiento es el registro inicial de equipos en un sitio.",
           "Accede desde 'Levantamiento' en el menú principal.",
-          "Registra cada extintor / equipo con sus datos y fotos.",
+          "Registra cada extintor / equipo con sus datos y fotos (hasta 15 fotos por equipo).",
           "Al completar, el levantamiento queda disponible en la plataforma.",
+          "En la plataforma se pueden ver las miniaturas de fotos directamente en la tabla de puntos y abrirlas en galería.",
+          "Los levantamientos completados tienen botón 📊 Excel en la plataforma para exportar todos los puntos a CSV.",
         ],
       },
       {
