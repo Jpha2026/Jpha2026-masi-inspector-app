@@ -754,16 +754,18 @@ export default function InspectionScreen({ navigation, route }: Props) {
   const idempotencyKey = useRef(`insp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
   const { location } = useLocation();
 
-  // Try loading checklist from API; only reset items if inspector hasn't started answering yet
+  // Try loading checklist from API; preserve answers but sync category labels from latest def
   useEffect(() => {
     fetchChecklistFromApi(equipment.type).then(def => {
-      if (def) {
-        setChecklist(def);
-        setItems(prev => {
-          const hasAnswers = prev.some(it => it.result !== "NA");
-          return hasAnswers ? prev : buildInitialItems(def);
-        });
-      }
+      if (!def) return;
+      const newItems = buildInitialItems(def);
+      setChecklist(def);
+      setItems(prev => {
+        const hasAnswers = prev.some(it => it.result !== "NA");
+        if (!hasAnswers) return newItems;
+        // Keep inspector's answers; update categories to match the server's current checklist order
+        return prev.map((it, i) => ({ ...it, category: newItems[i]?.category ?? it.category }));
+      });
     });
   }, [equipment.type]);
 
